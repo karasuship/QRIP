@@ -31,11 +31,12 @@ def fetch(tk):
     res = data["chart"]["result"][0]
     ts = res["timestamp"]
     adj = res["indicators"]["adjclose"][0]["adjclose"]
+    vol = res["indicators"]["quote"][0]["volume"]
     rows = []
-    for t, c in zip(ts, adj):
+    for t, c, vv in zip(ts, adj, vol):
         if c is None:
             continue
-        rows.append((datetime.datetime.utcfromtimestamp(t).strftime("%Y-%m-%d"), c))
+        rows.append((datetime.datetime.utcfromtimestamp(t).strftime("%Y-%m-%d"), c, vv or 0))
     return rows
 
 
@@ -47,9 +48,9 @@ def main():
         except Exception as e:
             print(tk, "FAILED", repr(e)); continue
         with open(os.path.join(OUT, tk + ".csv"), "w", encoding="utf-8", newline="") as f:
-            f.write("DATE,ADJCLOSE\n")
-            for d, c in rows:
-                f.write("%s,%.4f\n" % (d, c))
+            f.write("DATE,ADJCLOSE,VOLUME\n")
+            for d, c, vv in rows:
+                f.write("%s,%.4f,%d\n" % (d, c, vv))
         print("%-5s %d rows  %s..%s" % (tk, len(rows), rows[0][0], rows[-1][0]))
 
 
