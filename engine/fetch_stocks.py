@@ -10,8 +10,17 @@ import sys
 import datetime
 
 OUT = os.path.join(os.path.dirname(__file__), "data", "stocks")
-TICKERS = ["NVDA", "AMD", "MU", "INTC", "AVGO", "QCOM", "TSLA", "NFLX",
-           "AMZN", "META", "CRM", "ADBE", "BA", "CAT", "GS"]
+TICKERS = [
+    # semiconductors (volatile, emotional -- constitution's core)
+    "NVDA", "AMD", "MU", "INTC", "AVGO", "QCOM", "TXN", "AMAT", "LRCX",
+    "KLAC", "ADI", "NXPI", "MCHP",
+    # growth / tech
+    "TSLA", "NFLX", "AMZN", "META", "CRM", "ADBE", "PYPL", "NOW",
+    # biotech (volatile)
+    "GILD", "VRTX", "REGN", "BIIB", "AMGN",
+    # cyclical / high-beta
+    "BA", "CAT", "GS", "FCX", "DAL", "CCL", "WYNN", "MGM", "GM", "F",
+]
 
 
 def fetch(tk):
