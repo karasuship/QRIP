@@ -1,0 +1,271 @@
+{
+  "source": "S&P500（配当込み）1996〜2026",
+  "note": "過去の分布の事実であり、将来を保証するものではありません。判断はご自身で。",
+  "cells": [
+    {
+      "depth": "5〜10%",
+      "speed": "fast",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": null,
+          "win": null,
+          "worst": null
+        },
+        {
+          "h": "1年",
+          "median": null,
+          "win": null,
+          "worst": null
+        },
+        {
+          "h": "3年",
+          "median": null,
+          "win": null,
+          "worst": null
+        }
+      ],
+      "n": 0
+    },
+    {
+      "depth": "5〜10%",
+      "speed": "gradual",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 8,
+          "win": 79,
+          "worst": -40
+        },
+        {
+          "h": "1年",
+          "median": 11,
+          "win": 72,
+          "worst": -47
+        },
+        {
+          "h": "3年",
+          "median": 31,
+          "win": 60,
+          "worst": -42
+        }
+      ],
+      "n": 963
+    },
+    {
+      "depth": "10〜20%",
+      "speed": "fast",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 17,
+          "win": 73,
+          "worst": -26
+        },
+        {
+          "h": "1年",
+          "median": 29,
+          "win": 85,
+          "worst": -37
+        },
+        {
+          "h": "3年",
+          "median": 41,
+          "win": 91,
+          "worst": -21
+        }
+      ],
+      "n": 26
+    },
+    {
+      "depth": "10〜20%",
+      "speed": "gradual",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 3,
+          "win": 61,
+          "worst": -46
+        },
+        {
+          "h": "1年",
+          "median": 12,
+          "win": 76,
+          "worst": -49
+        },
+        {
+          "h": "3年",
+          "median": 38,
+          "win": 59,
+          "worst": -47
+        }
+      ],
+      "n": 1312
+    },
+    {
+      "depth": "20〜35%",
+      "speed": "fast",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 13,
+          "win": 76,
+          "worst": -28
+        },
+        {
+          "h": "1年",
+          "median": 20,
+          "win": 67,
+          "worst": -23
+        },
+        {
+          "h": "3年",
+          "median": 55,
+          "win": 86,
+          "worst": -7
+        }
+      ],
+      "n": 66
+    },
+    {
+      "depth": "20〜35%",
+      "speed": "gradual",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 4,
+          "win": 67,
+          "worst": -46
+        },
+        {
+          "h": "1年",
+          "median": 7,
+          "win": 77,
+          "worst": -34
+        },
+        {
+          "h": "3年",
+          "median": 29,
+          "win": 91,
+          "worst": -29
+        }
+      ],
+      "n": 1266
+    },
+    {
+      "depth": "35%以上",
+      "speed": "fast",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 5,
+          "win": 67,
+          "worst": -17
+        },
+        {
+          "h": "1年",
+          "median": 22,
+          "win": 97,
+          "worst": -14
+        },
+        {
+          "h": "3年",
+          "median": 46,
+          "win": 100,
+          "worst": 13
+        }
+      ],
+      "n": 70
+    },
+    {
+      "depth": "35%以上",
+      "speed": "gradual",
+      "horizons": [
+        {
+          "h": "6ヶ月",
+          "median": 12,
+          "win": 87,
+          "worst": -14
+        },
+        {
+          "h": "1年",
+          "median": 21,
+          "win": 99,
+          "worst": -2
+        },
+        {
+          "h": "3年",
+          "median": 42,
+          "win": 100,
+          "worst": 21
+        }
+      ],
+      "n": 429
+    }
+  ],
+  "dropProb": [
+    {
+      "x": "10%",
+      "within": [
+        {
+          "days": "1ヶ月",
+          "p": 5
+        },
+        {
+          "days": "3ヶ月",
+          "p": 16
+        },
+        {
+          "days": "6ヶ月",
+          "p": 26
+        },
+        {
+          "days": "1年",
+          "p": 37
+        }
+      ]
+    },
+    {
+      "x": "20%",
+      "within": [
+        {
+          "days": "1ヶ月",
+          "p": 1
+        },
+        {
+          "days": "3ヶ月",
+          "p": 3
+        },
+        {
+          "days": "6ヶ月",
+          "p": 8
+        },
+        {
+          "days": "1年",
+          "p": 17
+        }
+      ]
+    },
+    {
+      "x": "30%",
+      "within": [
+        {
+          "days": "1ヶ月",
+          "p": 0
+        },
+        {
+          "days": "3ヶ月",
+          "p": 1
+        },
+        {
+          "days": "6ヶ月",
+          "p": 3
+        },
+        {
+          "days": "1年",
+          "p": 6
+        }
+      ]
+    }
+  ]
+}
