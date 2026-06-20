@@ -89,7 +89,7 @@ def main():
         e = months[sub[-1]][-1]
         return irr(buys, e, v[e])
 
-    grid = (1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0)
+    grid = (1.60, 1.65, 1.70, 1.75, 1.81, 1.85)
     print("S&P500 %s..%s。-5%%刻みで level N→10万×m^(N-1)。\n" % (dates[0], dates[-1]))
     print("  脳死・月末DCA(全期間) IRR %+.3f%%\n" % (irr(me, last, fp) * 100))
     print("  倍率m   全期間IRR   前半(96-11)   後半(11-26)")
