@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import behavior from "./data/behavior.json";
 
 const DEPTHS = ["5〜10%", "10〜20%", "20〜35%", "35%以上"];
@@ -146,7 +147,20 @@ export default function Home() {
           </div>
         </section>
 
-        <p className="mt-10 border-t border-zinc-200 pt-5 text-xs leading-5 text-zinc-400 dark:border-zinc-800">
+        <section className="mt-10 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+          <p className="text-sm font-medium">なぜ「予測しない」のか？</p>
+          <p className="mt-1 text-xs leading-5 text-zinc-500">
+            買うタイミングはほぼ効かない。DCAを超える方法は3つだけ——を30年分のデータで検証しました。
+          </p>
+          <Link
+            href="/learn"
+            className="mt-3 inline-block text-sm font-medium text-emerald-700 hover:underline dark:text-emerald-400"
+          >
+            タイミングという幻想 — 検証で分かった事実 →
+          </Link>
+        </section>
+
+        <p className="mt-8 text-xs leading-5 text-zinc-400">
           {behavior.note} これは投資助言ではなく、過去データの分布提示です。
         </p>
       </main>
