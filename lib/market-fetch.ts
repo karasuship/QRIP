@@ -90,6 +90,92 @@ function computeAth(vals: number[]): { ath: number; ageAth: number; athDd: numbe
   return { ath, ageAth, athDd };
 }
 
+// ──────────────────────────────────────────────
+// COT: CFTC 機関投資家ポジション（週次）
+// E-Mini S&P 500 = contract code 138741
+// ──────────────────────────────────────────────
+interface COTData {
+  reportDate: string;
+  amNet: number;     // Asset Manager（年金・保険）ネットポジション
+  amNetPct: number;  // 対建玉比
+  levNet: number;    // Leveraged Money（ヘッジファンド）ネット
+  levNetPct: number; // 対建玉比（高い=HF強気・低い=逆張り候補）
+}
+
+async function fetchCOT(): Promise<COTData | null> {
+  const url =
+    "https://publicreporting.cftc.gov/resource/jun7-fc8e.json" +
+    "?cftc_contract_market_code=138741" +
+    "&%24order=report_date_as_yyyy_mm_dd+DESC" +
+    "&%24limit=1";
+  try {
+    const res = await fetch(url, {
+      headers: { "Accept": "application/json" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) return null;
+    const row = data[0];
+    const amLong  = parseFloat(row.asset_mgr_positions_long_all  ?? "0");
+    const amShort = parseFloat(row.asset_mgr_positions_short_all ?? "0");
+    const levLong  = parseFloat(row.lev_money_positions_long_all  ?? "0");
+    const levShort = parseFloat(row.lev_money_positions_short_all ?? "0");
+    const oi = parseFloat(row.open_interest_all ?? "1") || 1;
+    return {
+      reportDate: row.report_date_as_yyyy_mm_dd ?? "",
+      amNet: amLong - amShort,
+      amNetPct: (amLong - amShort) / oi,
+      levNet: levLong - levShort,
+      levNetPct: (levLong - levShort) / oi,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ──────────────────────────────────────────────
+// AAII 個人投資家センチメント（週次・HTML スクレイピング）
+// ──────────────────────────────────────────────
+interface AAIIData {
+  bullish: number;
+  neutral: number;
+  bearish: number;
+  bullBear: number; // 強気-弱気スプレッド
+}
+
+async function fetchAAII(): Promise<AAIIData | null> {
+  try {
+    const res = await fetch("https://www.aaii.com/sentimentsurvey", {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept": "text/html",
+      },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    // AAII のページから数値を抽出（例: "38.7%" の形式）
+    const extract = (label: string): number | null => {
+      const re = new RegExp(label + "[\\s\\S]*?([\\d.]+)\\s*%", "i");
+      const m = html.match(re);
+      return m ? parseFloat(m[1]) : null;
+    };
+    const bullish = extract("Bullish");
+    const neutral = extract("Neutral");
+    const bearish = extract("Bearish");
+    if (bullish === null || bearish === null) return null;
+    return {
+      bullish,
+      neutral: neutral ?? 100 - bullish - bearish,
+      bearish,
+      bullBear: bullish - bearish,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // FRED から週次データを取得（APIキー不要のCSVエンドポイント）
 async function fetchFRED(seriesId: string): Promise<[string[], number[]] | null> {
   const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&cosd=2023-01-01`;
@@ -213,6 +299,16 @@ export interface MarketSnapshot {
   mmf_institutional: Nullable<number>;
   mmf_total: Nullable<number>;
   mmf_4w_change: Nullable<number>;
+  // COT（機関投資家ポジション）
+  cot_report_date: Nullable<string>;
+  cot_am_net_pct: Nullable<number>;
+  cot_lev_net_pct: Nullable<number>;
+  // AAII 個人センチメント
+  aaii_bullish: Nullable<number>;
+  aaii_bearish: Nullable<number>;
+  aaii_bull_bear: Nullable<number>;
+  // FFR（実効政策金利下限）
+  ffr_target: Nullable<number>;
 }
 
 export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
@@ -227,7 +323,7 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     xlyRes, xlpRes, xluRes, xlbRes, xlreRes, xlcRes,
     efaRes, eemRes, gldRes, usoRes,
     btcRes, copperRes, pcRes,
-    mmfRetailRes, mmfInstRes,
+    mmfRetailRes, mmfInstRes, ffrRes,
   ] = await Promise.all([
     fetchTicker("%5EGSPC", "2y"),
     fetchTicker("HYG", "6mo"),
@@ -257,8 +353,15 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     fetchTicker("BTC-USD", "3mo"),
     fetchTicker("HG%3DF", "3mo"),
     fetchTicker("%5ECPCE", "1mo"),
-    fetchFRED("WRMFSL"),  // 個人 MMF（週次・10億ドル）
-    fetchFRED("WRMFNS"),  // 機関 MMF（週次・10億ドル）
+    fetchFRED("WRMFSL"),    // 個人 MMF（週次・10億ドル）
+    fetchFRED("WRMFNS"),    // 機関 MMF（週次・10億ドル）
+    fetchFRED("DFEDTARL"),  // FF金利誘導目標・下限（FOMC決定値）
+  ]);
+
+  // 週次データ（COT・AAII）は並列で追加取得
+  const [cotData, aaiiData] = await Promise.all([
+    fetchCOT(),
+    fetchAAII(),
   ]);
 
   if (!spRes) throw new Error("SP500 データ取得失敗");
@@ -457,6 +560,10 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
         (mmfRVals[mmfRN - 5] + mmfIVals[mmfIN - 5])
       : null;
 
+  // FFR（政策金利下限）
+  const [, ffrVals] = ffrRes ?? [[], []];
+  const ffr_target = last(ffrVals);
+
   return {
     date,
     sp500_close: spVals[n - 1],
@@ -487,6 +594,13 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     btc_close, btc_20d_ret, btc_sp500_corr20,
     copper_close, copper_20d_ret, put_call_ratio,
     mmf_retail, mmf_institutional, mmf_total, mmf_4w_change,
+    cot_report_date: cotData?.reportDate ?? null,
+    cot_am_net_pct: cotData?.amNetPct ?? null,
+    cot_lev_net_pct: cotData?.levNetPct ?? null,
+    aaii_bullish: aaiiData?.bullish ?? null,
+    aaii_bearish: aaiiData?.bearish ?? null,
+    aaii_bull_bear: aaiiData?.bullBear ?? null,
+    ffr_target,
   };
 }
 
