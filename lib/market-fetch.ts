@@ -177,6 +177,13 @@ export interface MarketSnapshot {
   // Real
   gld_close: Nullable<number>;
   uso_close: Nullable<number>;
+  // Alternative / sentiment
+  btc_close: Nullable<number>;
+  btc_20d_ret: Nullable<number>;
+  btc_sp500_corr20: Nullable<number>;
+  copper_close: Nullable<number>;
+  copper_20d_ret: Nullable<number>;
+  put_call_ratio: Nullable<number>;
 }
 
 export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
@@ -190,6 +197,7 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     xlkRes, xlfRes, xleRes, xlvRes, xliRes,
     xlyRes, xlpRes, xluRes, xlbRes, xlreRes, xlcRes,
     efaRes, eemRes, gldRes, usoRes,
+    btcRes, copperRes, pcRes,
   ] = await Promise.all([
     fetchTicker("%5EGSPC", "2y"),
     fetchTicker("HYG", "6mo"),
@@ -216,6 +224,9 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     fetchTicker("XLC", "3mo"),
     fetchTicker("EFA", "3mo"), fetchTicker("EEM", "3mo"),
     fetchTicker("GLD", "3mo"), fetchTicker("USO", "3mo"),
+    fetchTicker("BTC-USD", "3mo"),
+    fetchTicker("HG%3DF", "3mo"),
+    fetchTicker("%5ECPCE", "1mo"),
   ]);
 
   if (!spRes) throw new Error("SP500 データ取得失敗");
@@ -350,6 +361,52 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
   const [, gldVals] = gldRes ?? [[], []];
   const [, usoVals] = usoRes ?? [[], []];
 
+  // BTC / 銅 / プットコール比
+  const [btcDates, btcVals] = btcRes ?? [[], []];
+  const btcN = btcVals.length;
+  const btc_close = last(btcVals);
+  const btc_20d_ret = btcN >= 21 ? btcVals[btcN - 1] / btcVals[btcN - 21] - 1 : null;
+
+  // BTC-SP500 20日ローリング相関（日次リターンのピアソン相関）
+  // SP500 営業日ベースで BTC を日付アラインして計算
+  let btc_sp500_corr20: Nullable<number> = null;
+  if (btcN >= 21 && n >= 21) {
+    const btcByDate = new Map<string, number>();
+    btcDates.forEach((d, i) => btcByDate.set(d, btcVals[i]));
+    // SP500 の最新20日の営業日に合わせる
+    const spRets: number[] = [];
+    const bRets: number[] = [];
+    for (let i = n - 20; i < n; i++) {
+      const spRet = spVals[i] / spVals[i - 1] - 1;
+      const b0 = btcByDate.get(spDates[i]);
+      const b1 = btcByDate.get(spDates[i - 1]);
+      if (b0 !== undefined && b1 !== undefined) {
+        spRets.push(spRet);
+        bRets.push(b0 / b1 - 1);
+      }
+    }
+    if (spRets.length >= 10) {
+      const meanSp = spRets.reduce((a, b) => a + b, 0) / spRets.length;
+      const meanB = bRets.reduce((a, b) => a + b, 0) / bRets.length;
+      let cov = 0, varSp = 0, varB = 0;
+      for (let i = 0; i < spRets.length; i++) {
+        const ds = spRets[i] - meanSp;
+        const db = bRets[i] - meanB;
+        cov += ds * db; varSp += ds * ds; varB += db * db;
+      }
+      const denom = Math.sqrt(varSp * varB);
+      btc_sp500_corr20 = denom > 0 ? cov / denom : null;
+    }
+  }
+
+  const [, copperVals] = copperRes ?? [[], []];
+  const copperN = copperVals.length;
+  const copper_close = last(copperVals);
+  const copper_20d_ret = copperN >= 21 ? copperVals[copperN - 1] / copperVals[copperN - 21] - 1 : null;
+
+  const [, pcVals] = pcRes ?? [[], []];
+  const put_call_ratio = last(pcVals);
+
   return {
     date,
     sp500_close: spVals[n - 1],
@@ -377,6 +434,8 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     xlre_rs: secRS(xlreRes), xlc_rs: secRS(xlcRes),
     efa_close: last(efaVals), eem_close: last(eemVals),
     gld_close: last(gldVals), uso_close: last(usoVals),
+    btc_close, btc_20d_ret, btc_sp500_corr20,
+    copper_close, copper_20d_ret, put_call_ratio,
   };
 }
 
