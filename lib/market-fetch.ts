@@ -90,6 +90,30 @@ function computeAth(vals: number[]): { ath: number; ageAth: number; athDd: numbe
   return { ath, ageAth, athDd };
 }
 
+// FRED から週次データを取得（APIキー不要のCSVエンドポイント）
+async function fetchFRED(seriesId: string): Promise<[string[], number[]] | null> {
+  const url = `https://fred.stlouisfed.org/graph/fredgraph.csv?id=${seriesId}&cosd=2023-01-01`;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      cache: "no-store",
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const lines = text.trim().split("\n").slice(1); // ヘッダー除去
+    const dates: string[] = [];
+    const vals: number[] = [];
+    for (const line of lines) {
+      const [d, v] = line.split(",");
+      const n = parseFloat(v);
+      if (d && !isNaN(n)) { dates.push(d.trim()); vals.push(n); }
+    }
+    return dates.length > 0 ? [dates, vals] : null;
+  } catch {
+    return null;
+  }
+}
+
 // セクター 20日相対強度（vs SP500）
 function sectorRS(
   sectorVals: number[],
@@ -184,6 +208,11 @@ export interface MarketSnapshot {
   copper_close: Nullable<number>;
   copper_20d_ret: Nullable<number>;
   put_call_ratio: Nullable<number>;
+  // MMF（マネーマーケットファンド待機資金）
+  mmf_retail: Nullable<number>;
+  mmf_institutional: Nullable<number>;
+  mmf_total: Nullable<number>;
+  mmf_4w_change: Nullable<number>;
 }
 
 export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
@@ -198,6 +227,7 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     xlyRes, xlpRes, xluRes, xlbRes, xlreRes, xlcRes,
     efaRes, eemRes, gldRes, usoRes,
     btcRes, copperRes, pcRes,
+    mmfRetailRes, mmfInstRes,
   ] = await Promise.all([
     fetchTicker("%5EGSPC", "2y"),
     fetchTicker("HYG", "6mo"),
@@ -227,6 +257,8 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     fetchTicker("BTC-USD", "3mo"),
     fetchTicker("HG%3DF", "3mo"),
     fetchTicker("%5ECPCE", "1mo"),
+    fetchFRED("WRMFSL"),  // 個人 MMF（週次・10億ドル）
+    fetchFRED("WRMFNS"),  // 機関 MMF（週次・10億ドル）
   ]);
 
   if (!spRes) throw new Error("SP500 データ取得失敗");
@@ -407,6 +439,24 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
   const [, pcVals] = pcRes ?? [[], []];
   const put_call_ratio = last(pcVals);
 
+  // MMF 待機資金（週次・最新値を使う）
+  const [, mmfRVals] = mmfRetailRes ?? [[], []];
+  const [, mmfIVals] = mmfInstRes ?? [[], []];
+  const mmf_retail = last(mmfRVals);
+  const mmf_institutional = last(mmfIVals);
+  const mmf_total =
+    mmf_retail !== null && mmf_institutional !== null
+      ? mmf_retail + mmf_institutional
+      : null;
+  // 4週前比（約1ヶ月の資金フロー方向）
+  const mmfRN = mmfRVals.length;
+  const mmfIN = mmfIVals.length;
+  const mmf_4w_change =
+    mmfRN >= 5 && mmfIN >= 5
+      ? (mmfRVals[mmfRN - 1] + mmfIVals[mmfIN - 1]) -
+        (mmfRVals[mmfRN - 5] + mmfIVals[mmfIN - 5])
+      : null;
+
   return {
     date,
     sp500_close: spVals[n - 1],
@@ -436,6 +486,7 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
     gld_close: last(gldVals), uso_close: last(usoVals),
     btc_close, btc_20d_ret, btc_sp500_corr20,
     copper_close, copper_20d_ret, put_call_ratio,
+    mmf_retail, mmf_institutional, mmf_total, mmf_4w_change,
   };
 }
 
