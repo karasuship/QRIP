@@ -5,6 +5,7 @@ import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
 import { fetchSocialData } from "@/lib/social-fetch";
 import { notifySignal } from "@/lib/email-notify";
+import { notifySignalTelegram } from "@/lib/telegram-notify";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -61,33 +62,36 @@ export async function GET(req: NextRequest) {
     fired.push("RSI25");
   }
 
-  // メール通知（phi2 / RSI25 / DOUBLE）
+  // 通知（メール + Telegram）
+  const notifyParams = (signalType: string) => ({
+    date: snapshot.date,
+    signalType,
+    sp500Price: snapshot.sp500_close,
+    athDd: snapshot.sp500_ath_dd,
+    crsScore: snapshot.crs_score,
+  });
+
   for (const signalType of fired) {
-    await notifySignal({
-      date: snapshot.date,
-      signalType,
-      sp500Price: snapshot.sp500_close,
-      athDd: snapshot.sp500_ath_dd,
-      crsScore: snapshot.crs_score,
-      detail:
-        signalType === "DOUBLE"
+    const p = notifyParams(signalType);
+    await Promise.allSettled([
+      notifySignal({ ...p,
+        detail: signalType === "DOUBLE"
           ? "過去30年8回のみの超希少シグナル。積極的な追加投入を検討。"
           : signalType === "PHI2"
             ? "63日後平均+13.6%（DCA比）。追加投入タイミング。"
             : "RSI<25クロスアンダー。phi2と同時でなければ信頼度は低め。",
-    }).catch((e) => console.error("[cron] email failed:", e));
+      }),
+      notifySignalTelegram(p),
+    ]);
   }
 
   // HYG-8% 通知（phi2とは独立）
   if (snapshot.crs_c5_hyg60 && snapshot.sp500_ath_dd <= -0.05 && !fired.includes("PHI2") && !fired.includes("DOUBLE")) {
-    await notifySignal({
-      date: snapshot.date,
-      signalType: "HYG8",
-      sp500Price: snapshot.sp500_close,
-      athDd: snapshot.sp500_ath_dd,
-      crsScore: snapshot.crs_score,
-      detail: "HYG 60日高値-8%以下。QE後 TEST Z=+9.42 の独立シグナル。",
-    }).catch((e) => console.error("[cron] email failed:", e));
+    const p = notifyParams("HYG8");
+    await Promise.allSettled([
+      notifySignal({ ...p, detail: "HYG 60日高値-8%以下。QE後 TEST Z=+9.42 の独立シグナル。" }),
+      notifySignalTelegram(p),
+    ]);
   }
 
   for (const signalType of fired) {
