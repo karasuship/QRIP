@@ -38,6 +38,9 @@ export const metadata: Metadata = {
     description: "暴落で投げ売りする前に。30年統計に基づいた行動根拠を渡す。",
   },
   robots: { index: true, follow: true },
+  verification: {
+    google: "Q7ibhM9YNxPTeLyc2EFFjabcqSvgwRBmssOhsd7_j3M",
+  },
 };
 
 export default async function RootLayout({
