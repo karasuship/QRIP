@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import type { NewsResponse } from "@/app/api/news/route";
+import { fetchHeadlines } from "@/lib/news-fetch";
+import { analyzeNews } from "@/lib/news-analyze";
+import type { Headline } from "@/lib/news-fetch";
+import type { NewsAnalysis } from "@/lib/news-analyze";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のニュース",
@@ -8,21 +11,6 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 1800;
-
-async function fetchNews(): Promise<NewsResponse | null> {
-  try {
-    const baseUrl = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3001";
-    const res = await fetch(`${baseUrl}/api/news`, {
-      next: { revalidate: 1800 },
-    });
-    if (!res.ok) return null;
-    return res.json();
-  } catch {
-    return null;
-  }
-}
 
 function SentimentBar({ score }: { score: number }) {
   const pct = Math.round((score + 1) * 50); // -1〜+1 → 0〜100%
@@ -94,10 +82,15 @@ const TOPIC_LABELS: Record<string, string> = {
 };
 
 export default async function NewsPage() {
-  const data = await fetchNews();
-  const analysis = data?.analysis ?? null;
-  const headlines = data?.headlines ?? [];
-  const fetchedAt = data?.fetchedAt ? new Date(data.fetchedAt) : null;
+  const fetchedAt = new Date();
+  let headlines: Headline[] = [];
+  let analysis: NewsAnalysis | null = null;
+  try {
+    headlines = await fetchHeadlines();
+    analysis = await analyzeNews(headlines);
+  } catch {
+    // 取得失敗時は null のまま
+  }
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
