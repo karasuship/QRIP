@@ -21,37 +21,40 @@ function useFlash(value: number | null) {
   return flash;
 }
 
-function FlashCell({
-  label, value, sub, numValue, warn, highlight,
+function MetricTile({
+  label, value, sub, numValue, state,
 }: {
   label: string;
   value: string;
   sub: string;
   numValue?: number | null;
-  warn?: boolean;
-  highlight?: boolean;
+  state?: "active" | "warn" | "dim" | "default";
 }) {
   const flash = useFlash(numValue ?? null);
-  const flashCls =
-    flash === "up" ? "bg-emerald-100 dark:bg-emerald-900/50" :
-    flash === "down" ? "bg-red-100 dark:bg-red-900/50" :
-    "";
+
+  const borderCls =
+    flash === "up"   ? "border-[#10b981]/50 glow-green" :
+    flash === "down" ? "border-[#ef4444]/50 glow-red"   :
+    state === "active" ? "border-[#10b981]/40 glow-green" :
+    state === "warn"   ? "border-[#f59e0b]/40 glow-amber" :
+    state === "dim"    ? "border-[#16162a]"                :
+    "border-[#1e1e32]";
+
+  const valueCls =
+    flash === "up"   ? "text-glow-green" :
+    flash === "down" ? "text-glow-red"   :
+    state === "active" ? "text-[#10b981]" :
+    state === "warn"   ? "text-[#f59e0b]" :
+    state === "dim"    ? "text-[#2e2e48]" :
+    "text-[#e2e8f0]";
 
   return (
-    <div className={`rounded-lg border p-3 transition-colors duration-500 ${
-      highlight ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950" :
-      warn ? "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950" :
-      "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-    } ${flashCls}`}>
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className={`mt-0.5 text-lg font-semibold tabular-nums transition-colors duration-300 ${
-        flash === "up" ? "text-emerald-600 dark:text-emerald-400" :
-        flash === "down" ? "text-red-500 dark:text-red-400" :
-        highlight ? "text-emerald-700 dark:text-emerald-300" :
-        warn ? "text-amber-600 dark:text-amber-400" :
-        "text-zinc-900 dark:text-zinc-100"
-      }`}>{value}</p>
-      <p className="text-xs text-zinc-400 mt-0.5">{sub}</p>
+    <div className={`rounded-lg border bg-[#0c0c15] p-3 transition-all duration-300 ${borderCls}`}>
+      <p className="font-mono text-[9px] uppercase tracking-widest text-[#2e2e48]">{label}</p>
+      <p className={`mt-1 font-mono text-lg tabular-nums transition-colors duration-200 ${valueCls}`}>
+        {value}
+      </p>
+      <p className="mt-0.5 text-[10px] text-[#374151]">{sub}</p>
     </div>
   );
 }
@@ -71,14 +74,8 @@ export default function LiveMetrics({ initial }: { initial: SignalData }) {
       setLoading(true);
       try {
         const res = await fetch("/api/signal", { cache: "no-store" });
-        if (res.ok) {
-          const json: SignalData = await res.json();
-          setData(json);
-          setLastUpdate(new Date());
-        }
-      } finally {
-        setLoading(false);
-      }
+        if (res.ok) { setData(await res.json()); setLastUpdate(new Date()); }
+      } finally { setLoading(false); }
     };
     const id = setInterval(poll, POLL_MS);
     return () => clearInterval(id);
@@ -89,67 +86,63 @@ export default function LiveMetrics({ initial }: { initial: SignalData }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="text-sm font-medium text-zinc-700 dark:text-zinc-300">指標</p>
-        <span className="flex items-center gap-1.5 text-xs text-zinc-400">
-          {loading && (
-            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-zinc-400" />
-          )}
-          {lastUpdate.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" })} 更新
+        <p className="font-mono text-[9px] uppercase tracking-widest text-[#2e2e48]">ライブ指標</p>
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#374151]">
+          {loading && <span className="h-1 w-1 rounded-full bg-[#10b981] animate-pulse" />}
+          {lastUpdate.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <FlashCell
+        <MetricTile
           label="SP500"
           value={price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
           sub={dayRet !== null ? `前日比 ${pct(dayRet)}` : ""}
           numValue={price}
-          highlight={dayRet !== null && dayRet > 0}
-          warn={dayRet !== null && dayRet <= -0.02}
+          state={dayRet !== null && dayRet <= -0.02 ? "warn" : dayRet !== null && dayRet > 0 ? "active" : "default"}
         />
-        <FlashCell
+        <MetricTile
           label="ATH 乖離"
           value={pct(athDd)}
           sub="≤ −10% で phi2 圏内"
           numValue={athDd}
-          warn={athDd <= -0.1}
+          state={athDd <= -0.1 ? "warn" : "default"}
         />
-        <FlashCell
+        <MetricTile
           label="ATH からの日数"
           value={`${ageAth}日`}
-          sub={ageAthOk ? "フィルタ OK" : "除外ゾーン [91-252]"}
+          sub={ageAthOk ? "フィルタ OK" : "除外 [91-252]"}
           numValue={ageAth}
-          warn={!ageAthOk}
+          state={!ageAthOk ? "dim" : "default"}
         />
-        <FlashCell
+        <MetricTile
           label="vol20（年率）"
           value={vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—"}
           sub="> 25% で条件達成"
           numValue={vol20}
-          highlight={vol20 !== null && vol20 > 0.25}
+          state={vol20 !== null && vol20 > 0.25 ? "active" : "default"}
         />
-        <FlashCell
+        <MetricTile
           label="当日リターン"
           value={dayRet !== null ? pct(dayRet) : "—"}
           sub="≤ −2% で条件達成"
           numValue={dayRet}
-          highlight={dayRet !== null && dayRet <= -0.02}
-          warn={dayRet !== null && dayRet < 0 && dayRet > -0.02}
+          state={dayRet !== null && dayRet <= -0.02 ? "active" : "default"}
         />
-        <FlashCell
+        <MetricTile
           label="RSI14"
           value={rsi14 !== null ? rsi14.toFixed(1) : "—"}
-          sub={rsi14 !== null && rsi14 < 25 ? "< 25（シグナル域）" : "通常域（> 25）"}
+          sub={rsi14 !== null && rsi14 < 25 ? "< 25 シグナル域" : "> 25 通常域"}
           numValue={rsi14}
-          warn={rsi14 !== null && rsi14 < 25}
+          state={rsi14 !== null && rsi14 < 25 ? "warn" : "default"}
         />
         {vix !== null && (
-          <FlashCell
+          <MetricTile
             label="VIX"
             value={vix.toFixed(1)}
-            sub={vix > 30 ? "CRS C1 達成（>30）" : "通常域（≤ 30）"}
+            sub={vix > 30 ? "CRS C1 達成 (>30)" : "通常域 (≤30)"}
             numValue={vix}
-            warn={vix > 30}
+            state={vix > 30 ? "warn" : "default"}
           />
         )}
       </div>
