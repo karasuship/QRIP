@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Nav from "./components/Nav";
+import Ticker from "./components/Ticker";
+import { fetchSignal } from "@/lib/signal";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,11 +21,14 @@ export const metadata: Metadata = {
     "暴落で投げ売りする前に。予測ではなく、過去に同じような局面がどうなったか（最悪・回復・確率）の事実だけを見せる狼狽売り防止ツール。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  let initialSignal = null;
+  try { initialSignal = await fetchSignal(); } catch { /* silent */ }
+
   return (
     <html
       lang="ja"
@@ -31,6 +36,7 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Nav />
+        {initialSignal && <Ticker initial={initialSignal} />}
         {children}
       </body>
     </html>
