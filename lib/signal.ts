@@ -17,6 +17,15 @@ export interface TriggerDay {
   phi2v3: boolean;
 }
 
+export interface PastEpisode {
+  date: string;
+  athDd: number;
+  dayRet: number;
+  vol20: number;
+  retToDate: number;
+  daysAgo: number;
+}
+
 export interface SignalData {
   date: string;
   price: number;
@@ -30,11 +39,22 @@ export interface SignalData {
   vix: number | null;
   crs: number;
   crsComponents: CRSComponents;
+  // メインシグナル
   phi2Active: boolean;
   rsi25Active: boolean;
   rsi25Crossunder: boolean;
+  // 追加シグナル
+  hygSignal: boolean;       // HYG-8% QE後 (decisions/0016)
+  b4Active: boolean;        // phi2後7日追加投入 (decisions/0018)
+  b4BaseDate: string | null;
+  // グローバル
+  efaAthDd: number | null;
+  efaActive: boolean;
+  eemAthDd: number | null;
+  eemActive: boolean;
   signalTier: "NONE" | "NEAR" | "PHI2" | "RSI25" | "DOUBLE";
   history: TriggerDay[];
+  pastEpisodes: PastEpisode[];
 }
 
 type Nullable<T> = T | null;
@@ -149,27 +169,21 @@ function computeCRS(params: {
   const { date, vixDates, vixVals, hygDates, hygVals, dxyDates, dxyVals,
           rspDates, rspVals, spDates, spVals, ageAth } = params;
 
-  // C1: VIX > 30
   const vi = dateFloor(vixDates, date);
   const c1 = vi >= 0 && vixVals[vi] > 30;
 
-  // C2: HYG 3日落（3日前比マイナス）
   const hi = dateFloor(hygDates, date);
   const c2 = hi >= 3 && (hygVals[hi] / hygVals[hi - 3] - 1) <= 0;
 
-  // C3: DXY 5日上昇
   const di = dateFloor(dxyDates, date);
   const c3 = di >= 5 && (dxyVals[di] / dxyVals[di - 5] - 1) >= 0;
 
-  // C4: age_ath <= 90
   const c4 = ageAth <= 90;
 
-  // C5: HYG 60日高値-8%以下
   const c5 =
     hi >= 60 &&
     hygVals[hi] / Math.max(...hygVals.slice(hi - 60, hi + 1)) - 1 <= -0.08;
 
-  // C6: RSP 5日リターン < SP500 5日リターン
   const ri = dateFloor(rspDates, date);
   const si = dateFloor(spDates, date);
   const rspRet = ri >= 5 ? rspVals[ri] / rspVals[ri - 5] - 1 : null;
@@ -181,14 +195,41 @@ function computeCRS(params: {
   return { crs, components };
 }
 
+// EFA/EEM など グローバル ETF の phi2 v3 条件チェック（CRS は SP500 ベース）
+function computeGlobalPhi2(
+  vals: number[],
+  crs: number
+): { athDd: number; active: boolean } {
+  if (vals.length < 30) return { athDd: 0, active: false };
+  const n = vals.length;
+  let ath = vals[0], athIdx = 0;
+  for (let i = 1; i < n; i++) {
+    if (vals[i] > ath) { ath = vals[i]; athIdx = i; }
+  }
+  const athDd = vals[n - 1] / ath - 1;
+  const ageAth = n - 1 - athIdx;
+  const ageAthOk = !(ageAth >= 91 && ageAth <= 252);
+  const dayRet = n >= 2 ? vals[n - 1] / vals[n - 2] - 1 : null;
+  const vol20 = annualVol20(vals, n - 1);
+  const active =
+    athDd <= -0.1 &&
+    dayRet !== null && dayRet <= -0.02 &&
+    vol20 !== null && vol20 > 0.25 &&
+    ageAthOk &&
+    crs >= 2;
+  return { athDd, active };
+}
+
 export async function fetchSignal(): Promise<SignalData> {
-  const [spResult, vixResult, hygResult, dxyResult, rspResult] =
+  const [spResult, vixResult, hygResult, dxyResult, rspResult, efaResult, eemResult] =
     await Promise.all([
       fetchTicker("%5EGSPC", "2y"),
       fetchTicker("%5EVIX", "6mo").catch(() => null),
       fetchTicker("HYG", "6mo").catch(() => null),
       fetchTicker("DX-Y.NYB", "6mo").catch(() => null),
       fetchTicker("RSP", "6mo").catch(() => null),
+      fetchTicker("EFA", "2y").catch(() => null),
+      fetchTicker("EEM", "2y").catch(() => null),
     ]);
 
   if (!spResult) throw new Error("SP500データ取得失敗");
@@ -232,11 +273,9 @@ export async function fetchSignal(): Promise<SignalData> {
   const prevRsi14 =
     n >= 2 ? wilderRSI(spVals.slice(Math.max(0, n - 101), n - 1)) : null;
 
-  // VIX latest
   const vi = dateFloor(vixDates, lastDate);
   const vix = vi >= 0 ? vixVals[vi] : null;
 
-  // CRS for today
   const { crs, components: crsComponents } = computeCRS({
     date: lastDate,
     vixDates, vixVals,
@@ -247,7 +286,6 @@ export async function fetchSignal(): Promise<SignalData> {
     ageAth,
   });
 
-  // phi2 v3 active today
   const phi2Active =
     athDd <= -0.1 &&
     dayRet !== null && dayRet <= -0.02 &&
@@ -259,6 +297,48 @@ export async function fetchSignal(): Promise<SignalData> {
   const rsi25Crossunder =
     rsi25Active && (prevRsi14 === null || prevRsi14 >= 25);
 
+  // HYG-8% QE後シグナル (decisions/0016)
+  // CRS C5 (HYG 60日-8%) が成立 AND ATH-5% 以上の下落
+  const hygSignal = crsComponents.c5 && athDd <= -0.05;
+
+  // B4: phi2が7営業日前に発動 AND 今日もATH-10%以下 (decisions/0018)
+  let b4Active = false;
+  let b4BaseDate: string | null = null;
+  if (n >= 10 && athDd <= -0.1) {
+    const b4Idx = n - 8; // 7営業日前
+    if (b4Idx >= 1) {
+      const b4Dr = spVals[b4Idx] / spVals[b4Idx - 1] - 1;
+      const b4Dd = spVals[b4Idx] / runningAth[b4Idx] - 1;
+      if (b4Dr <= -0.02 && b4Dd <= -0.1) {
+        const b4V20 = annualVol20(spVals, b4Idx);
+        const b4Age = b4Idx - runningAthIdx[b4Idx];
+        const b4AgeOk = !(b4Age >= 91 && b4Age <= 252);
+        if (b4V20 && b4V20 > 0.25 && b4AgeOk) {
+          const b4Date = spDates[b4Idx];
+          const { crs: b4Crs } = computeCRS({
+            date: b4Date,
+            vixDates, vixVals,
+            hygDates, hygVals,
+            dxyDates, dxyVals,
+            rspDates, rspVals,
+            spDates, spVals,
+            ageAth: b4Age,
+          });
+          if (b4Crs >= 2) {
+            b4Active = true;
+            b4BaseDate = b4Date;
+          }
+        }
+      }
+    }
+  }
+
+  // EFA / EEM グローバルシグナル (decisions/0042 相当)
+  const [, efaVals] = efaResult ?? [[], []];
+  const [, eemVals] = eemResult ?? [[], []];
+  const { athDd: efaAthDd, active: efaActive } = computeGlobalPhi2(efaVals, crs);
+  const { athDd: eemAthDd, active: eemActive } = computeGlobalPhi2(eemVals, crs);
+
   let signalTier: SignalData["signalTier"];
   if (phi2Active && rsi25Crossunder) signalTier = "DOUBLE";
   else if (phi2Active) signalTier = "PHI2";
@@ -266,7 +346,7 @@ export async function fetchSignal(): Promise<SignalData> {
   else if (athDd <= -0.1) signalTier = "NEAR";
   else signalTier = "NONE";
 
-  // History: last 30 SP500 days, phi2 v3 candidate check
+  // 直近30日の phi2 候補日（history セクション表示用）
   const history: TriggerDay[] = [];
   for (let i = Math.max(1, n - 30); i < n - 1; i++) {
     const dr = spVals[i] / spVals[i - 1] - 1;
@@ -303,6 +383,27 @@ export async function fetchSignal(): Promise<SignalData> {
     });
   }
 
+  // 過去2年の phi2 類似事例（実際のリターン付き）
+  const pastEpisodes: PastEpisode[] = [];
+  for (let i = 21; i < n - 1; i++) {
+    const dr = spVals[i] / spVals[i - 1] - 1;
+    const dd = spVals[i] / runningAth[i] - 1;
+    if (dr > -0.02 || dd > -0.1) continue;
+    const v20 = annualVol20(spVals, i);
+    if (!v20 || v20 <= 0.25) continue;
+    const age = i - runningAthIdx[i];
+    if (age >= 91 && age <= 252) continue; // ageAthOk フィルタ
+    pastEpisodes.push({
+      date: spDates[i],
+      athDd: dd,
+      dayRet: dr,
+      vol20: v20,
+      retToDate: spVals[n - 1] / spVals[i] - 1,
+      daysAgo: n - 1 - i,
+    });
+  }
+  pastEpisodes.reverse(); // 新しい順
+
   return {
     date: lastDate,
     price: last,
@@ -319,7 +420,15 @@ export async function fetchSignal(): Promise<SignalData> {
     phi2Active,
     rsi25Active,
     rsi25Crossunder,
+    hygSignal,
+    b4Active,
+    b4BaseDate,
+    efaAthDd: efaVals.length >= 30 ? efaAthDd : null,
+    efaActive,
+    eemAthDd: eemVals.length >= 30 ? eemAthDd : null,
+    eemActive,
     signalTier,
     history,
+    pastEpisodes,
   };
 }

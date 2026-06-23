@@ -4,6 +4,7 @@ import { fetchMarketSnapshot, fetchSP500History } from "@/lib/market-fetch";
 import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
 import { fetchSocialData } from "@/lib/social-fetch";
+import { notifySignal } from "@/lib/email-notify";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -58,6 +59,35 @@ export async function GET(req: NextRequest) {
     fired.push("PHI2");
   } else if (snapshot.rsi25_crossunder) {
     fired.push("RSI25");
+  }
+
+  // メール通知（phi2 / RSI25 / DOUBLE）
+  for (const signalType of fired) {
+    await notifySignal({
+      date: snapshot.date,
+      signalType,
+      sp500Price: snapshot.sp500_close,
+      athDd: snapshot.sp500_ath_dd,
+      crsScore: snapshot.crs_score,
+      detail:
+        signalType === "DOUBLE"
+          ? "過去30年8回のみの超希少シグナル。積極的な追加投入を検討。"
+          : signalType === "PHI2"
+            ? "63日後平均+13.6%（DCA比）。追加投入タイミング。"
+            : "RSI<25クロスアンダー。phi2と同時でなければ信頼度は低め。",
+    }).catch((e) => console.error("[cron] email failed:", e));
+  }
+
+  // HYG-8% 通知（phi2とは独立）
+  if (snapshot.crs_c5_hyg60 && snapshot.sp500_ath_dd <= -0.05 && !fired.includes("PHI2") && !fired.includes("DOUBLE")) {
+    await notifySignal({
+      date: snapshot.date,
+      signalType: "HYG8",
+      sp500Price: snapshot.sp500_close,
+      athDd: snapshot.sp500_ath_dd,
+      crsScore: snapshot.crs_score,
+      detail: "HYG 60日高値-8%以下。QE後 TEST Z=+9.42 の独立シグナル。",
+    }).catch((e) => console.error("[cron] email failed:", e));
   }
 
   for (const signalType of fired) {

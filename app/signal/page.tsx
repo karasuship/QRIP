@@ -6,7 +6,7 @@ import LiveMetrics from "@/app/components/LiveMetrics";
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
   description:
-    "phi2 v3 / RSI<25 のリアルタイム発動状態。CRS スコアと ATH 乖離を表示（Yahoo Finance 15分更新）",
+    "phi2 v3 / RSI<25 / HYG-8% / B4 / EFA / EEM のリアルタイム発動状態（Yahoo Finance 15分更新）",
 };
 
 export const revalidate = 900;
@@ -33,29 +33,52 @@ function CRSDot({ active, label }: { active: boolean; label: string }) {
   );
 }
 
-function MetricCard({
+function SignalBadge({
+  active,
   label,
-  value,
   sub,
-  highlight = false,
-  warn = false,
+  quality,
 }: {
+  active: boolean;
   label: string;
-  value: string;
   sub: string;
-  highlight?: boolean;
-  warn?: boolean;
+  quality: "high" | "mid" | "low";
 }) {
-  const border = highlight
-    ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950"
-    : warn
+  const colors = {
+    high: active
+      ? "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950"
+      : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900",
+    mid: active
       ? "border-amber-300 bg-amber-50 dark:border-amber-700 dark:bg-amber-950"
-      : "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-950";
+      : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900",
+    low: active
+      ? "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950"
+      : "border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900",
+  };
   return (
-    <div className={`rounded-xl border p-3 ${border}`}>
-      <p className="text-xs text-zinc-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
-      <p className="mt-0.5 text-xs text-zinc-500">{sub}</p>
+    <div className={`rounded-xl border p-3 ${colors[quality]}`}>
+      <div className="flex items-center gap-2">
+        <span
+          className={`h-2 w-2 rounded-full ${
+            active
+              ? quality === "high"
+                ? "bg-emerald-500"
+                : quality === "mid"
+                  ? "bg-amber-500"
+                  : "bg-blue-500"
+              : "bg-zinc-300 dark:bg-zinc-700"
+          }`}
+        />
+        <p className={`text-sm font-medium ${active ? "" : "text-zinc-400 dark:text-zinc-600"}`}>
+          {label}
+        </p>
+        {active && (
+          <span className="ml-auto text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            発動中
+          </span>
+        )}
+      </div>
+      <p className="mt-1 pl-4 text-xs text-zinc-500">{sub}</p>
     </div>
   );
 }
@@ -90,11 +113,12 @@ export default async function SignalPage() {
     date, price, ath, athDd, ageAth, ageAthOk,
     vol20, dayRet, rsi14, vix,
     crs, crsComponents,
-    phi2Active, rsi25Active, rsi25Crossunder, signalTier,
-    history,
+    phi2Active, rsi25Active, rsi25Crossunder,
+    hygSignal, b4Active, b4BaseDate,
+    efaAthDd, efaActive, eemAthDd, eemActive,
+    signalTier, history, pastEpisodes,
   } = signal;
 
-  // ── ステータスカードの文言 ──────────────────────────────────
   type StatusConfig = {
     label: string;
     sub: string;
@@ -112,7 +136,7 @@ export default async function SignalPage() {
     PHI2: {
       label: "phi2 v3 発動",
       sub: `ATH ${pct(athDd)} · CRS ${crs}/6 · vol ${vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—"}`,
-      detail: `年平均3回。63日後平均+13.6%（DCA比）。追加投入日。`,
+      detail: "年平均3回。63日後平均+13.6%（DCA比）。追加投入日。",
       color: "border-emerald-300 bg-emerald-50 dark:border-emerald-700 dark:bg-emerald-950",
     },
     RSI25: {
@@ -162,7 +186,7 @@ export default async function SignalPage() {
           最終取引日: {date} · 15分キャッシュ（Yahoo Finance ^GSPC）
         </p>
 
-        {/* ステータスカード */}
+        {/* メインステータス */}
         <div className={`mt-6 rounded-2xl border p-5 ${st.color}`}>
           <p className="text-xl font-semibold">{st.label}</p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{st.sub}</p>
@@ -170,6 +194,49 @@ export default async function SignalPage() {
             {st.detail}
           </p>
         </div>
+
+        {/* ── 全シグナル一覧 ───────────────────────────── */}
+        <section className="mt-5">
+          <p className="mb-2 text-sm font-medium">全シグナル状態（4体制 v3）</p>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <SignalBadge
+              active={phi2Active}
+              label="phi2 v3（主力）"
+              sub={`ATH-10% · 当日-2% · vol>25% · CRS≥2 · age非L字 | TEST Z=+8.65`}
+              quality="high"
+            />
+            <SignalBadge
+              active={rsi25Crossunder}
+              label="RSI<25 クロスアンダー"
+              sub={`RSI14 = ${rsi14 !== null ? rsi14.toFixed(1) : "—"} | TEST Z=+3.92`}
+              quality="mid"
+            />
+            <SignalBadge
+              active={hygSignal}
+              label="HYG-8% QE後"
+              sub={`HYG 60日高値-8%以下 AND ATH-5%以下 | TEST Z=+9.42`}
+              quality="high"
+            />
+            <SignalBadge
+              active={b4Active}
+              label={`B4（phi2後7日）${b4BaseDate ? `← ${b4BaseDate}` : ""}`}
+              sub={`phi2発動7営業日後 AND 今日もATH-10%以下 | TEST Z=+8.29`}
+              quality="mid"
+            />
+            <SignalBadge
+              active={efaActive}
+              label="EFA 先進国（除く米国）"
+              sub={`ATH乖離 ${efaAthDd !== null ? pct(efaAthDd) : "—"} · SP500 CRS共用 | TEST Z=+8.08`}
+              quality="low"
+            />
+            <SignalBadge
+              active={eemActive}
+              label="EEM 新興国"
+              sub={`ATH乖離 ${eemAthDd !== null ? pct(eemAthDd) : "—"} · SP500 CRS共用`}
+              quality="low"
+            />
+          </div>
+        </section>
 
         {/* CRS スコア */}
         <section className="mt-5 rounded-xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-950">
@@ -212,31 +279,11 @@ export default async function SignalPage() {
           <p className="mb-3 text-sm font-medium">phi2 v3 発動条件</p>
           {(
             [
-              {
-                label: "ATH 乖離 ≤ −10%",
-                ok: athDd <= -0.1,
-                val: pct(athDd),
-              },
-              {
-                label: "当日リターン ≤ −2%",
-                ok: dayRet !== null && dayRet <= -0.02,
-                val: dayRet !== null ? pct(dayRet) : "—",
-              },
-              {
-                label: "vol20 > 25%",
-                ok: vol20 !== null && vol20 > 0.25,
-                val: vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—",
-              },
-              {
-                label: "age_ath ∉ [91-252]",
-                ok: ageAthOk,
-                val: `${ageAth}日`,
-              },
-              {
-                label: "CRS ≥ 2",
-                ok: crs >= 2,
-                val: `${crs}/6`,
-              },
+              { label: "ATH 乖離 ≤ −10%", ok: athDd <= -0.1, val: pct(athDd) },
+              { label: "当日リターン ≤ −2%", ok: dayRet !== null && dayRet <= -0.02, val: dayRet !== null ? pct(dayRet) : "—" },
+              { label: "vol20 > 25%", ok: vol20 !== null && vol20 > 0.25, val: vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—" },
+              { label: "age_ath ∉ [91-252]", ok: ageAthOk, val: `${ageAth}日` },
+              { label: "CRS ≥ 2", ok: crs >= 2, val: `${crs}/6` },
             ] as { label: string; ok: boolean; val: string }[]
           ).map(({ label, ok, val }) => (
             <div
@@ -244,25 +291,89 @@ export default async function SignalPage() {
               className="flex items-center justify-between border-b border-zinc-100 py-1.5 last:border-0 dark:border-zinc-800"
             >
               <span className="flex items-center gap-2 text-sm">
-                <span
-                  className={
-                    ok ? "text-emerald-500" : "text-zinc-300 dark:text-zinc-600"
-                  }
-                >
+                <span className={ok ? "text-emerald-500" : "text-zinc-300 dark:text-zinc-600"}>
                   {ok ? "✓" : "○"}
                 </span>
                 {label}
               </span>
-              <span
-                className={`text-sm font-mono ${ok ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500"}`}
-              >
+              <span className={`text-sm font-mono ${ok ? "text-emerald-600 dark:text-emerald-400" : "text-zinc-500"}`}>
                 {val}
               </span>
             </div>
           ))}
         </section>
 
-        {/* 過去 30 日の phi2 候補日 */}
+        {/* 過去類似事例 */}
+        {pastEpisodes.length > 0 && (
+          <section className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
+            <p className="text-sm font-medium">過去2年の phi2 類似事例</p>
+            <p className="mt-0.5 text-xs text-zinc-400">
+              ATH−10% · 当日−2% · vol&gt;25% · age非L字を満たした日 — その後のリターン（実績）
+            </p>
+            <div className="mt-3 overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-800">
+              <table className="w-full text-sm">
+                <thead className="bg-zinc-100 text-xs text-zinc-500 dark:bg-zinc-900">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">日付</th>
+                    <th className="px-3 py-2 text-right font-medium">当日</th>
+                    <th className="px-3 py-2 text-right font-medium">ATH 乖離</th>
+                    <th className="px-3 py-2 text-right font-medium">今日まで</th>
+                    <th className="px-3 py-2 text-right font-medium">経過</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pastEpisodes.slice(0, 10).map((ep) => (
+                    <tr key={ep.date} className="border-t border-zinc-200 dark:border-zinc-800">
+                      <td className="px-3 py-2 font-mono text-xs">{ep.date}</td>
+                      <td className="px-3 py-2 text-right text-rose-600 dark:text-rose-400">
+                        {pct(ep.dayRet)}
+                      </td>
+                      <td className="px-3 py-2 text-right text-zinc-500">
+                        {pct(ep.athDd)}
+                      </td>
+                      <td className={`px-3 py-2 text-right font-semibold ${
+                        ep.retToDate > 0
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-rose-600 dark:text-rose-400"
+                      }`}>
+                        {pct(ep.retToDate)}
+                      </td>
+                      <td className="px-3 py-2 text-right text-xs text-zinc-400">
+                        {ep.daysAgo < 30
+                          ? `${ep.daysAgo}日前`
+                          : `${Math.round(ep.daysAgo / 21)}ヶ月前`}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {pastEpisodes.length > 0 && (
+              <p className="mt-2 text-xs text-zinc-400">
+                平均リターン:{" "}
+                <span className={`font-semibold ${
+                  pastEpisodes.slice(0, 10).reduce((a, e) => a + e.retToDate, 0) / Math.min(pastEpisodes.length, 10) > 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-rose-600"
+                }`}>
+                  {pct(
+                    pastEpisodes.slice(0, 10).reduce((a, e) => a + e.retToDate, 0) /
+                      Math.min(pastEpisodes.length, 10)
+                  )}
+                </span>
+                {" · "}勝率:{" "}
+                <span className="font-semibold">
+                  {Math.round(
+                    (pastEpisodes.slice(0, 10).filter((e) => e.retToDate > 0).length /
+                      Math.min(pastEpisodes.length, 10)) * 100
+                  )}%
+                </span>
+              </p>
+            )}
+          </section>
+        )}
+
+        {/* 直近30日 phi2 候補日 */}
         <section className="mt-8 border-t border-zinc-200 pt-6 dark:border-zinc-800">
           <p className="text-sm font-medium">過去 30 日の phi2 v3 候補日</p>
           <p className="mt-0.5 text-xs text-zinc-400">
@@ -286,10 +397,7 @@ export default async function SignalPage() {
                 </thead>
                 <tbody>
                   {history.map((h) => (
-                    <tr
-                      key={h.date}
-                      className="border-t border-zinc-200 dark:border-zinc-800"
-                    >
+                    <tr key={h.date} className="border-t border-zinc-200 dark:border-zinc-800">
                       <td className="px-3 py-2 font-mono text-xs">{h.date}</td>
                       <td className="px-3 py-2 text-right text-rose-600 dark:text-rose-400">
                         {pct(h.dayRet)}
@@ -297,13 +405,7 @@ export default async function SignalPage() {
                       <td className="px-3 py-2 text-right">{pct(h.athDd)}</td>
                       <td className="px-3 py-2 text-right">
                         {h.crs !== null ? (
-                          <span
-                            className={
-                              h.crs >= 2
-                                ? "font-medium text-amber-600 dark:text-amber-400"
-                                : "text-zinc-400"
-                            }
-                          >
+                          <span className={h.crs >= 2 ? "font-medium text-amber-600 dark:text-amber-400" : "text-zinc-400"}>
                             {h.crs}/6
                           </span>
                         ) : (
@@ -312,9 +414,7 @@ export default async function SignalPage() {
                       </td>
                       <td className="px-3 py-2 text-right">
                         {h.phi2v3 ? (
-                          <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                            ✓
-                          </span>
+                          <span className="font-medium text-emerald-600 dark:text-emerald-400">✓</span>
                         ) : (
                           <span className="text-zinc-300 dark:text-zinc-600">○</span>
                         )}
@@ -328,10 +428,13 @@ export default async function SignalPage() {
         </section>
 
         <p className="mt-8 text-xs leading-5 text-zinc-400">
-          データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP)。
-          phi2 v3 の根拠:{" "}
-          <span className="font-mono">decisions/0021</span>（30年 TEST Z=+8.65）。
-          RSI&lt;25 単独は短期反発の予測力なし（R41）。
+          データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。
+          phi2 v3:{" "}
+          <span className="font-mono">decisions/0021</span>（TEST Z=+8.65）·
+          HYG-8%:{" "}
+          <span className="font-mono">decisions/0016</span>（TEST Z=+9.42）·
+          B4:{" "}
+          <span className="font-mono">decisions/0018</span>（TEST Z=+8.29）。
           これは投資助言ではありません。
         </p>
       </main>
