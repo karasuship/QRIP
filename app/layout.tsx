@@ -39,7 +39,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   verification: {
-    google: "Q7ibhM9YNxPTeLyc2EFFjabcqSvgwRBmssOhsd7_j3M",
+    google: "r9w7TMZ_xj8hUkioxC2Mpx84JouFMOjV4f2ke7c5Ouo",
   },
 };
 
