@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Nav from "./components/Nav";
 import Ticker from "./components/Ticker";
+import AlertBanner from "./components/AlertBanner";
 import { fetchSignal } from "@/lib/signal";
 import "./globals.css";
 
@@ -36,6 +37,7 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <Nav />
+        {initialSignal && <AlertBanner signal={initialSignal} />}
         {initialSignal && <Ticker initial={initialSignal} />}
         {children}
       </body>

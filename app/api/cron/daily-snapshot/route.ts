@@ -6,6 +6,7 @@ import { analyzeNews } from "@/lib/news-analyze";
 import { fetchSocialData } from "@/lib/social-fetch";
 import { notifySignal } from "@/lib/email-notify";
 import { notifySignalTelegram } from "@/lib/telegram-notify";
+import { sendWebPushToAll, buildSignalPayload } from "@/lib/web-push-notify";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -73,6 +74,7 @@ export async function GET(req: NextRequest) {
 
   for (const signalType of fired) {
     const p = notifyParams(signalType);
+    const pushPayload = buildSignalPayload({ signalType, athDd: snapshot.sp500_ath_dd, crsScore: snapshot.crs_score });
     await Promise.allSettled([
       notifySignal({ ...p,
         detail: signalType === "DOUBLE"
@@ -82,15 +84,18 @@ export async function GET(req: NextRequest) {
             : "RSI<25クロスアンダー。phi2と同時でなければ信頼度は低め。",
       }),
       notifySignalTelegram(p),
+      sendWebPushToAll(pushPayload),
     ]);
   }
 
   // HYG-8% 通知（phi2とは独立）
   if (snapshot.crs_c5_hyg60 && snapshot.sp500_ath_dd <= -0.05 && !fired.includes("PHI2") && !fired.includes("DOUBLE")) {
     const p = notifyParams("HYG8");
+    const pushPayload = buildSignalPayload({ signalType: "HYG8", athDd: snapshot.sp500_ath_dd, crsScore: snapshot.crs_score });
     await Promise.allSettled([
       notifySignal({ ...p, detail: "HYG 60日高値-8%以下。QE後 TEST Z=+9.42 の独立シグナル。" }),
       notifySignalTelegram(p),
+      sendWebPushToAll(pushPayload),
     ]);
   }
 

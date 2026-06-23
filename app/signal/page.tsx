@@ -2,6 +2,7 @@ import { fetchSignal } from "@/lib/signal";
 import type { Metadata } from "next";
 import Link from "next/link";
 import LiveMetrics from "@/app/components/LiveMetrics";
+import PushSubscribe from "@/app/components/PushSubscribe";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -179,12 +180,17 @@ export default async function SignalPage() {
           ← ホームにもどる
         </Link>
 
-        <h1 className="mt-6 text-2xl font-semibold tracking-tight">
-          今日のシグナル状態
-        </h1>
-        <p className="mt-1 text-xs text-zinc-500">
-          最終取引日: {date} · 15分キャッシュ（Yahoo Finance ^GSPC）
-        </p>
+        <div className="mt-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              今日のシグナル状態
+            </h1>
+            <p className="mt-1 text-xs text-zinc-500">
+              最終取引日: {date} · 15分キャッシュ（Yahoo Finance ^GSPC）
+            </p>
+          </div>
+          <PushSubscribe />
+        </div>
 
         {/* メインステータス */}
         <div className={`mt-6 rounded-2xl border p-5 ${st.color}`}>
