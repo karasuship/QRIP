@@ -102,24 +102,54 @@ Round 01〜36 主要発見まとめ：
 - CRSは「今の恐怖の深さ」。未来予測ではない
 - 大暴落が30年で1回も来ない確率は約5%（ポアソン推定）
 
-## 次にやること（実装フェーズ・優先順位付き）
+## 実装済み（2026-06-23 時点）
 
-### Phase 1（即着手）
-1. ✅ **phi2 v2 + RSI<25 シグナル表示**（`/signal` ページ）
-2. ✅ 基本UIデザイン・ナビゲーション
-3. ✅ セキュリティ設定
-4. **`/signal` を phi2 v3 に更新**（現在 v2。CRS≥2・age非L字フィルタ追加が必要）
-5. **CRS リアルタイムスコア表示**（VIX/HYG/DXY/RSP 当日取得・0〜6点表示）
+### 完了済み
+- ✅ phi2 v3 + RSI<25 + HYG-8% + B4 + EFA/EEM シグナル（`/signal`）
+- ✅ CRS リアルタイムスコア表示（0〜6点・6成分）
+- ✅ 過去2年の類似事例テーブル（実績リターン・勝率付き）
+- ✅ ニュース要約（Claude Haiku、`/news`）
+- ✅ Supabase 自動蓄積（毎営業日7時 cron）
+- ✅ Web Push 通知（Android/デスクトップ）
+- ✅ Telegram 通知（設定任意）
+- ✅ Resend メール通知（設定任意）
+- ✅ サイト全ページにアラートバナー（シグナル発動時）
+- ✅ 近未来 UI（ターミナル × クリーンダーク、モノスペース数値、グロー）
+- ✅ Google Search Console 登録・サイトマップ送信
+- ✅ OGP / Twitter Card / robots.txt
 
-### Phase 2（中期）
-6. HYG-8% / B4 シグナルを `/signal` に追加
-7. 過去類似事例の自動検索・表示（「前回CRS=4は2020-03、63日後+38%」）
-8. ニュース要約機能（ANTHROPIC_API_KEY 必要）
+### 必要な環境変数（Vercel + .env.local）
+| 変数 | 用途 | 状態 |
+|------|------|------|
+| SUPABASE_URL | DB接続 | ✅ |
+| SUPABASE_SERVICE_ROLE_KEY | DB管理者 | ✅ |
+| ANTHROPIC_API_KEY | ニュース分析 | ✅ |
+| CRON_SECRET | cron認証 | ✅ |
+| NEXT_PUBLIC_VAPID_PUBLIC_KEY | Web Push | ✅ |
+| VAPID_PRIVATE_KEY | Web Push | ✅ |
+| RESEND_API_KEY | メール通知 | 任意 |
+| TELEGRAM_BOT_TOKEN | Telegram通知 | 任意 |
+| TELEGRAM_CHAT_ID | Telegram通知 | 任意 |
 
-### Phase 3（長期・要設計）
-9. ポートフォリオトラッカー（実績 vs DCA ベースライン比較）
-10. CRS連動サイジングUI（CRS=5→2x 推奨表示）
-11. EFA/EEM グローバルシグナル追加（同じ phi2 ロジックが使える）
+## 次にやること
+
+### 優先（Web 機能追加）
+1. `/signal` ページ改善（ユーザーフィードバック待ち）
+2. iPhone 向け通知（React Native アプリ — 別リポジトリで並行開発）
+3. ポートフォリオトラッカー（実績 vs DCA ベースライン比較）
+4. CRS連動サイジングUI（CRS=5→2x 推奨表示）
+5. LINE公式アカウント（多ユーザー通知拡張）
+
+### 後回しリスト
+- Google AdSense 申請（プライバシーポリシー・コンテンツ充実が先）
+- EFA/EEM 専用ページ
+- FOMC声明スコアリング
+
+### アプリ（並行・別リポジトリ）
+- React Native（iOS/Android）
+- Supabase API をそのまま利用
+- FCM プッシュ通知
+- App Store / Google Play 申請
 
 ## 参照トリガー（Claudeはいつ立ち返るか）
 
