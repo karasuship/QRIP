@@ -173,6 +173,37 @@ export default async function SignalPage() {
   const st = statusMap[signalTier];
   const isActive = signalTier === "PHI2" || signalTier === "DOUBLE";
 
+  const conclusion = (() => {
+    if (signalTier === "DOUBLE") return {
+      text: "🔴 最高品質シグナル同時発動。30年で8回のみの局面。積極的な追加投入を検討してください。",
+      cls: "border-violet-500/30 bg-violet-500/10 text-[#c4b5fd]",
+    };
+    if (signalTier === "PHI2") return {
+      text: "⚡ 買い増しシグナル発動中。過去の同条件、63日後の平均はDCA比 +13.6%。",
+      cls: "border-[#10b981]/30 bg-[#10b981]/10 text-[#10b981]",
+    };
+    if (hygSignal) return {
+      text: "⚡ HYG-8% シグナル発動中。クレジット市場の恐怖を検知。30年統計 TEST Z=+9.42。",
+      cls: "border-amber-500/30 bg-amber-500/10 text-amber-400",
+    };
+    if (b4Active) return {
+      text: "⚡ B4 追加タイミング。phi2 発動から7営業日、ATH-10% 圏内が継続しています。",
+      cls: "border-blue-500/30 bg-blue-500/10 text-blue-400",
+    };
+    if (signalTier === "RSI25") return {
+      text: "RSI<25 シグナル。短期反発の根拠は薄いが、長期保有前提の追加投入なら合理的。",
+      cls: "border-amber-500/20 bg-amber-500/5 text-amber-400/80",
+    };
+    if (signalTier === "NEAR") return {
+      text: "発動圏内に入っています。条件はまだ揃っていません。引き続き定期積立を続けてください。",
+      cls: "border-[#1e1e32] bg-[#0c0c15] text-[#94a3b8]",
+    };
+    return {
+      text: "今日は通常状態です。定期積立（DCA）を続けてください。",
+      cls: "border-[#1e1e32] bg-[#090910] text-[#64748b]",
+    };
+  })();
+
   return (
     <div className="min-h-screen bg-zinc-50 text-zinc-900 dark:bg-black dark:text-zinc-100">
       <main className="mx-auto max-w-2xl px-5 py-12">
@@ -192,8 +223,18 @@ export default async function SignalPage() {
           <PushSubscribe />
         </div>
 
+        {/* 今日の結論 */}
+        <div className={`mt-5 rounded-xl border px-5 py-4 ${conclusion.cls}`}>
+          <p className="font-mono text-[9px] uppercase tracking-[0.25em] opacity-50 mb-1.5">
+            今日の結論
+          </p>
+          <p className="text-base font-semibold leading-snug">
+            {conclusion.text}
+          </p>
+        </div>
+
         {/* メインステータス */}
-        <div className={`mt-6 rounded-2xl border p-5 ${st.color}`}>
+        <div className={`mt-4 rounded-2xl border p-5 ${st.color}`}>
           <p className="text-xl font-semibold">{st.label}</p>
           <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-400">{st.sub}</p>
           <p className={`mt-3 text-sm font-medium ${isActive ? "text-emerald-700 dark:text-emerald-400" : "text-amber-700 dark:text-amber-400"}`}>
