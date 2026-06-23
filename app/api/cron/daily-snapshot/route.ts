@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase";
 import { fetchMarketSnapshot, fetchSP500History } from "@/lib/market-fetch";
+import { fetchHeadlines } from "@/lib/news-fetch";
+import { analyzeNews } from "@/lib/news-analyze";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -135,6 +137,39 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // ──────────────────────────────────────────────
+  // 5. ニュース取得 → Claude 分析 → news_daily に保存
+  // ──────────────────────────────────────────────
+  let newsResult: { sentiment_score: number; crisis_relevance: number } | null = null;
+  try {
+    const headlines = await fetchHeadlines();
+    const analysis = await analyzeNews(headlines);
+    if (analysis && headlines.length > 0) {
+      const { error: newsErr } = await db.from("news_daily").upsert(
+        {
+          date: snapshot.date,
+          headlines: headlines.map((h) => ({ title: h.title, source: h.source })),
+          sentiment_score: analysis.sentiment_score,
+          crisis_relevance: analysis.crisis_relevance,
+          fed_tone: analysis.fed_tone,
+          main_topics: analysis.main_topics,
+          notable_events: analysis.notable_events,
+          raw_claude_output: analysis,
+          model_used: analysis.model_used,
+        },
+        { onConflict: "date" }
+      );
+      if (newsErr) {
+        console.error("[cron] news_daily upsert error:", newsErr.message);
+      } else {
+        newsResult = { sentiment_score: analysis.sentiment_score, crisis_relevance: analysis.crisis_relevance };
+        console.log(`[cron] news: sentiment=${analysis.sentiment_score} crisis=${analysis.crisis_relevance} fed=${analysis.fed_tone}`);
+      }
+    }
+  } catch (e) {
+    console.error("[cron] news analysis failed:", e instanceof Error ? e.message : String(e));
+  }
+
   console.log(
     `[cron] ${snapshot.date} done. tier=${snapshot.signal_tier} crs=${snapshot.crs_score} fired=[${fired.join(",")}]`
   );
@@ -147,5 +182,6 @@ export async function GET(req: NextRequest) {
     phi2_active: snapshot.phi2_active,
     rsi25_crossunder: snapshot.rsi25_crossunder,
     fired,
+    news: newsResult,
   });
 }
