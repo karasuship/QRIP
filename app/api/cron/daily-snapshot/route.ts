@@ -3,6 +3,7 @@ import { getSupabaseServer } from "@/lib/supabase";
 import { fetchMarketSnapshot, fetchSP500History } from "@/lib/market-fetch";
 import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
+import { fetchSocialData } from "@/lib/social-fetch";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -138,7 +139,18 @@ export async function GET(req: NextRequest) {
   }
 
   // ──────────────────────────────────────────────
-  // 5. ニュース取得 → Claude 分析 → news_daily に保存
+  // 5. SNS センチメント取得 → market_daily に追記
+  // ──────────────────────────────────────────────
+  try {
+    const social = await fetchSocialData();
+    await db.from("market_daily").update(social).eq("date", snapshot.date);
+    console.log(`[cron] social: st_bullish=${social.st_spy_bullish_pct?.toFixed(2)} wsb_mentions=${social.reddit_wsb_mentions}`);
+  } catch (e) {
+    console.error("[cron] social fetch failed:", e instanceof Error ? e.message : String(e));
+  }
+
+  // ──────────────────────────────────────────────
+  // 6. ニュース取得 → Claude 分析 → news_daily に保存
   // ──────────────────────────────────────────────
   let newsResult: { sentiment_score: number; crisis_relevance: number } | null = null;
   try {
