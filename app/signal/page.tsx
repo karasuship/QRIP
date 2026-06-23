@@ -1,6 +1,7 @@
 import { fetchSignal } from "@/lib/signal";
 import type { Metadata } from "next";
 import Link from "next/link";
+import LiveMetrics from "@/app/components/LiveMetrics";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -201,59 +202,9 @@ export default async function SignalPage() {
           </div>
         </section>
 
-        {/* メトリクス */}
-        <div className="mt-4 grid grid-cols-3 gap-3">
-          <MetricCard
-            label="SP500"
-            value={price.toLocaleString("en-US", { maximumFractionDigits: 2 })}
-            sub={`ATH ${ath >= price * 0.9999 ? "更新中" : ath.toLocaleString("en-US", { maximumFractionDigits: 0 })}`}
-          />
-          <MetricCard
-            label="ATH 乖離"
-            value={pct(athDd)}
-            sub="≤ −10% で phi2 圏内"
-            warn={athDd <= -0.1 && !phi2Active}
-            highlight={phi2Active}
-          />
-          <MetricCard
-            label="ATH からの日数"
-            value={`${ageAth}日`}
-            sub={ageAthOk ? "フィルタ OK" : "除外ゾーン [91-252]"}
-            warn={!ageAthOk}
-          />
-          <MetricCard
-            label="vol20（年率）"
-            value={vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—"}
-            sub="> 25% で条件達成"
-            highlight={vol20 !== null && vol20 > 0.25}
-          />
-          <MetricCard
-            label="当日リターン"
-            value={dayRet !== null ? pct(dayRet) : "—"}
-            sub="≤ −2% で条件達成"
-            highlight={dayRet !== null && dayRet <= -0.02}
-          />
-          <MetricCard
-            label="RSI14"
-            value={rsi14 !== null ? rsi14.toFixed(1) : "—"}
-            sub={
-              rsi25Crossunder
-                ? "< 25 下抜け（シグナル）"
-                : rsi25Active
-                  ? "< 25 継続中"
-                  : "通常域（> 25）"
-            }
-            warn={rsi25Active && !phi2Active}
-            highlight={rsi25Active && phi2Active}
-          />
-          {vix !== null && (
-            <MetricCard
-              label="VIX"
-              value={vix.toFixed(1)}
-              sub={vix > 30 ? "CRS C1 達成（>30）" : "通常域（≤ 30）"}
-              warn={vix > 30}
-            />
-          )}
+        {/* メトリクス（60秒ライブ更新） */}
+        <div className="mt-4">
+          <LiveMetrics initial={signal} />
         </div>
 
         {/* phi2 v3 条件チェックリスト */}
