@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { sp500PriceLimiter, getClientIP, rateLimitHeaders } from "@/lib/ratelimit";
 
 // Yahoo Finance から指定日付近辺の SP500 終値を取得する
 export async function GET(req: NextRequest) {
+  if (sp500PriceLimiter) {
+    const ip = getClientIP(req);
+    const { success, remaining, reset } = await sp500PriceLimiter.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests" },
+        { status: 429, headers: rateLimitHeaders(remaining, reset) }
+      );
+    }
+  }
+
   const { searchParams } = new URL(req.url);
   const dateStr = searchParams.get("date"); // YYYY-MM-DD
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { newsExpandLimiter, getClientIP, rateLimitHeaders } from "@/lib/ratelimit";
 
 export const runtime = "nodejs";
 
@@ -15,30 +16,62 @@ const ALLOWED_ORIGINS = [
   "http://localhost:3000",
 ];
 
-function isAllowedOrigin(req: NextRequest): boolean {
-  const origin  = req.headers.get("origin")  ?? "";
-  const referer = req.headers.get("referer") ?? "";
-  return ALLOWED_ORIGINS.some(
-    (o) => origin.startsWith(o) || referer.startsWith(o)
-  );
+function getAllowedOrigin(req: NextRequest): string | null {
+  const origin = req.headers.get("origin") ?? "";
+  return ALLOWED_ORIGINS.includes(origin) ? origin : null;
+}
+
+function corsHeaders(origin: string): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin":  origin,
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Vary": "Origin",
+  };
+}
+
+// CORS preflight
+export async function OPTIONS(req: NextRequest) {
+  const origin = getAllowedOrigin(req);
+  if (!origin) return new NextResponse(null, { status: 403 });
+  return new NextResponse(null, { status: 204, headers: corsHeaders(origin) });
 }
 
 export async function POST(req: NextRequest): Promise<NextResponse<ExpandResult | { error: string }>> {
-  if (!isAllowedOrigin(req)) {
+  // ── CORS ──
+  const origin = getAllowedOrigin(req);
+  if (!origin) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+  const headers = corsHeaders(origin);
+
+  // ── レートリミット（Upstash Redis が設定済みの場合のみ） ──
+  if (newsExpandLimiter) {
+    const ip = getClientIP(req);
+    const { success, remaining, reset } = await newsExpandLimiter.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many requests. Please wait a few minutes." },
+        { status: 429, headers: { ...headers, ...rateLimitHeaders(remaining, reset) } }
+      );
+    }
   }
 
   try {
     const body = await req.json();
-    // 入力長を制限してプロンプトインジェクションの影響を抑える
+    // 入力長を制限してプロンプトインジェクションの影響範囲を抑える
     const title       = String(body.title       ?? "").slice(0, 200);
     const description = String(body.description ?? "").slice(0, 300);
     const source      = String(body.source      ?? "").slice(0, 80);
 
-    if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
+    if (!title) {
+      return NextResponse.json({ error: "title required" }, { status: 400, headers });
+    }
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "service unavailable" }, { status: 503 });
+    if (!apiKey) {
+      return NextResponse.json({ error: "service unavailable" }, { status: 503, headers });
+    }
 
     const client = new Anthropic({ apiKey });
     const msg = await client.messages.create({
@@ -63,17 +96,25 @@ export async function POST(req: NextRequest): Promise<NextResponse<ExpandResult 
     const text = msg.content[0].type === "text" ? msg.content[0].text : "";
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
-      return NextResponse.json({ deep_analysis: text, sp500_direction: "neutral", key_numbers: [], watch_next: "" });
+      return NextResponse.json(
+        { deep_analysis: text, sp500_direction: "neutral", key_numbers: [], watch_next: "" },
+        { headers }
+      );
     }
     const parsed = JSON.parse(match[0]);
     const VALID = new Set(["bullish", "bearish", "neutral"]);
-    return NextResponse.json({
-      deep_analysis: String(parsed.deep_analysis ?? "").slice(0, 400),
-      sp500_direction: VALID.has(parsed.sp500_direction) ? parsed.sp500_direction : "neutral",
-      key_numbers: Array.isArray(parsed.key_numbers) ? parsed.key_numbers.slice(0, 3).map(String) : [],
-      watch_next: String(parsed.watch_next ?? "").slice(0, 100),
-    });
+    return NextResponse.json(
+      {
+        deep_analysis:   String(parsed.deep_analysis   ?? "").slice(0, 400),
+        sp500_direction: VALID.has(parsed.sp500_direction) ? parsed.sp500_direction : "neutral",
+        key_numbers:     Array.isArray(parsed.key_numbers)
+                           ? parsed.key_numbers.slice(0, 3).map(String)
+                           : [],
+        watch_next:      String(parsed.watch_next ?? "").slice(0, 100),
+      },
+      { headers }
+    );
   } catch {
-    return NextResponse.json({ error: "analysis failed" }, { status: 500 });
+    return NextResponse.json({ error: "analysis failed" }, { status: 500, headers });
   }
 }
