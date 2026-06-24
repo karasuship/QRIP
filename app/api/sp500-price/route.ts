@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
     if (!bestDate) return NextResponse.json({ error: "no price found" }, { status: 502 });
 
     return NextResponse.json({ date: bestDate, price: Math.round(bestPrice * 100) / 100 });
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "internal error" }, { status: 500 });
   }
 }

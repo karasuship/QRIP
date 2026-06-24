@@ -10,11 +10,35 @@ export interface ExpandResult {
   watch_next: string;
 }
 
+const ALLOWED_ORIGINS = [
+  "https://qrip-eight.vercel.app",
+  "http://localhost:3000",
+];
+
+function isAllowedOrigin(req: NextRequest): boolean {
+  const origin  = req.headers.get("origin")  ?? "";
+  const referer = req.headers.get("referer") ?? "";
+  return ALLOWED_ORIGINS.some(
+    (o) => origin.startsWith(o) || referer.startsWith(o)
+  );
+}
+
 export async function POST(req: NextRequest): Promise<NextResponse<ExpandResult | { error: string }>> {
+  if (!isAllowedOrigin(req)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   try {
-    const { title, description, source } = await req.json();
+    const body = await req.json();
+    // 入力長を制限してプロンプトインジェクションの影響を抑える
+    const title       = String(body.title       ?? "").slice(0, 200);
+    const description = String(body.description ?? "").slice(0, 300);
+    const source      = String(body.source      ?? "").slice(0, 80);
+
+    if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
+
     const apiKey = process.env.ANTHROPIC_API_KEY;
-    if (!apiKey) return NextResponse.json({ error: "no key" }, { status: 500 });
+    if (!apiKey) return NextResponse.json({ error: "service unavailable" }, { status: 503 });
 
     const client = new Anthropic({ apiKey });
     const msg = await client.messages.create({

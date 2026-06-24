@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const data = await fetchSignal();
     return NextResponse.json(data);
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 502 });
+  } catch {
+    return NextResponse.json({ error: "signal fetch failed" }, { status: 502 });
   }
 }

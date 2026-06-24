@@ -19,8 +19,8 @@ export async function POST(req: NextRequest) {
     );
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "internal error" }, { status: 500 });
   }
 }
 
@@ -33,7 +33,7 @@ export async function DELETE(req: NextRequest) {
     await db.from("push_subscriptions").delete().eq("endpoint", endpoint);
 
     return NextResponse.json({ ok: true });
-  } catch (e) {
-    return NextResponse.json({ error: String(e) }, { status: 500 });
+  } catch {
+    return NextResponse.json({ error: "internal error" }, { status: 500 });
   }
 }
