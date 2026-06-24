@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
-import type { Headline } from "@/lib/news-fetch";
-import type { NewsAnalysis } from "@/lib/news-analyze";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のニュース",
@@ -12,166 +10,191 @@ export const metadata: Metadata = {
 
 export const revalidate = 1800;
 
-function SentimentBar({ score }: { score: number }) {
-  const pct = Math.round((score + 1) * 50); // -1〜+1 → 0〜100%
-  const color =
-    score >= 0.3 ? "bg-emerald-500" :
-    score <= -0.3 ? "bg-red-500" :
-    "bg-zinc-400";
-  const label =
-    score >= 0.5 ? "強気" :
-    score >= 0.2 ? "やや強気" :
-    score <= -0.5 ? "弱気" :
-    score <= -0.2 ? "やや弱気" :
-    "中立";
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs text-zinc-500">
-        <span>弱気 −1</span>
-        <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-          {score >= 0 ? "+" : ""}{score.toFixed(2)} {label}
-        </span>
-        <span>強気 +1</span>
-      </div>
-      <div className="relative h-2 w-full rounded-full bg-zinc-200 dark:bg-zinc-700">
-        <div
-          className={`absolute top-0 h-2 w-1 rounded-full ${color}`}
-          style={{ left: `calc(${pct}% - 2px)` }}
-        />
-        <div className="absolute top-0 left-1/2 h-2 w-px bg-zinc-400" />
-      </div>
-    </div>
-  );
+const TOPIC_LABELS: Record<string, { label: string; color: string }> = {
+  inflation:   { label: "インフレ",   color: "border-orange-400/40 bg-orange-400/[0.08] text-orange-300" },
+  recession:   { label: "景気後退",   color: "border-red-400/40 bg-red-400/[0.08] text-red-300" },
+  fed:         { label: "Fed",         color: "border-violet-400/40 bg-violet-400/[0.08] text-violet-300" },
+  geopolitics: { label: "地政学",     color: "border-amber-400/40 bg-amber-400/[0.08] text-amber-300" },
+  earnings:    { label: "決算",        color: "border-[#34d399]/40 bg-[#34d399]/[0.08] text-[#34d399]" },
+  tech:        { label: "テック",      color: "border-sky-400/40 bg-sky-400/[0.08] text-sky-300" },
+  energy:      { label: "エネルギー", color: "border-yellow-400/40 bg-yellow-400/[0.08] text-yellow-300" },
+  credit:      { label: "信用",        color: "border-pink-400/40 bg-pink-400/[0.08] text-pink-300" },
+  other:       { label: "その他",      color: "border-slate-400/40 bg-slate-400/[0.08] text-slate-300" },
+};
+
+const SOURCE_COLOR: Record<string, string> = {
+  Reuters:     "bg-[#38bdf8]/15 text-[#38bdf8]",
+  CNBC:        "bg-[#34d399]/15 text-[#34d399]",
+  MarketWatch: "bg-violet-400/15 text-violet-300",
+};
+
+function sentimentMeta(score: number) {
+  if (score >= 0.5)  return { label: "強気",      color: "text-[#34d399]",  glow: "glow-green",  bar: "from-[#34d399]" };
+  if (score >= 0.2)  return { label: "やや強気",  color: "text-[#34d399]",  glow: "glow-green",  bar: "from-[#34d399]" };
+  if (score <= -0.5) return { label: "弱気",      color: "text-[#f87171]",  glow: "glow-red",    bar: "from-[#f87171]" };
+  if (score <= -0.2) return { label: "やや弱気",  color: "text-[#f87171]",  glow: "glow-red",    bar: "from-[#f87171]" };
+  return { label: "中立", color: "text-slate-300", glow: "", bar: "from-slate-400" };
 }
 
-function CrisisDots({ score }: { score: number }) {
-  return (
-    <div className="flex items-center gap-1.5">
-      {[1, 2, 3, 4, 5].map((i) => (
-        <span
-          key={i}
-          className={`inline-block h-3 w-3 rounded-full ${
-            i <= score ? "bg-red-500" : "bg-zinc-200 dark:bg-zinc-700"
-          }`}
-        />
-      ))}
-      <span className="ml-1 text-sm text-zinc-500">{score} / 5</span>
-    </div>
-  );
-}
-
-function FedBadge({ tone }: { tone: string }) {
-  const config: Record<string, { label: string; cls: string }> = {
-    hawkish: { label: "タカ派（利上げ示唆）", cls: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300" },
-    dovish:  { label: "ハト派（利下げ示唆）", cls: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300" },
-    neutral: { label: "中立", cls: "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400" },
-    none:    { label: "Fed 言及なし", cls: "bg-zinc-100 text-zinc-400 dark:bg-zinc-800 dark:text-zinc-500" },
-  };
-  const c = config[tone] ?? config.none;
-  return (
-    <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium ${c.cls}`}>
-      Fed: {c.label}
-    </span>
-  );
-}
-
-const TOPIC_LABELS: Record<string, string> = {
-  inflation: "インフレ", recession: "景気後退", fed: "Fed",
-  geopolitics: "地政学", earnings: "決算", tech: "テック",
-  energy: "エネルギー", credit: "信用", other: "その他",
+const FED_CONFIG: Record<string, { label: string; color: string }> = {
+  hawkish: { label: "タカ派（利上げ示唆）", color: "border-red-400/40 bg-red-400/[0.08] text-red-300" },
+  dovish:  { label: "ハト派（利下げ示唆）", color: "border-[#34d399]/40 bg-[#34d399]/[0.08] text-[#34d399]" },
+  neutral: { label: "中立",                  color: "border-white/[0.12] bg-white/[0.06] text-slate-400" },
+  none:    { label: "Fed 言及なし",           color: "border-white/[0.09] bg-white/[0.04] text-slate-500" },
 };
 
 export default async function NewsPage() {
   const fetchedAt = new Date();
-  let headlines: Headline[] = [];
-  let analysis: NewsAnalysis | null = null;
+  let analysis = null;
   try {
-    headlines = await fetchHeadlines();
+    const headlines = await fetchHeadlines();
     analysis = await analyzeNews(headlines);
-  } catch {
-    // 取得失敗時は null のまま
-  }
+  } catch { /* silent */ }
+
+  const score = analysis?.sentiment_score ?? 0;
+  const meta = sentimentMeta(score);
+  const barPct = Math.round((score + 1) * 50);
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-8 space-y-6">
-      <Link href="/" className="text-sm text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300">
-        ← ホームに戻る
-      </Link>
+    <div className="min-h-screen">
+      <main className="mx-auto max-w-4xl px-6 py-12">
+        <Link href="/" className="font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors">
+          ← ホームにもどる
+        </Link>
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">今日のニュース</h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          {fetchedAt
-            ? `取得: ${fetchedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} · 30分キャッシュ`
-            : "Reuters · CNBC · MarketWatch（30分更新）"}
-        </p>
-      </div>
-
-      {!analysis ? (
-        <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-6 text-center text-zinc-500">
-          ニュース取得に失敗しました。しばらくしてから再読み込みしてください。
+        <div className="mt-6">
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">News / 今日のニュース</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#e8f4ff]">市場ニュース</h1>
+          <p className="mt-1 font-mono text-[10px] text-slate-500">
+            {fetchedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} 取得 · 30分キャッシュ · Reuters / CNBC / MarketWatch
+          </p>
         </div>
-      ) : (
-        <>
-          {/* センチメント */}
-          <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-5 space-y-4">
-            <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide">市場センチメント</h2>
-            <SentimentBar score={analysis.sentiment_score} />
 
-            <div className="flex flex-wrap gap-3 pt-1">
-              <div>
-                <p className="text-xs text-zinc-500 mb-1">危機関連度</p>
-                <CrisisDots score={analysis.crisis_relevance} />
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500 mb-1">Fed トーン</p>
-                <FedBadge tone={analysis.fed_tone} />
-              </div>
-            </div>
-
-            {analysis.main_topics.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {analysis.main_topics.map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-0.5 text-xs text-zinc-600 dark:text-zinc-400"
-                  >
-                    {TOPIC_LABELS[t] ?? t}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {analysis.notable_events && (
-              <p className="text-sm text-zinc-700 dark:text-zinc-300 border-l-2 border-zinc-300 dark:border-zinc-600 pl-3">
-                {analysis.notable_events}
-              </p>
-            )}
+        {!analysis ? (
+          <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 text-center text-slate-400 backdrop-blur-md">
+            ニュース取得に失敗しました。しばらくしてから再読み込みしてください。
           </div>
+        ) : (
+          <div className="mt-6 space-y-4">
 
-          {/* ヘッドライン */}
-          {headlines.length > 0 && (
-            <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800">
-              <div className="px-5 py-3">
-                <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide">ヘッドライン</h2>
+            {/* センチメント大表示 */}
+            <div className={`rounded-2xl border border-white/[0.12] bg-white/[0.06] p-6 backdrop-blur-md ${meta.glow}`}>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-4">市場センチメント</p>
+              <div className="flex items-end gap-4">
+                <span className={`font-mono text-6xl font-bold tabular-nums leading-none ${meta.color}`}>
+                  {score >= 0 ? "+" : ""}{score.toFixed(2)}
+                </span>
+                <span className={`mb-1 text-xl font-semibold ${meta.color}`}>{meta.label}</span>
               </div>
-              {headlines.map((h, i) => (
-                <div key={i} className="px-5 py-3 space-y-0.5">
-                  <p className="text-sm font-medium text-zinc-800 dark:text-zinc-200 leading-snug">{h.title}</p>
-                  {h.description && (
-                    <p className="text-xs text-zinc-500 leading-relaxed">{h.description}</p>
-                  )}
-                  <p className="text-xs text-zinc-400">{h.source}</p>
-                </div>
-              ))}
+              {/* グラデーションバー */}
+              <div className="mt-5 relative h-1.5 w-full rounded-full bg-gradient-to-r from-[#f87171] via-slate-500/40 to-[#34d399]">
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-4 w-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
+                  style={{ left: `${barPct}%` }}
+                />
+              </div>
+              <div className="mt-1.5 flex justify-between font-mono text-[10px] text-slate-600">
+                <span>弱気 −1</span><span>中立 0</span><span>強気 +1</span>
+              </div>
             </div>
-          )}
-        </>
-      )}
 
-      <p className="text-xs text-zinc-400 text-center">
-        ニュース: Reuters · CNBC · MarketWatch RSS。分析: Claude Haiku。これは投資助言ではありません。
-      </p>
+            {/* 危機関連度 / Fed / トピック */}
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {/* 危機関連度 */}
+              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">危機関連度</p>
+                <div className="flex items-center gap-2">
+                  {[1,2,3,4,5].map((i) => (
+                    <span
+                      key={i}
+                      className={`h-3 w-3 rounded-full transition-all ${
+                        i <= analysis.crisis_relevance
+                          ? i >= 4 ? "bg-[#f87171] shadow-[0_0_8px_rgba(248,113,113,0.6)]"
+                          : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                          : "bg-white/[0.10]"
+                      }`}
+                    />
+                  ))}
+                  <span className={`ml-1 font-mono text-sm font-bold ${
+                    analysis.crisis_relevance >= 4 ? "text-[#f87171]"
+                    : analysis.crisis_relevance >= 2 ? "text-amber-400"
+                    : "text-slate-500"
+                  }`}>{analysis.crisis_relevance}/5</span>
+                </div>
+              </div>
+
+              {/* Fed トーン */}
+              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">Fed トーン</p>
+                {(() => {
+                  const fed = FED_CONFIG[analysis.fed_tone] ?? FED_CONFIG.none;
+                  return (
+                    <span className={`inline-flex items-center rounded-xl border px-3 py-1 text-xs font-medium ${fed.color}`}>
+                      {fed.label}
+                    </span>
+                  );
+                })()}
+              </div>
+
+              {/* 主要トピック */}
+              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">主要トピック</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {analysis.main_topics.length > 0
+                    ? analysis.main_topics.map((t) => {
+                        const cfg = TOPIC_LABELS[t] ?? TOPIC_LABELS.other;
+                        return (
+                          <span key={t} className={`rounded-full border px-2 py-0.5 text-[10px] font-medium ${cfg.color}`}>
+                            {cfg.label}
+                          </span>
+                        );
+                      })
+                    : <span className="text-xs text-slate-500">—</span>
+                  }
+                </div>
+              </div>
+            </div>
+
+            {/* 特記事項 */}
+            {analysis.notable_events && (
+              <div className="rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.05] px-5 py-3.5 backdrop-blur-sm">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#38bdf8]/60 mb-1">特記事項</p>
+                <p className="text-sm leading-6 text-slate-300">{analysis.notable_events}</p>
+              </div>
+            )}
+
+            {/* ヘッドライン */}
+            {analysis.headlines_ja.length > 0 && (
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-2">ヘッドライン</p>
+                <div className="space-y-2">
+                  {analysis.headlines_ja.map((h, i) => (
+                    <div
+                      key={i}
+                      className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-5 py-4 backdrop-blur-sm"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-medium leading-snug text-[#e8f4ff]">{h.title}</p>
+                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium ${SOURCE_COLOR[h.source] ?? "bg-white/[0.06] text-slate-400"}`}>
+                          {h.source}
+                        </span>
+                      </div>
+                      {h.description && (
+                        <p className="mt-1.5 text-xs leading-5 text-slate-400">{h.description}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+
+        <p className="mt-8 font-mono text-[10px] leading-5 text-slate-600">
+          ニュース: Reuters · CNBC · MarketWatch RSS。翻訳・分析: Claude Haiku。これは投資助言ではありません。
+        </p>
+      </main>
     </div>
   );
 }
