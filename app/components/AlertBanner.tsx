@@ -70,7 +70,7 @@ export default function AlertBanner({ signal }: { signal: SignalData }) {
           <span className="font-mono text-xs font-semibold tracking-wide text-[#e8f4ff]">
             {cfg.label}
           </span>
-          <span className="hidden font-mono text-[10px] text-white/30 sm:block">
+          <span className="hidden font-mono text-[10px] text-slate-400 sm:block">
             ATH {pct(athDd)} · CRS {crs}/6
           </span>
         </div>

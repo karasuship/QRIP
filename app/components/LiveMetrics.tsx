@@ -38,7 +38,7 @@ function MetricTile({
     state === "active"  ? "border-[#34d399]/35 glow-green" :
     state === "warn"    ? "border-amber-400/35 glow-amber" :
     state === "dim"     ? "border-white/[0.04]"             :
-    "border-white/[0.08]";
+    "border-white/[0.18]";
 
   const valueCls =
     flash === "up"      ? "text-glow-green" :
@@ -49,12 +49,12 @@ function MetricTile({
     "text-[#e8f4ff]";
 
   return (
-    <div className={`rounded-2xl border bg-white/[0.05] p-3.5 backdrop-blur-md transition-all duration-300 ${borderCls}`}>
-      <p className="font-mono text-[9px] uppercase tracking-widest text-white/25">{label}</p>
+    <div className={`rounded-2xl border bg-white/[0.09] p-3.5 backdrop-blur-md transition-all duration-300 ${borderCls}`}>
+      <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">{label}</p>
       <p className={`mt-1 font-mono text-lg tabular-nums transition-colors duration-200 ${valueCls}`}>
         {value}
       </p>
-      <p className="mt-0.5 text-[10px] text-white/25">{sub}</p>
+      <p className="mt-0.5 text-[10px] text-slate-500">{sub}</p>
     </div>
   );
 }
@@ -86,8 +86,8 @@ export default function LiveMetrics({ initial }: { initial: SignalData }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-white/25">ライブ指標</p>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">ライブ指標</p>
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-slate-500">
           {loading && <span className="h-1 w-1 rounded-full bg-[#38bdf8] animate-pulse" />}
           {lastUpdate.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </span>

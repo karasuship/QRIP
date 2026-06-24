@@ -23,7 +23,7 @@ export default function Home() {
   return (
     <div className="min-h-screen">
       {/* Hero */}
-      <div className="relative border-b border-white/[0.06]">
+      <div className="relative border-b border-white/[0.14]">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-400/[0.07] via-sky-400/[0.02] to-transparent" />
         <main className="relative mx-auto max-w-4xl px-6 py-20">
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#38bdf8]/70">
@@ -31,9 +31,9 @@ export default function Home() {
           </p>
           <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#e8f4ff] sm:text-4xl">
             いま、売るべきか？
-            <span className="block text-slate-500">過去はこうだった。</span>
+            <span className="block text-slate-400">過去はこうだった。</span>
           </h1>
-          <p className="mt-4 max-w-lg text-sm leading-7 text-slate-500">
+          <p className="mt-4 max-w-lg text-sm leading-7 text-slate-400">
             相場が下げると最初の判断を忘れて投げ売りしたくなる。でも「どこまで下がる」は誰にも当てられない。
             このツールは予測しない。
             <span className="text-slate-400">「過去、同じような局面はどうなったか」という事実だけ</span>を見せる。
@@ -47,7 +47,7 @@ export default function Home() {
             </Link>
             <Link
               href="/learn"
-              className="rounded-xl border border-white/[0.08] bg-white/[0.04] px-5 py-2.5 font-mono text-xs text-slate-400 hover:text-slate-300 hover:bg-white/[0.06] transition-colors tracking-wide backdrop-blur-sm"
+              className="rounded-xl border border-white/[0.18] bg-white/[0.07] px-5 py-2.5 font-mono text-xs text-slate-400 hover:text-slate-300 hover:bg-white/[0.06] transition-colors tracking-wide backdrop-blur-sm"
             >
               検証データを読む
             </Link>
@@ -58,7 +58,7 @@ export default function Home() {
       <main className="mx-auto max-w-4xl px-6 py-10">
         {/* 下落幅セレクタ */}
         <section>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/25">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
             Step 1 — 高値からの下落幅
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -69,7 +69,7 @@ export default function Home() {
                 className={`rounded-xl border px-4 py-1.5 font-mono text-xs transition-all backdrop-blur-sm ${
                   depth === d
                     ? "border-[#38bdf8]/40 bg-[#38bdf8]/10 text-[#38bdf8]"
-                    : "border-white/[0.08] bg-white/[0.03] text-slate-500 hover:border-white/[0.14] hover:text-slate-300"
+                    : "border-white/[0.18] bg-white/[0.06] text-slate-400 hover:border-white/[0.14] hover:text-slate-300"
                 }`}
               >
                 {d}
@@ -77,7 +77,7 @@ export default function Home() {
             ))}
           </div>
 
-          <p className="mt-5 font-mono text-[10px] uppercase tracking-widest text-white/25">
+          <p className="mt-5 font-mono text-[10px] uppercase tracking-widest text-slate-400">
             Step 2 — 下がり方
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
@@ -88,7 +88,7 @@ export default function Home() {
                 className={`rounded-xl border px-4 py-1.5 font-mono text-xs transition-all backdrop-blur-sm ${
                   speed === s.key
                     ? "border-[#38bdf8]/40 bg-[#38bdf8]/10 text-[#38bdf8]"
-                    : "border-white/[0.08] bg-white/[0.03] text-slate-500 hover:border-white/[0.14] hover:text-slate-300"
+                    : "border-white/[0.18] bg-white/[0.06] text-slate-400 hover:border-white/[0.14] hover:text-slate-300"
                 }`}
               >
                 {s.label}
@@ -98,11 +98,11 @@ export default function Home() {
         </section>
 
         {/* 結果カード */}
-        <section className="mt-6 rounded-2xl border border-white/[0.08] bg-white/[0.05] p-6 backdrop-blur-md">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/25">
+        <section className="mt-6 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-6 backdrop-blur-md">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
             {behavior.source} — 過去の分布
           </p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-400">
             高値から<span className="text-slate-300 font-medium">{depth}</span>・
             <span className="text-slate-300 font-medium">{speed === "fast" ? "急落" : "じわじわ"}</span>
             の局面から——
@@ -112,20 +112,20 @@ export default function Home() {
             <>
               <div className="mt-4 grid grid-cols-3 gap-3">
                 {cell!.horizons.map((h) => (
-                  <div key={h.h} className="rounded-2xl border border-white/[0.06] bg-white/[0.04] p-4 text-center backdrop-blur-sm">
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-white/25">{h.h}後</p>
+                  <div key={h.h} className="rounded-2xl border border-white/[0.14] bg-white/[0.07] p-4 text-center backdrop-blur-sm">
+                    <p className="font-mono text-[9px] uppercase tracking-widest text-slate-400">{h.h}後</p>
                     <p className={`mt-1.5 font-mono text-2xl font-bold ${
                       h.median !== null && h.median > 0 ? "text-[#34d399]" : "text-[#f87171]"
                     }`}>
                       {pct(h.median)}
                     </p>
                     <p className="text-[10px] text-white/20">中央値</p>
-                    <p className="mt-1.5 font-mono text-xs text-slate-500">勝率 {h.win}%</p>
+                    <p className="mt-1.5 font-mono text-xs text-slate-400">勝率 {h.win}%</p>
                     <p className="font-mono text-[10px] text-[#f87171]/60">最悪 {pct(h.worst)}</p>
                   </div>
                 ))}
               </div>
-              <p className="mt-5 text-sm leading-7 text-slate-500">
+              <p className="mt-5 text-sm leading-7 text-slate-400">
                 最悪{" "}
                 <span className="font-mono text-[#f87171]">{pct(cell!.horizons[0].worst)}</span>
                 {" "}まで落ちた事例もある。でも 1 年持てば中央値{" "}
@@ -147,19 +147,19 @@ export default function Home() {
 
         {/* 下落確率表 */}
         <section className="mt-8">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/25">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
             大きな下落はどれくらい来るか
           </p>
           <p className="mt-1 text-xs text-slate-600">
             「待っていれば安く買える」は幻想。大きな下落は滅多に来ない。
           </p>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm">
+          <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
             <table className="w-full text-center text-xs">
-              <thead className="border-b border-white/[0.06] bg-white/[0.03]">
+              <thead className="border-b border-white/[0.14] bg-white/[0.06]">
                 <tr>
-                  <th className="py-2.5 font-mono text-[9px] uppercase tracking-widest text-white/25">下落幅</th>
+                  <th className="py-2.5 font-mono text-[9px] uppercase tracking-widest text-slate-400">下落幅</th>
                   {behavior.dropProb[0].within.map((w) => (
-                    <th key={w.days} className="py-2.5 font-mono text-[9px] uppercase tracking-widest text-white/25">
+                    <th key={w.days} className="py-2.5 font-mono text-[9px] uppercase tracking-widest text-slate-400">
                       {w.days}以内
                     </th>
                   ))}
@@ -167,10 +167,10 @@ export default function Home() {
               </thead>
               <tbody>
                 {behavior.dropProb.map((row) => (
-                  <tr key={row.x} className="border-t border-white/[0.04]">
+                  <tr key={row.x} className="border-t border-white/[0.10]">
                     <td className="py-2.5 font-mono text-xs text-slate-400">{row.x}下落</td>
                     {row.within.map((w) => (
-                      <td key={w.days} className="py-2.5 font-mono text-xs text-slate-500">
+                      <td key={w.days} className="py-2.5 font-mono text-xs text-slate-400">
                         {w.p}%
                       </td>
                     ))}
@@ -195,7 +195,7 @@ export default function Home() {
           </Link>
         </section>
 
-        <p className="mt-8 font-mono text-[10px] leading-5 text-white/15">
+        <p className="mt-8 font-mono text-[10px] leading-5 text-slate-400">
           {behavior.note} これは投資助言ではなく、過去データの分布提示です。
         </p>
       </main>

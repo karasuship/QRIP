@@ -23,7 +23,7 @@ function CRSDot({ active, label }: { active: boolean; label: string }) {
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wide ${
         active
           ? "border-red-400/30 bg-red-400/10 text-red-400"
-          : "border-white/[0.08] bg-white/[0.03] text-white/25"
+          : "border-white/[0.18] bg-white/[0.06] text-white/25"
       }`}
     >
       <span className={`inline-block h-1.5 w-1.5 rounded-full ${active ? "bg-red-400" : "bg-white/20"}`} />
@@ -44,7 +44,7 @@ function SignalBadge({
     ? quality === "high" ? "border-[#34d399]/40 bg-[#34d399]/[0.08]"
     : quality === "mid"  ? "border-amber-400/40 bg-amber-400/[0.08]"
     : "border-sky-400/40 bg-sky-400/[0.08]"
-    : "border-white/[0.07] bg-white/[0.03]";
+    : "border-white/[0.15] bg-white/[0.06]";
 
   const dot = active
     ? quality === "high" ? "bg-[#34d399]"
@@ -84,11 +84,11 @@ export default async function SignalPage() {
     return (
       <div className="min-h-screen">
         <main className="mx-auto max-w-4xl px-6 py-12">
-          <Link href="/" className="font-mono text-xs text-slate-500 hover:text-slate-300 transition-colors">
+          <Link href="/" className="font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors">
             ← ホームにもどる
           </Link>
           <p className="mt-8 text-sm text-red-400">データ取得に失敗しました。しばらくしてから再読み込みしてください。</p>
-          {error && <p className="mt-2 font-mono text-xs text-white/20">{error}</p>}
+          {error && <p className="mt-2 font-mono text-xs text-slate-400">{error}</p>}
         </main>
       </div>
     );
@@ -148,8 +148,8 @@ export default async function SignalPage() {
       label: "待機中 — 発動圏外",
       sub: `ATH ${pct(athDd)} — phi2 圏（−10%）に達していない`,
       detail: "通常の市場状態。定期積立（DCA）を継続。",
-      border: "border-white/[0.07] bg-white/[0.03]",
-      detailColor: "text-slate-500",
+      border: "border-white/[0.15] bg-white/[0.06]",
+      detailColor: "text-slate-400",
     },
   };
 
@@ -161,43 +161,43 @@ export default async function SignalPage() {
     if (hygSignal)               return { text: "⚡ HYG-8% シグナル発動中。クレジット市場の恐怖を検知。30年統計 TEST Z=+9.42。", cls: "border-amber-400/30 bg-amber-400/[0.08] text-amber-400" };
     if (b4Active)                return { text: "⚡ B4 追加タイミング。phi2 発動から7営業日、ATH-10% 圏内が継続しています。", cls: "border-sky-400/30 bg-sky-400/[0.08] text-sky-400" };
     if (signalTier === "RSI25")  return { text: "RSI<25 シグナル。短期反発の根拠は薄いが、長期保有前提の追加投入なら合理的。", cls: "border-amber-400/20 bg-amber-400/[0.05] text-amber-400/80" };
-    if (signalTier === "NEAR")   return { text: "発動圏内に入っています。条件はまだ揃っていません。引き続き定期積立を続けてください。", cls: "border-white/[0.08] bg-white/[0.04] text-slate-400" };
-    return { text: "今日は通常状態です。定期積立（DCA）を続けてください。", cls: "border-white/[0.06] bg-white/[0.03] text-slate-500" };
+    if (signalTier === "NEAR")   return { text: "発動圏内に入っています。条件はまだ揃っていません。引き続き定期積立を続けてください。", cls: "border-white/[0.18] bg-white/[0.07] text-slate-400" };
+    return { text: "今日は通常状態です。定期積立（DCA）を続けてください。", cls: "border-white/[0.13] bg-white/[0.06] text-slate-400" };
   })();
 
   return (
     <div className="min-h-screen">
       <main className="mx-auto max-w-4xl px-6 py-12">
-        <Link href="/" className="font-mono text-xs text-slate-500 hover:text-slate-300 transition-colors">
+        <Link href="/" className="font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors">
           ← ホームにもどる
         </Link>
 
         <div className="mt-6 flex items-start justify-between gap-4">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/20">Signal / リアルタイム</p>
+            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-400">Signal / リアルタイム</p>
             <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#e8f4ff]">今日のシグナル状態</h1>
-            <p className="mt-1 font-mono text-[10px] text-white/20">{date} · 15分キャッシュ · Yahoo Finance ^GSPC</p>
+            <p className="mt-1 font-mono text-[10px] text-slate-400">{date} · 15分キャッシュ · Yahoo Finance ^GSPC</p>
           </div>
           <PushSubscribe />
         </div>
 
         {/* 今日の結論 */}
         <div className={`mt-5 rounded-2xl border px-5 py-4 backdrop-blur-sm ${conclusion.cls}`}>
-          <p className="font-mono text-[9px] uppercase tracking-[0.25em] opacity-40 mb-1.5">今日の結論</p>
+          <p className="font-mono text-[9px] uppercase tracking-[0.25em] mb-1.5 text-slate-400">今日の結論</p>
           <p className="text-base font-semibold leading-snug">{conclusion.text}</p>
         </div>
 
         {/* メインステータス */}
         <div className={`mt-4 rounded-2xl border p-5 backdrop-blur-sm ${st.border}`}>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/20 mb-2">シグナル状態</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-2">シグナル状態</p>
           <p className="text-xl font-semibold text-[#e8f4ff]">{st.label}</p>
-          <p className="mt-1 font-mono text-xs text-slate-500">{st.sub}</p>
+          <p className="mt-1 font-mono text-xs text-slate-400">{st.sub}</p>
           <p className={`mt-3 text-sm font-medium ${st.detailColor}`}>{st.detail}</p>
         </div>
 
         {/* 全シグナル一覧 */}
         <section className="mt-5">
-          <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-white/20">全シグナル状態（4体制 v3）</p>
+          <p className="mb-2 font-mono text-[10px] uppercase tracking-widest text-slate-400">全シグナル状態（4体制 v3）</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             <SignalBadge active={phi2Active}     label="phi2 v3（主力）"            sub={`ATH-10% · 当日-2% · vol>25% · CRS≥2 · age非L字 | TEST Z=+8.65`} quality="high" />
             <SignalBadge active={rsi25Crossunder} label="RSI<25 クロスアンダー"     sub={`RSI14 = ${rsi14 !== null ? rsi14.toFixed(1) : "—"} | TEST Z=+3.92`} quality="mid" />
@@ -209,18 +209,18 @@ export default async function SignalPage() {
         </section>
 
         {/* CRS スコア */}
-        <section className="mt-5 rounded-2xl border border-white/[0.08] bg-white/[0.05] p-4 backdrop-blur-md">
+        <section className="mt-5 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
           <div className="flex items-center justify-between">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">CRS（Crisis Recovery Score）</p>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">CRS（Crisis Recovery Score）</p>
             <span className={`rounded-full px-3 py-1 font-mono text-sm font-bold ${
               crs >= 4 ? "bg-red-400/15 text-red-400"
               : crs >= 2 ? "bg-amber-400/15 text-amber-400"
-              : "bg-white/[0.06] text-slate-500"
+              : "bg-white/[0.06] text-slate-400"
             }`}>
               {crs} / 6
             </span>
           </div>
-          <p className="mt-1 mb-3 font-mono text-[10px] text-white/20">
+          <p className="mt-1 mb-3 font-mono text-[10px] text-slate-400">
             ≥ 2 でシグナル有効 · ≥ 4 で高品質 · 5-6 で 2x 投入検討
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -239,8 +239,8 @@ export default async function SignalPage() {
         </div>
 
         {/* phi2 条件チェック */}
-        <section className="mt-4 rounded-2xl border border-white/[0.08] bg-white/[0.05] p-4 backdrop-blur-md">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-white/20">phi2 v3 発動条件</p>
+        <section className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
+          <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-slate-400">phi2 v3 発動条件</p>
           {(
             [
               { label: "ATH 乖離 ≤ −10%",    ok: athDd <= -0.1,                              val: pct(athDd) },
@@ -250,38 +250,38 @@ export default async function SignalPage() {
               { label: "CRS ≥ 2",             ok: crs >= 2,                                   val: `${crs}/6` },
             ] as { label: string; ok: boolean; val: string }[]
           ).map(({ label, ok, val }) => (
-            <div key={label} className="flex items-center justify-between border-b border-white/[0.05] py-2 last:border-0">
+            <div key={label} className="flex items-center justify-between border-b border-white/[0.12] py-2 last:border-0">
               <span className="flex items-center gap-2 text-sm">
-                <span className={`font-mono ${ok ? "text-[#34d399]" : "text-white/20"}`}>{ok ? "✓" : "○"}</span>
+                <span className={`font-mono ${ok ? "text-[#34d399]" : "text-slate-400"}`}>{ok ? "✓" : "○"}</span>
                 <span className={ok ? "text-[#e8f4ff]" : "text-slate-600"}>{label}</span>
               </span>
-              <span className={`font-mono text-sm ${ok ? "text-[#34d399]" : "text-white/20"}`}>{val}</span>
+              <span className={`font-mono text-sm ${ok ? "text-[#34d399]" : "text-slate-400"}`}>{val}</span>
             </div>
           ))}
         </section>
 
         {/* 過去類似事例 */}
         {pastEpisodes.length > 0 && (
-          <section className="mt-8 border-t border-white/[0.05] pt-6">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">過去2年の phi2 類似事例</p>
-            <p className="mt-1 mb-3 text-xs text-slate-500">ATH−10% · 当日−2% · vol&gt;25% · age非L字を満たした日 — その後のリターン（実績）</p>
-            <div className="overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm">
+          <section className="mt-8 border-t border-white/[0.12] pt-6">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">過去2年の phi2 類似事例</p>
+            <p className="mt-1 mb-3 text-xs text-slate-400">ATH−10% · 当日−2% · vol&gt;25% · age非L字を満たした日 — その後のリターン（実績）</p>
+            <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
               <table className="w-full text-sm">
-                <thead className="border-b border-white/[0.06] bg-white/[0.03]">
+                <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                   <tr>
                     {["日付","当日","ATH 乖離","今日まで","経過"].map(h => (
-                      <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-white/20 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
+                      <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {pastEpisodes.slice(0, 10).map((ep) => (
-                    <tr key={ep.date} className="border-t border-white/[0.04]">
+                    <tr key={ep.date} className="border-t border-white/[0.09]">
                       <td className="px-3 py-2 font-mono text-xs text-slate-400">{ep.date}</td>
                       <td className="px-3 py-2 text-right font-mono text-xs text-[#f87171]">{pct(ep.dayRet)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-xs text-slate-500">{pct(ep.athDd)}</td>
+                      <td className="px-3 py-2 text-right font-mono text-xs text-slate-400">{pct(ep.athDd)}</td>
                       <td className={`px-3 py-2 text-right font-mono text-xs font-semibold ${ep.retToDate > 0 ? "text-[#34d399]" : "text-[#f87171]"}`}>{pct(ep.retToDate)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-[10px] text-white/20">
+                      <td className="px-3 py-2 text-right font-mono text-[10px] text-slate-400">
                         {ep.daysAgo < 30 ? `${ep.daysAgo}日前` : `${Math.round(ep.daysAgo / 21)}ヶ月前`}
                       </td>
                     </tr>
@@ -289,13 +289,13 @@ export default async function SignalPage() {
                 </tbody>
               </table>
             </div>
-            <p className="mt-2 font-mono text-[10px] text-white/20">
+            <p className="mt-2 font-mono text-[10px] text-slate-400">
               平均リターン:{" "}
               <span className={`font-semibold ${pastEpisodes.slice(0,10).reduce((a,e)=>a+e.retToDate,0)/Math.min(pastEpisodes.length,10)>0?"text-[#34d399]":"text-[#f87171]"}`}>
                 {pct(pastEpisodes.slice(0,10).reduce((a,e)=>a+e.retToDate,0)/Math.min(pastEpisodes.length,10))}
               </span>
               {" · "}勝率:{" "}
-              <span className="font-semibold text-slate-500">
+              <span className="font-semibold text-slate-400">
                 {Math.round(pastEpisodes.slice(0,10).filter(e=>e.retToDate>0).length/Math.min(pastEpisodes.length,10)*100)}%
               </span>
             </p>
@@ -303,34 +303,34 @@ export default async function SignalPage() {
         )}
 
         {/* 過去30日候補日 */}
-        <section className="mt-8 border-t border-white/[0.05] pt-6">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">過去 30 日の phi2 v3 候補日</p>
-          <p className="mt-1 mb-3 text-xs text-slate-500">ATH −10% · 当日 −2% · vol &gt; 25% を満たした日</p>
+        <section className="mt-8 border-t border-white/[0.12] pt-6">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">過去 30 日の phi2 v3 候補日</p>
+          <p className="mt-1 mb-3 text-xs text-slate-400">ATH −10% · 当日 −2% · vol &gt; 25% を満たした日</p>
           {history.length === 0 ? (
-            <p className="font-mono text-xs text-white/20">過去 30 日以内に phi2 候補日なし</p>
+            <p className="font-mono text-xs text-slate-400">過去 30 日以内に phi2 候補日なし</p>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm">
+            <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
               <table className="w-full text-sm">
-                <thead className="border-b border-white/[0.06] bg-white/[0.03]">
+                <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                   <tr>
                     {["日付","当日","ATH 乖離","CRS","phi2 v3"].map(h => (
-                      <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-white/20 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
+                      <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {history.map((h) => (
-                    <tr key={h.date} className="border-t border-white/[0.04]">
+                    <tr key={h.date} className="border-t border-white/[0.09]">
                       <td className="px-3 py-2 font-mono text-xs text-slate-400">{h.date}</td>
                       <td className="px-3 py-2 text-right font-mono text-xs text-[#f87171]">{pct(h.dayRet)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-xs text-slate-500">{pct(h.athDd)}</td>
+                      <td className="px-3 py-2 text-right font-mono text-xs text-slate-400">{pct(h.athDd)}</td>
                       <td className="px-3 py-2 text-right font-mono text-xs">
                         {h.crs !== null
-                          ? <span className={h.crs >= 2 ? "text-amber-400" : "text-white/20"}>{h.crs}/6</span>
-                          : <span className="text-white/20">—</span>}
+                          ? <span className={h.crs >= 2 ? "text-amber-400" : "text-slate-400"}>{h.crs}/6</span>
+                          : <span className="text-slate-400">—</span>}
                       </td>
                       <td className="px-3 py-2 text-right font-mono text-xs">
-                        {h.phi2v3 ? <span className="text-[#34d399]">✓</span> : <span className="text-white/20">○</span>}
+                        {h.phi2v3 ? <span className="text-[#34d399]">✓</span> : <span className="text-slate-400">○</span>}
                       </td>
                     </tr>
                   ))}
@@ -340,7 +340,7 @@ export default async function SignalPage() {
           )}
         </section>
 
-        <p className="mt-8 font-mono text-[10px] leading-6 text-white/15">
+        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
           データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。
           phi2 v3: decisions/0021（TEST Z=+8.65）· HYG-8%: decisions/0016（TEST Z=+9.42）· B4: decisions/0018（TEST Z=+8.29）。
           これは投資助言ではありません。

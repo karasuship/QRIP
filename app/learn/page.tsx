@@ -45,15 +45,15 @@ export default function Learn() {
   return (
     <div className="min-h-screen">
       <main className="mx-auto max-w-4xl px-6 py-12">
-        <Link href="/" className="font-mono text-xs text-slate-500 hover:text-slate-300 transition-colors">
+        <Link href="/" className="font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors">
           ← ホームにもどる
         </Link>
 
         {/* ヘッダ */}
         <div className="mt-6">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-white/20">Learn / 使い方と検証結果</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-400">Learn / 使い方と検証結果</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#e8f4ff]">QRIPの使い方</h1>
-          <p className="mt-2 text-sm leading-7 text-slate-500">
+          <p className="mt-2 text-sm leading-7 text-slate-400">
             このツールは相場を予測しない。「過去、同じ条件の局面ではどうなったか」という事実を渡すだけ。
             数字の読み方と、その根拠となった検証を説明する。
           </p>
@@ -61,14 +61,14 @@ export default function Learn() {
 
         {/* 使い方 4ステップ */}
         <section className="mt-10">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">使い方</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">使い方</p>
           <div className="mt-3 space-y-2">
             {STEPS.map((s) => (
-              <div key={s.n} className="flex gap-4 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-4 backdrop-blur-sm">
+              <div key={s.n} className="flex gap-4 rounded-2xl border border-white/[0.18] bg-white/[0.07] p-4 backdrop-blur-sm">
                 <span className="w-7 shrink-0 pt-0.5 font-mono text-xl font-bold text-white/10">{s.n}</span>
                 <div>
                   <p className="text-sm font-semibold text-[#e8f4ff]">{s.title}</p>
-                  <p className="mt-1 text-xs leading-6 text-slate-500">{s.body}</p>
+                  <p className="mt-1 text-xs leading-6 text-slate-400">{s.body}</p>
                 </div>
               </div>
             ))}
@@ -77,20 +77,20 @@ export default function Learn() {
 
         {/* シグナルの読み方 */}
         <section className="mt-10">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">シグナルの読み方</p>
-          <p className="mt-1 mb-3 text-xs text-slate-500">4体制が独立して動く。いずれか発動で OR 条件。数値は30年バックテスト由来。</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">シグナルの読み方</p>
+          <p className="mt-1 mb-3 text-xs text-slate-400">4体制が独立して動く。いずれか発動で OR 条件。数値は30年バックテスト由来。</p>
           <div className="space-y-2">
             {SIGNALS.map((s) => (
               <div key={s.name} className={`rounded-2xl border p-4 backdrop-blur-sm ${s.border}`}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`h-2 w-2 rounded-full shrink-0 ${s.dot}`} />
                   <span className={`font-mono text-sm font-bold ${s.color}`}>{s.name}</span>
-                  <span className="ml-1 font-mono text-[9px] uppercase tracking-widest text-white/20">{s.quality}</span>
+                  <span className="ml-1 font-mono text-[9px] uppercase tracking-widest text-slate-400">{s.quality}</span>
                 </div>
-                <p className="text-xs text-slate-500 mb-2">{s.condition}</p>
+                <p className="text-xs text-slate-400 mb-2">{s.condition}</p>
                 <div className="flex items-center gap-3">
                   <span className={`font-mono text-xs font-semibold ${s.color}`}>{s.stat}</span>
-                  <span className="font-mono text-[10px] text-white/20">{s.z}</span>
+                  <span className="font-mono text-[10px] text-slate-400">{s.z}</span>
                 </div>
               </div>
             ))}
@@ -99,31 +99,31 @@ export default function Learn() {
 
         {/* CRS対応表 */}
         <section className="mt-10">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">CRS（Crisis Recovery Score）の読み方</p>
-          <p className="mt-2 mb-3 text-xs leading-6 text-slate-500">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">CRS（Crisis Recovery Score）の読み方</p>
+          <p className="mt-2 mb-3 text-xs leading-6 text-slate-400">
             VIX・HYG・DXY・ATH経過日数・RSPの5要素をバイナリで合計した0〜6のスコア。
             「今の市場がどれだけ恐怖に覆われているか」の深さを示す。未来予測ではない。
           </p>
-          <div className="overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm">
+          <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/[0.06] bg-white/[0.03]">
+              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                 <tr>
                   {["スコア","状態","対応"].map(h => (
-                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-white/20">{h}</th>
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {[
-                  { score: "0〜1", state: "通常",    note: "シグナル無効",        color: "text-white/20" },
+                  { score: "0〜1", state: "通常",    note: "シグナル無効",        color: "text-slate-400" },
                   { score: "2〜3", state: "警戒",    note: "phi2シグナル有効",    color: "text-amber-400" },
                   { score: "4",   state: "高品質",   note: "統計精度が上がる",    color: "text-amber-400" },
                   { score: "5〜6", state: "最高品質", note: "投入量2倍を検討する根拠", color: "text-[#f87171]" },
                 ].map((r) => (
-                  <tr key={r.score} className="border-t border-white/[0.04]">
+                  <tr key={r.score} className="border-t border-white/[0.09]">
                     <td className={`px-4 py-2.5 font-mono text-sm font-bold ${r.color}`}>{r.score}</td>
                     <td className="px-4 py-2.5 text-sm text-slate-400">{r.state}</td>
-                    <td className="px-4 py-2.5 text-xs text-slate-500">{r.note}</td>
+                    <td className="px-4 py-2.5 text-xs text-slate-400">{r.note}</td>
                   </tr>
                 ))}
               </tbody>
@@ -132,9 +132,9 @@ export default function Learn() {
         </section>
 
         {/* 区切り */}
-        <div className="mt-12 border-t border-white/[0.05] pt-10">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-white/20">なぜこのアプローチか — 検証で分かったこと</p>
-          <p className="mt-2 text-sm leading-7 text-slate-500">
+        <div className="mt-12 border-t border-white/[0.12] pt-10">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">なぜこのアプローチか — 検証で分かったこと</p>
+          <p className="mt-2 text-sm leading-7 text-slate-400">
             「もっと安く買えたはず」「今は待つべきだ」——その直感を、30年分のデータで全部検証した。
             結論は、投資の常識をなぞるようでいて、行動を変えるものだった。
           </p>
@@ -146,17 +146,17 @@ export default function Learn() {
             <section key={l.id}>
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#38bdf8]/60">{l.tag}</p>
               <h2 className="mt-1 text-lg font-semibold text-[#e8f4ff]">{l.title}</h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">{l.lead}</p>
+              <p className="mt-2 text-sm leading-6 text-slate-400">{l.lead}</p>
 
               {l.rows && (
-                <div className="mt-4 overflow-hidden rounded-2xl border border-white/[0.08] backdrop-blur-sm">
+                <div className="mt-4 overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
                   <table className="w-full text-sm">
                     <tbody>
                       {l.rows.map((r) => (
-                        <tr key={r.label} className="border-t border-white/[0.04] first:border-t-0">
+                        <tr key={r.label} className="border-t border-white/[0.09] first:border-t-0">
                           <td className="px-4 py-2.5 text-slate-400">{r.label}</td>
                           <td className="px-4 py-2.5 text-right font-mono font-semibold text-[#34d399] tabular-nums">{r.value}</td>
-                          <td className="px-4 py-2.5 text-right font-mono text-[10px] text-white/20">{r.note ?? ""}</td>
+                          <td className="px-4 py-2.5 text-right font-mono text-[10px] text-slate-400">{r.note ?? ""}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -165,7 +165,7 @@ export default function Learn() {
               )}
 
               {l.body.map((p, i) => (
-                <p key={i} className="mt-4 text-sm leading-6 text-slate-500">{p}</p>
+                <p key={i} className="mt-4 text-sm leading-6 text-slate-400">{p}</p>
               ))}
 
               <div className="mt-4 rounded-2xl border border-[#34d399]/20 bg-[#34d399]/[0.06] px-4 py-3 backdrop-blur-sm">
@@ -176,7 +176,7 @@ export default function Learn() {
         </div>
 
         {/* クロージング */}
-        <div className="mt-12 border-t border-white/[0.05] pt-8">
+        <div className="mt-12 border-t border-white/[0.12] pt-8">
           <p className="text-base font-medium leading-7 text-[#e8f4ff]">{closing}</p>
           <Link
             href="/signal"
@@ -186,7 +186,7 @@ export default function Learn() {
           </Link>
         </div>
 
-        <p className="mt-8 font-mono text-[10px] leading-6 text-white/15">
+        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
           数値はS&P500等の過去データに対する自前バックテスト（engine/archive）由来。
           過去の分布であり、将来を保証しません。これは投資助言ではなく事実の提示です。
         </p>

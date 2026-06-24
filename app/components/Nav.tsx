@@ -20,7 +20,7 @@ export default function Nav() {
           <span className="font-mono text-sm font-bold tracking-widest text-[#38bdf8]">
             QRIP
           </span>
-          <span className="hidden text-[10px] tracking-widest text-white/20 sm:block uppercase">
+          <span className="hidden text-[10px] tracking-widest text-slate-500 sm:block uppercase">
             市場観測システム
           </span>
         </Link>
