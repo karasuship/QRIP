@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/", label: "診断" },
   { href: "/signal", label: "シグナル" },
   { href: "/news", label: "ニュース" },
+  { href: "/portfolio", label: "実績" },
   { href: "/learn", label: "検証" },
 ];
 

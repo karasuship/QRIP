@@ -260,6 +260,99 @@ export default function Learn() {
           </div>
         </section>
 
+        {/* ⑧ regime-specific 発見（R45） */}
+        <section className="mt-10">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">体制別の検証結果（Round 45 — 新発見）</p>
+          <p className="mt-2 mb-3 text-xs leading-6 text-slate-400">
+            30年を金融政策体制で3分割して phi2 の有効性を再検証。
+            「局所的に成立するルールを構造的に説明できれば未来に応用可能」という視点から分析した。
+          </p>
+
+          {/* 体制定義 */}
+          <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm mb-3">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+                <tr>
+                  {["体制","期間","特徴"].map(h => (
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { regime: "A: 従来型", period: "1996〜2008-09", note: "Fed が金利で調整。CAPE が正常機能" },
+                  { regime: "B: QE体制", period: "2008-09〜2021", note: "ZIRP+QE。CAPE 無効化。流動性主導" },
+                  { regime: "C: 引き締め", period: "2022〜現在",   note: "QT+利上げ。新環境（n=7、参考程度）" },
+                ].map(r => (
+                  <tr key={r.regime} className="border-t border-white/[0.09]">
+                    <td className="px-4 py-2.5 font-mono text-xs text-[#38bdf8]">{r.regime}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{r.period}</td>
+                    <td className="px-4 py-2.5 text-xs text-slate-500">{r.note}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* H1: phi2 体制普遍性 */}
+          <div className="rounded-2xl border border-[#34d399]/25 bg-[#34d399]/[0.06] px-4 py-3.5 mb-3">
+            <p className="font-mono text-xs font-bold text-[#34d399] mb-1">発見①: phi2 v3 は全体制で有効（体制非依存）</p>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {[
+                { label: "A 従来型", z: "Z = 7.61", mu: "+11.8%", n: "n=20" },
+                { label: "B QE体制", z: "Z = 5.33", mu: "+7.95%", n: "n=76" },
+                { label: "C 引締め", z: "Z = 4.12", mu: "+14.6%", n: "n=7" },
+              ].map(r => (
+                <div key={r.label} className="rounded-xl border border-white/[0.09] bg-white/[0.04] px-3 py-2 text-center">
+                  <p className="font-mono text-[10px] text-slate-500">{r.label}</p>
+                  <p className="font-mono text-sm font-bold text-[#34d399] mt-0.5">{r.z}</p>
+                  <p className="font-mono text-[10px] text-slate-400">{r.mu} · {r.n}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              Fed がQEをしていようとQTをしていようと、phi2（恐怖の過剰反応）は有効。
+              行動経済学的な「セリングクライマックスの過剰反応」は体制を問わず発生する。
+            </p>
+          </div>
+
+          {/* H3: CAPE逆説確定 */}
+          <div className="rounded-2xl border border-amber-400/25 bg-amber-400/[0.06] px-4 py-3.5 mb-3">
+            <p className="font-mono text-xs font-bold text-amber-400 mb-1">発見②: QE体制で「高CAPE = より高品質」（逆説確定）</p>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              {[
+                { label: "CAPE > 25（高評価）", z: "Z = 7.93", mu: "+17.7%", n: "n=20", color: "text-amber-400 border-amber-400/30" },
+                { label: "CAPE ≤ 25（低評価）", z: "Z = 2.80", mu: "+4.5%",  n: "n=56", color: "text-slate-400 border-white/[0.09]" },
+              ].map(r => (
+                <div key={r.label} className={`rounded-xl border bg-white/[0.04] px-3 py-2 text-center ${r.color}`}>
+                  <p className="font-mono text-[10px]">{r.label}</p>
+                  <p className="font-mono text-sm font-bold mt-0.5">{r.z}</p>
+                  <p className="font-mono text-[10px]">{r.mu} · {r.n}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-400">
+              QE体制で高CAPEの phi2 の方が圧倒的に高品質（+13.2%の差）。
+              構造的理由: 高CAPE = Fed が積極的QEを継続中 = 流動性が充分 = 株式の底割れリスクが低い。
+              「高く買っても戻る」のはバリュエーションではなく流動性が支配しているから。
+              <span className="font-mono text-amber-400/80"> → 次のQE体制ではCAPEが高くても phi2 を躊躇わない根拠。</span>
+            </p>
+          </div>
+
+          {/* H4: CRS体制依存性 */}
+          <div className="rounded-2xl border border-violet-400/25 bg-violet-400/[0.06] px-4 py-3.5">
+            <p className="font-mono text-xs font-bold text-violet-300 mb-1">発見③: CRS=5-6 は QE体制にのみ発生する（30年データ）</p>
+            <p className="mt-1 text-xs leading-5 text-slate-400">
+              VIX急騰・HYG急落・DXY急騰が同時発生するには「グローバル流動性危機」が必要。
+              これはGFC（2008〜09）・コロナショック（2020）・ユーロ圏危機（2011〜12）など、
+              全てQE体制内のイベント。従来型（A）・引き締め体制（C）では CRS=5-6 は ゼロ。
+            </p>
+            <p className="mt-2 text-xs font-medium text-violet-300">
+              CRS=5-6 が発動する = 「Fed が無制限緩和に動く圧力が極めて高い局面」を間接的に意味する可能性がある。
+            </p>
+          </div>
+        </section>
+
         {/* 区切り */}
         <div className="mt-12 border-t border-white/[0.12] pt-10">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">なぜこのアプローチか — 検証で分かったこと</p>

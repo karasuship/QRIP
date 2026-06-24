@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import LiveMetrics from "@/app/components/LiveMetrics";
 import PushSubscribe from "@/app/components/PushSubscribe";
+import CrsSizingCalc from "@/app/components/CrsSizingCalc";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -206,7 +207,7 @@ export default async function SignalPage() {
           <p className={`mt-3 text-sm font-medium ${st.detailColor}`}>{st.detail}</p>
         </div>
 
-        {/* ① CRS=5〜6 → 2倍投入バナー */}
+        {/* ① CRS=5〜6 → 2倍投入バナー + サイジング試算 */}
         {crs >= 5 && (
           <div className="mt-3 rounded-2xl border border-violet-400/35 bg-violet-400/[0.07] px-5 py-3.5 backdrop-blur-sm">
             <div className="flex items-center gap-2 mb-1">
@@ -219,6 +220,8 @@ export default async function SignalPage() {
             </p>
           </div>
         )}
+        {/* CRS連動サイジング試算 (CRS>=2 で表示) */}
+        {crs >= 2 && <CrsSizingCalc crs={crs} />}
 
         {/* ④ 購入後の行動ガイド（シグナル発動時のみ） */}
         {anySignalActive && (
