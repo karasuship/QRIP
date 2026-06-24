@@ -460,11 +460,14 @@ export default async function SignalPage() {
           )}
         </section>
 
-        {/* 経済カレンダー */}
-        <EconCalendar />
-
-        {/* 決算カレンダー */}
-        <EarningsCalendar />
+        {/* 今後のイベント */}
+        <section className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-5">
+          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-slate-600 mb-4">
+            今後のイベント
+          </p>
+          <EconCalendar />
+          <EarningsCalendar />
+        </section>
 
         <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
           データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。

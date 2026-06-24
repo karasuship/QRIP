@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/", label: "診断" },
+  { href: "/", label: "ホーム" },
   { href: "/signal", label: "シグナル" },
   { href: "/news", label: "ニュース" },
   { href: "/portfolio", label: "実績" },
