@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { createHash } from "crypto";
 import Link from "next/link";
 import { fetchMmf } from "@/lib/mmf-fetch";
+import { fetchHeadlines } from "@/lib/news-fetch";
+import { analyzeNews } from "@/lib/news-analyze";
 import { getSupabaseServer } from "@/lib/supabase";
 import type { NewsAnalysis } from "@/lib/news-analyze";
 import NewsSection from "./NewsSection";
@@ -47,12 +49,13 @@ const FED_CONFIG: Record<string, { label: string; color: string }> = {
 };
 
 export default async function NewsPage() {
-  // ── Supabase から最新キャッシュを読む（cron が毎朝 7:00 JST に書き込む）──
+  // ── 1st: Supabase キャッシュ（cron が毎朝 7:00 JST に書き込む）──
   let analysis: NewsAnalysis | null = null;
   let dataDate: string | null = null;
+  let supabase: ReturnType<typeof getSupabaseServer> | null = null;
 
   try {
-    const supabase = getSupabaseServer();
+    supabase = getSupabaseServer();
     const { data: cached } = await supabase
       .from("news_daily")
       .select("date, raw_claude_output")
@@ -64,7 +67,35 @@ export default async function NewsPage() {
       analysis = cached.raw_claude_output as NewsAnalysis;
       dataDate = cached.date as string;
     }
-  } catch { /* DB が空なら null のまま */ }
+  } catch { /* テーブル未作成 or DB エラーは無視 */ }
+
+  // ── 2nd: キャッシュがなければライブフェッチ（初回 or cron 未実行時）──
+  if (!analysis) {
+    try {
+      const headlines = await fetchHeadlines();
+      if (headlines.length > 0) {
+        analysis = await analyzeNews(headlines);
+        dataDate = new Date().toISOString().slice(0, 10);
+        // 取得できたら次回のために DB に保存
+        if (analysis && supabase) {
+          await supabase.from("news_daily").upsert(
+            {
+              date: dataDate,
+              headlines: headlines.map((h) => ({ title: h.title, source: h.source })),
+              sentiment_score: analysis.sentiment_score,
+              crisis_relevance: analysis.crisis_relevance,
+              fed_tone: analysis.fed_tone,
+              main_topics: analysis.main_topics,
+              notable_events: analysis.notable_events,
+              raw_claude_output: analysis,
+              model_used: analysis.model_used,
+            },
+            { onConflict: "date" }
+          ).then(() => {/* ignore */}, () => {/* テーブル未作成でも続行 */});
+        }
+      }
+    } catch { /* ライブフェッチも失敗したら null のまま */ }
+  }
 
   // MMF だけは独立して取得（軽い・失敗しても無視）
   const mmf = await fetchMmf().catch(() => null);
@@ -121,9 +152,9 @@ export default async function NewsPage() {
 
         {!analysis ? (
           <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 backdrop-blur-md space-y-2 text-center">
-            <p className="text-slate-400">データがまだありません</p>
+            <p className="text-slate-400">ニュースの取得に失敗しました</p>
             <p className="font-mono text-[10px] text-slate-600">
-              毎営業日 7:00 JST に自動更新されます。初回データは翌朝以降に表示されます。
+              しばらくしてから再読み込みしてください（毎営業日 7:00 JST に自動更新）
             </p>
           </div>
         ) : (
