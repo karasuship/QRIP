@@ -59,7 +59,7 @@ function HeadlineCard({
 
   // Check if user liked this item
   useEffect(() => {
-    if (!user || fetchedLike.current) return;
+    if (!supabase || !user || fetchedLike.current) return;
     fetchedLike.current = true;
     supabase
       .from("news_reactions")
@@ -68,18 +68,18 @@ function HeadlineCard({
       .eq("user_id", user.id)
       .maybeSingle()
       .then(({ data }) => setLiked(!!data));
-  }, [user, item.newsId]);
+  }, [supabase, user, item.newsId]);
 
   // Load comments when section opens
   useEffect(() => {
-    if (!showComments) return;
+    if (!supabase || !showComments) return;
     supabase
       .from("news_comments")
       .select("id, user_name, content, created_at")
       .eq("news_item_id", item.newsId)
       .order("created_at", { ascending: true })
       .then(({ data }) => setComments(data ?? []));
-  }, [showComments, item.newsId]);
+  }, [supabase, showComments, item.newsId]);
 
   const handleExpand = useCallback(async () => {
     const next = !expanded;
@@ -104,6 +104,7 @@ function HeadlineCard({
 
   const handleLike = useCallback(async () => {
     if (!user) { onLogin(); return; }
+    if (!supabase) return;
     if (liked) {
       setLiked(false);
       setLikeCount((c) => Math.max(0, c - 1));
@@ -120,10 +121,10 @@ function HeadlineCard({
         .from("news_reactions")
         .insert({ news_item_id: item.newsId, user_id: user.id });
     }
-  }, [user, liked, item.newsId, onLogin]);
+  }, [supabase, user, liked, item.newsId, onLogin]);
 
   const handleComment = useCallback(async () => {
-    if (!user || !commentText.trim() || submitting) return;
+    if (!supabase || !user || !commentText.trim() || submitting) return;
     setSubmitting(true);
     const content = commentText.trim().slice(0, 200);
     const userName = (user.user_metadata?.full_name as string | undefined) ?? user.email ?? "匿名";
@@ -138,7 +139,7 @@ function HeadlineCard({
       setCommentText("");
     }
     setSubmitting(false);
-  }, [user, commentText, submitting, item.newsId]);
+  }, [supabase, user, commentText, submitting, item.newsId]);
 
   const impact = IMPACT[item.sp500_impact] ?? IMPACT.neutral;
 
@@ -292,21 +293,23 @@ export default function NewsSection({ items }: NewsSectionProps) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    if (!supabase) return;
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
-  }, []);
+  }, [supabase]);
 
   const handleLogin = useCallback(async () => {
+    if (!supabase) return;
     await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
         redirectTo: `${window.location.origin}/auth/callback?next=/news`,
       },
     });
-  }, []);
+  }, [supabase]);
 
   return (
     <div className="space-y-2">

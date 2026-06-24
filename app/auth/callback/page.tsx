@@ -13,7 +13,7 @@ function CallbackHandler() {
     const next = params.get("next") ?? "/news";
     if (code) {
       getSupabaseBrowser()
-        .auth.exchangeCodeForSession(code)
+        ?.auth.exchangeCodeForSession(code)
         .then(() => router.push(next))
         .catch(() => router.push(next));
     } else {

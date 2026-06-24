@@ -12,16 +12,16 @@ export interface Headline {
 
 const RSS_SOURCES = [
   {
-    url: "https://feeds.reuters.com/reuters/businessNews",
-    source: "Reuters",
+    url: "https://news.google.com/rss/search?q=stock+market+S%26P500&hl=en-US&gl=US&ceid=US:en",
+    source: "Google News",
+  },
+  {
+    url: "https://news.google.com/rss/search?q=Federal+Reserve+interest+rate&hl=en-US&gl=US&ceid=US:en",
+    source: "Google News",
   },
   {
     url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",
     source: "CNBC",
-  },
-  {
-    url: "https://feeds.marketwatch.com/marketwatch/topstories/",
-    source: "MarketWatch",
   },
 ];
 
