@@ -59,8 +59,9 @@ export default async function NewsPage() {
   ]);
 
   let analysis = null;
+  let analysisFailed = false;
   if (headlines.length > 0) {
-    analysis = await analyzeNews(headlines).catch(() => null);
+    analysis = await analyzeNews(headlines).catch(() => { analysisFailed = true; return null; });
   }
 
   // persist news items + fetch like counts
@@ -119,8 +120,17 @@ export default async function NewsPage() {
         </div>
 
         {!analysis ? (
-          <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 text-center text-slate-400 backdrop-blur-md">
-            ニュース取得に失敗しました。しばらくしてから再読み込みしてください。
+          <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 backdrop-blur-md space-y-2">
+            <p className="text-center text-slate-400">
+              {analysisFailed
+                ? "Claude API でのニュース分析に失敗しました（APIキーまたはトークン制限の可能性）"
+                : headlines.length === 0
+                ? "ニュースソースからの取得に失敗しました（全ソースがブロックされているか応答なし）"
+                : "分析に失敗しました。しばらくしてから再読み込みしてください。"}
+            </p>
+            <p className="text-center font-mono text-[10px] text-slate-600">
+              診断: <a href="/api/news-debug" target="_blank" className="underline hover:text-slate-400">/api/news-debug</a> で詳細確認
+            </p>
           </div>
         ) : (
           <div className="mt-6 space-y-4">
