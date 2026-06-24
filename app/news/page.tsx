@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
+import { createHash } from "crypto";
 import Link from "next/link";
 import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
+import { fetchMmf } from "@/lib/mmf-fetch";
+import { getSupabaseServer } from "@/lib/supabase";
+import NewsSection from "./NewsSection";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のニュース",
@@ -9,6 +13,12 @@ export const metadata: Metadata = {
 };
 
 export const revalidate = 1800;
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+
+function newsId(title: string): string {
+  return createHash("sha256").update(title).digest("hex").slice(0, 32);
+}
 
 const TOPIC_LABELS: Record<string, { label: string; color: string }> = {
   inflation:   { label: "インフレ",   color: "border-orange-400/40 bg-orange-400/[0.08] text-orange-300" },
@@ -22,18 +32,12 @@ const TOPIC_LABELS: Record<string, { label: string; color: string }> = {
   other:       { label: "その他",      color: "border-slate-400/40 bg-slate-400/[0.08] text-slate-300" },
 };
 
-const SOURCE_COLOR: Record<string, string> = {
-  Reuters:     "bg-[#38bdf8]/15 text-[#38bdf8]",
-  CNBC:        "bg-[#34d399]/15 text-[#34d399]",
-  MarketWatch: "bg-violet-400/15 text-violet-300",
-};
-
 function sentimentMeta(score: number) {
-  if (score >= 0.5)  return { label: "強気",      color: "text-[#34d399]",  glow: "glow-green",  bar: "from-[#34d399]" };
-  if (score >= 0.2)  return { label: "やや強気",  color: "text-[#34d399]",  glow: "glow-green",  bar: "from-[#34d399]" };
-  if (score <= -0.5) return { label: "弱気",      color: "text-[#f87171]",  glow: "glow-red",    bar: "from-[#f87171]" };
-  if (score <= -0.2) return { label: "やや弱気",  color: "text-[#f87171]",  glow: "glow-red",    bar: "from-[#f87171]" };
-  return { label: "中立", color: "text-slate-300", glow: "", bar: "from-slate-400" };
+  if (score >= 0.5)  return { label: "強気",      color: "text-[#34d399]",  glow: "glow-green" };
+  if (score >= 0.2)  return { label: "やや強気",  color: "text-[#34d399]",  glow: "glow-green" };
+  if (score <= -0.5) return { label: "弱気",      color: "text-[#f87171]",  glow: "glow-red"   };
+  if (score <= -0.2) return { label: "やや弱気",  color: "text-[#f87171]",  glow: "glow-red"   };
+  return { label: "中立", color: "text-slate-300", glow: "" };
 }
 
 const FED_CONFIG: Record<string, { label: string; color: string }> = {
@@ -43,17 +47,61 @@ const FED_CONFIG: Record<string, { label: string; color: string }> = {
   none:    { label: "Fed 言及なし",           color: "border-white/[0.09] bg-white/[0.04] text-slate-500" },
 };
 
+// ── page ─────────────────────────────────────────────────────────────────────
+
 export default async function NewsPage() {
   const fetchedAt = new Date();
+
+  // fetch in parallel
+  const [headlines, mmf] = await Promise.all([
+    fetchHeadlines().catch(() => []),
+    fetchMmf().catch(() => null),
+  ]);
+
   let analysis = null;
-  try {
-    const headlines = await fetchHeadlines();
-    analysis = await analyzeNews(headlines);
-  } catch { /* silent */ }
+  if (headlines.length > 0) {
+    analysis = await analyzeNews(headlines).catch(() => null);
+  }
+
+  // persist news items + fetch like counts
+  let likeCounts: Record<string, number> = {};
+  if (analysis?.headlines_ja.length) {
+    const ids = analysis.headlines_ja.map((h) => newsId(h.title));
+    try {
+      const supabase = getSupabaseServer();
+      await supabase.from("news_items").upsert(
+        analysis.headlines_ja.map((h, i) => ({
+          id: ids[i],
+          title_ja: h.title,
+          source: h.source,
+        })),
+        { onConflict: "id", ignoreDuplicates: true }
+      );
+      const { data: reactions } = await supabase
+        .from("news_reactions")
+        .select("news_item_id")
+        .in("news_item_id", ids);
+      for (const r of reactions ?? []) {
+        const id = r.news_item_id as string;
+        likeCounts[id] = (likeCounts[id] ?? 0) + 1;
+      }
+    } catch { /* social features are optional */ }
+  }
 
   const score = analysis?.sentiment_score ?? 0;
   const meta = sentimentMeta(score);
   const barPct = Math.round((score + 1) * 50);
+
+  // build items for NewsSection
+  const newsItems = (analysis?.headlines_ja ?? []).map((h, i) => {
+    const id = newsId(h.title);
+    return {
+      ...h,
+      newsId: id,
+      initialLikeCount: likeCounts[id] ?? 0,
+      // NOTE: index i is unused — we use newsId for matching
+    };
+  });
 
   return (
     <div className="min-h-screen">
@@ -86,7 +134,6 @@ export default async function NewsPage() {
                 </span>
                 <span className={`mb-1 text-xl font-semibold ${meta.color}`}>{meta.label}</span>
               </div>
-              {/* グラデーションバー */}
               <div className="mt-5 relative h-1.5 w-full rounded-full bg-gradient-to-r from-[#f87171] via-slate-500/40 to-[#34d399]">
                 <div
                   className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 h-4 w-1 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.8)]"
@@ -98,19 +145,53 @@ export default async function NewsPage() {
               </div>
             </div>
 
+            {/* MMF 燃料スコア */}
+            {mmf && (
+              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-md">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
+                  MMF 燃料スコア — SP500 上昇余地
+                </p>
+                <div className="flex items-end gap-3 mb-4">
+                  <span className={`font-mono text-4xl font-bold tabular-nums leading-none ${
+                    mmf.fuel_score >= 7 ? "text-[#34d399]"
+                    : mmf.fuel_score >= 4 ? "text-amber-400"
+                    : "text-slate-400"
+                  }`}>{mmf.fuel_score}<span className="text-lg text-slate-500">/10</span></span>
+                  <span className="mb-1 text-sm text-slate-400">
+                    MMF残高 <span className="font-mono font-semibold text-slate-300">${mmf.current_billions.toLocaleString()}B</span>
+                    <span className="ml-2 text-slate-600 text-xs">（52週 min ${mmf.min_52w.toLocaleString()}B → max ${mmf.max_52w.toLocaleString()}B）</span>
+                  </span>
+                </div>
+                {/* fuel bar */}
+                <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      mmf.fuel_score >= 7 ? "bg-[#34d399]"
+                      : mmf.fuel_score >= 4 ? "bg-amber-400"
+                      : "bg-slate-500"
+                    }`}
+                    style={{ width: `${mmf.fuel_score * 10}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-slate-500">
+                  MMF残高が52週レンジの高位 = 現金待機が多い = 株への流入余地（燃料）が大きい。
+                  スコアは52週レンジ内の現在位置。（データ: FRED WRMFSL、{mmf.last_date}時点）
+                </p>
+              </div>
+            )}
+
             {/* 危機関連度 / Fed / トピック */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {/* 危機関連度 */}
               <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">危機関連度</p>
                 <div className="flex items-center gap-2">
-                  {[1,2,3,4,5].map((i) => (
+                  {[1, 2, 3, 4, 5].map((i) => (
                     <span
                       key={i}
-                      className={`h-3 w-3 rounded-full transition-all ${
+                      className={`h-3 w-3 rounded-full ${
                         i <= analysis.crisis_relevance
                           ? i >= 4 ? "bg-[#f87171] shadow-[0_0_8px_rgba(248,113,113,0.6)]"
-                          : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                            : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
                           : "bg-white/[0.10]"
                       }`}
                     />
@@ -123,7 +204,6 @@ export default async function NewsPage() {
                 </div>
               </div>
 
-              {/* Fed トーン */}
               <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">Fed トーン</p>
                 {(() => {
@@ -136,7 +216,6 @@ export default async function NewsPage() {
                 })()}
               </div>
 
-              {/* 主要トピック */}
               <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">主要トピック</p>
                 <div className="flex flex-wrap gap-1.5">
@@ -163,28 +242,13 @@ export default async function NewsPage() {
               </div>
             )}
 
-            {/* ヘッドライン */}
-            {analysis.headlines_ja.length > 0 && (
+            {/* ヘッドライン（クライアントコンポーネント） */}
+            {newsItems.length > 0 && (
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-2">ヘッドライン</p>
-                <div className="space-y-2">
-                  {analysis.headlines_ja.map((h, i) => (
-                    <div
-                      key={i}
-                      className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-5 py-4 backdrop-blur-sm"
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <p className="text-sm font-medium leading-snug text-[#e8f4ff]">{h.title}</p>
-                        <span className={`shrink-0 rounded-full px-2 py-0.5 font-mono text-[10px] font-medium ${SOURCE_COLOR[h.source] ?? "bg-white/[0.06] text-slate-400"}`}>
-                          {h.source}
-                        </span>
-                      </div>
-                      {h.description && (
-                        <p className="mt-1.5 text-xs leading-5 text-slate-400">{h.description}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-2">
+                  ヘッドライン — クリックで深掘り
+                </p>
+                <NewsSection items={newsItems} />
               </div>
             )}
 
@@ -192,7 +256,7 @@ export default async function NewsPage() {
         )}
 
         <p className="mt-8 font-mono text-[10px] leading-5 text-slate-600">
-          ニュース: Reuters · CNBC · MarketWatch RSS。翻訳・分析: Claude Haiku。これは投資助言ではありません。
+          ニュース: Reuters · CNBC · MarketWatch RSS。翻訳・分析: Claude Haiku。MMF: FRED WRMFSL。これは投資助言ではありません。
         </p>
       </main>
     </div>
