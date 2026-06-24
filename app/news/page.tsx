@@ -1,20 +1,19 @@
 import type { Metadata } from "next";
 import { createHash } from "crypto";
 import Link from "next/link";
-import { fetchHeadlines } from "@/lib/news-fetch";
-import { analyzeNews } from "@/lib/news-analyze";
 import { fetchMmf } from "@/lib/mmf-fetch";
 import { getSupabaseServer } from "@/lib/supabase";
+import type { NewsAnalysis } from "@/lib/news-analyze";
 import NewsSection from "./NewsSection";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のニュース",
-  description: "金融ニュースの要約・センチメント・Fed トーンをリアルタイム表示（30分更新）",
+  description: "金融ニュースの要約・センチメント・Fed トーンをリアルタイム表示",
 };
 
-export const revalidate = 1800;
-
-// ── helpers ───────────────────────────────────────────────────────────────────
+// 毎日 cron が news_daily を更新するので、ページは DB から読むだけ
+// キャッシュは 1 時間。cron は 7:00 JST に走るので最大 25 時間遅れ（週末含む）
+export const revalidate = 3600;
 
 function newsId(title: string): string {
   return createHash("sha256").update(title).digest("hex").slice(0, 32);
@@ -47,29 +46,36 @@ const FED_CONFIG: Record<string, { label: string; color: string }> = {
   none:    { label: "Fed 言及なし",           color: "border-white/[0.09] bg-white/[0.04] text-slate-500" },
 };
 
-// ── page ─────────────────────────────────────────────────────────────────────
-
 export default async function NewsPage() {
-  const fetchedAt = new Date();
+  // ── Supabase から最新キャッシュを読む（cron が毎朝 7:00 JST に書き込む）──
+  let analysis: NewsAnalysis | null = null;
+  let dataDate: string | null = null;
 
-  // fetch in parallel
-  const [headlines, mmf] = await Promise.all([
-    fetchHeadlines().catch(() => []),
-    fetchMmf().catch(() => null),
-  ]);
+  try {
+    const supabase = getSupabaseServer();
+    const { data: cached } = await supabase
+      .from("news_daily")
+      .select("date, raw_claude_output")
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
 
-  let analysis = null;
-  let analysisFailed = false;
-  if (headlines.length > 0) {
-    analysis = await analyzeNews(headlines).catch(() => { analysisFailed = true; return null; });
-  }
+    if (cached?.raw_claude_output) {
+      analysis = cached.raw_claude_output as NewsAnalysis;
+      dataDate = cached.date as string;
+    }
+  } catch { /* DB が空なら null のまま */ }
 
-  // persist news items + fetch like counts
+  // MMF だけは独立して取得（軽い・失敗しても無視）
+  const mmf = await fetchMmf().catch(() => null);
+
+  // social 機能用いいね数取得
   let likeCounts: Record<string, number> = {};
   if (analysis?.headlines_ja.length) {
     const ids = analysis.headlines_ja.map((h) => newsId(h.title));
     try {
       const supabase = getSupabaseServer();
+      // news_items が存在しない場合も無視
       await supabase.from("news_items").upsert(
         analysis.headlines_ja.map((h, i) => ({
           id: ids[i],
@@ -93,15 +99,9 @@ export default async function NewsPage() {
   const meta = sentimentMeta(score);
   const barPct = Math.round((score + 1) * 50);
 
-  // build items for NewsSection
-  const newsItems = (analysis?.headlines_ja ?? []).map((h, i) => {
+  const newsItems = (analysis?.headlines_ja ?? []).map((h) => {
     const id = newsId(h.title);
-    return {
-      ...h,
-      newsId: id,
-      initialLikeCount: likeCounts[id] ?? 0,
-      // NOTE: index i is unused — we use newsId for matching
-    };
+    return { ...h, newsId: id, initialLikeCount: likeCounts[id] ?? 0 };
   });
 
   return (
@@ -115,27 +115,21 @@ export default async function NewsPage() {
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">News / 今日のニュース</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#e8f4ff]">市場ニュース</h1>
           <p className="mt-1 font-mono text-[10px] text-slate-500">
-            {fetchedAt.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" })} 取得 · 30分キャッシュ · Reuters / CNBC / MarketWatch
+            {dataDate ? `${dataDate} のデータ · 毎営業日 7:00 JST 更新` : "データ準備中"}
           </p>
         </div>
 
         {!analysis ? (
-          <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 backdrop-blur-md space-y-2">
-            <p className="text-center text-slate-400">
-              {analysisFailed
-                ? "Claude API でのニュース分析に失敗しました（APIキーまたはトークン制限の可能性）"
-                : headlines.length === 0
-                ? "ニュースソースからの取得に失敗しました（全ソースがブロックされているか応答なし）"
-                : "分析に失敗しました。しばらくしてから再読み込みしてください。"}
-            </p>
-            <p className="text-center font-mono text-[10px] text-slate-600">
-              診断: <a href="/api/news-debug" target="_blank" className="underline hover:text-slate-400">/api/news-debug</a> で詳細確認
+          <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 backdrop-blur-md space-y-2 text-center">
+            <p className="text-slate-400">データがまだありません</p>
+            <p className="font-mono text-[10px] text-slate-600">
+              毎営業日 7:00 JST に自動更新されます。初回データは翌朝以降に表示されます。
             </p>
           </div>
         ) : (
           <div className="mt-6 space-y-4">
 
-            {/* センチメント大表示 */}
+            {/* センチメント */}
             <div className={`rounded-2xl border border-white/[0.12] bg-white/[0.06] p-6 backdrop-blur-md ${meta.glow}`}>
               <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-4">市場センチメント</p>
               <div className="flex items-end gap-4">
@@ -163,29 +157,23 @@ export default async function NewsPage() {
                 </p>
                 <div className="flex items-end gap-3 mb-4">
                   <span className={`font-mono text-4xl font-bold tabular-nums leading-none ${
-                    mmf.fuel_score >= 7 ? "text-[#34d399]"
-                    : mmf.fuel_score >= 4 ? "text-amber-400"
-                    : "text-slate-400"
+                    mmf.fuel_score >= 7 ? "text-[#34d399]" : mmf.fuel_score >= 4 ? "text-amber-400" : "text-slate-400"
                   }`}>{mmf.fuel_score}<span className="text-lg text-slate-500">/10</span></span>
                   <span className="mb-1 text-sm text-slate-400">
                     MMF残高 <span className="font-mono font-semibold text-slate-300">${mmf.current_billions.toLocaleString()}B</span>
                     <span className="ml-2 text-slate-600 text-xs">（52週 min ${mmf.min_52w.toLocaleString()}B → max ${mmf.max_52w.toLocaleString()}B）</span>
                   </span>
                 </div>
-                {/* fuel bar */}
                 <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
-                      mmf.fuel_score >= 7 ? "bg-[#34d399]"
-                      : mmf.fuel_score >= 4 ? "bg-amber-400"
-                      : "bg-slate-500"
+                      mmf.fuel_score >= 7 ? "bg-[#34d399]" : mmf.fuel_score >= 4 ? "bg-amber-400" : "bg-slate-500"
                     }`}
                     style={{ width: `${mmf.fuel_score * 10}%` }}
                   />
                 </div>
                 <p className="mt-2 text-[11px] leading-5 text-slate-500">
-                  MMF残高が52週レンジの高位 = 現金待機が多い = 株への流入余地（燃料）が大きい。
-                  スコアは52週レンジ内の現在位置。（データ: FRED WRMFSL、{mmf.last_date}時点）
+                  MMF残高が52週レンジの高位 = 現金待機が多い = 株への流入余地が大きい。（データ: FRED WRMFSL、{mmf.last_date}時点）
                 </p>
               </div>
             )}
@@ -196,15 +184,12 @@ export default async function NewsPage() {
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">危機関連度</p>
                 <div className="flex items-center gap-2">
                   {[1, 2, 3, 4, 5].map((i) => (
-                    <span
-                      key={i}
-                      className={`h-3 w-3 rounded-full ${
-                        i <= analysis.crisis_relevance
-                          ? i >= 4 ? "bg-[#f87171] shadow-[0_0_8px_rgba(248,113,113,0.6)]"
-                            : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
-                          : "bg-white/[0.10]"
-                      }`}
-                    />
+                    <span key={i} className={`h-3 w-3 rounded-full ${
+                      i <= analysis.crisis_relevance
+                        ? i >= 4 ? "bg-[#f87171] shadow-[0_0_8px_rgba(248,113,113,0.6)]"
+                          : "bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.4)]"
+                        : "bg-white/[0.10]"
+                    }`} />
                   ))}
                   <span className={`ml-1 font-mono text-sm font-bold ${
                     analysis.crisis_relevance >= 4 ? "text-[#f87171]"
@@ -252,7 +237,7 @@ export default async function NewsPage() {
               </div>
             )}
 
-            {/* ヘッドライン（クライアントコンポーネント） */}
+            {/* ヘッドライン */}
             {newsItems.length > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-2">
@@ -266,7 +251,7 @@ export default async function NewsPage() {
         )}
 
         <p className="mt-8 font-mono text-[10px] leading-5 text-slate-600">
-          ニュース: Reuters · CNBC · MarketWatch RSS。翻訳・分析: Claude Haiku。MMF: FRED WRMFSL。これは投資助言ではありません。
+          ニュース分析: Claude Haiku（毎営業日 7:00 JST 自動更新）。MMF: FRED WRMFSL。これは投資助言ではありません。
         </p>
       </main>
     </div>
