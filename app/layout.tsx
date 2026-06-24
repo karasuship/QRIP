@@ -54,7 +54,7 @@ export default async function RootLayout({
       lang="ja"
       className={`${geistSans.variable} ${geistMono.variable} dark h-full`}
     >
-      <body className="min-h-full flex flex-col bg-[#050508] text-[#e2e8f0] antialiased">
+      <body className="min-h-full flex flex-col antialiased">
         <Nav />
         {initialSignal && <AlertBanner signal={initialSignal} />}
         {initialSignal && <Ticker initial={initialSignal} />}

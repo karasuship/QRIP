@@ -14,32 +14,32 @@ type BannerConfig = {
 
 const CONFIGS: Record<string, BannerConfig> = {
   DOUBLE: {
-    glow: "shadow-[0_0_30px_rgba(139,92,246,0.4)] border-violet-500/60",
-    bar: "bg-gradient-to-r from-violet-900/80 via-violet-800/60 to-[#050508]",
+    glow: "shadow-[0_0_40px_rgba(167,139,250,0.3)] border-violet-400/40",
+    bar: "bg-gradient-to-r from-violet-500/20 via-violet-500/10 to-transparent",
     dot: "bg-violet-400",
     label: "phi2 v3 + RSI<25 同時発動 — 30年8回の超高品質シグナル",
   },
   PHI2: {
-    glow: "shadow-[0_0_30px_rgba(16,185,129,0.4)] border-emerald-500/60",
-    bar: "bg-gradient-to-r from-emerald-900/80 via-emerald-900/40 to-[#050508]",
+    glow: "shadow-[0_0_40px_rgba(52,211,153,0.3)] border-emerald-400/40",
+    bar: "bg-gradient-to-r from-emerald-500/20 via-emerald-500/10 to-transparent",
     dot: "bg-emerald-400",
     label: "phi2 v3 発動 — 追加投入シグナル",
   },
   HYG8: {
-    glow: "shadow-[0_0_30px_rgba(245,158,11,0.4)] border-amber-500/60",
-    bar: "bg-gradient-to-r from-amber-900/80 via-amber-900/40 to-[#050508]",
+    glow: "shadow-[0_0_40px_rgba(251,191,36,0.3)] border-amber-400/40",
+    bar: "bg-gradient-to-r from-amber-500/20 via-amber-500/10 to-transparent",
     dot: "bg-amber-400",
     label: "HYG-8% QE後シグナル発動",
   },
   B4: {
-    glow: "shadow-[0_0_30px_rgba(6,182,212,0.4)] border-cyan-500/60",
-    bar: "bg-gradient-to-r from-cyan-900/80 via-cyan-900/40 to-[#050508]",
-    dot: "bg-cyan-400",
+    glow: "shadow-[0_0_40px_rgba(56,189,248,0.3)] border-sky-400/40",
+    bar: "bg-gradient-to-r from-sky-500/20 via-sky-500/10 to-transparent",
+    dot: "bg-sky-400",
     label: "B4 phi2 追加フォロー発動",
   },
   RSI25: {
-    glow: "shadow-[0_0_20px_rgba(245,158,11,0.3)] border-amber-600/50",
-    bar: "bg-gradient-to-r from-amber-900/60 via-amber-900/30 to-[#050508]",
+    glow: "shadow-[0_0_30px_rgba(251,191,36,0.2)] border-amber-400/30",
+    bar: "bg-gradient-to-r from-amber-500/15 via-amber-500/8 to-transparent",
     dot: "bg-amber-500",
     label: "RSI<25 クロスアンダー",
   },
@@ -60,24 +60,23 @@ export default function AlertBanner({ signal }: { signal: SignalData }) {
   const cfg = CONFIGS[key];
 
   return (
-    <div className={`border-b ${cfg.glow} ${cfg.bar}`}>
-      <div className="mx-auto flex max-w-3xl items-center justify-between px-5 py-2.5">
+    <div className={`border-b backdrop-blur-sm ${cfg.glow} ${cfg.bar}`}>
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-2.5">
         <div className="flex items-center gap-3">
-          {/* Pinging dot */}
           <span className="relative flex h-2.5 w-2.5 shrink-0">
-            <span className={`absolute inline-flex h-full w-full rounded-full ${cfg.dot} opacity-50 ping-slow`} />
+            <span className={`absolute inline-flex h-full w-full rounded-full opacity-60 ping-slow ${cfg.dot}`} />
             <span className={`relative inline-flex h-2.5 w-2.5 rounded-full ${cfg.dot}`} />
           </span>
-          <span className="font-mono text-xs font-semibold tracking-wide text-[#e2e8f0]">
+          <span className="font-mono text-xs font-semibold tracking-wide text-[#e8f4ff]">
             {cfg.label}
           </span>
-          <span className="hidden text-[10px] font-mono text-[#64748b] sm:block">
+          <span className="hidden font-mono text-[10px] text-white/30 sm:block">
             ATH {pct(athDd)} · CRS {crs}/6
           </span>
         </div>
         <Link
           href="/signal"
-          className="shrink-0 rounded border border-white/10 bg-white/5 px-3 py-1 font-mono text-[10px] text-[#94a3b8] hover:bg-white/10 hover:text-white transition-colors tracking-wider"
+          className="shrink-0 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-1 font-mono text-[10px] text-slate-300 hover:bg-white/10 hover:text-white transition-colors tracking-wider backdrop-blur-sm"
         >
           詳細 →
         </Link>

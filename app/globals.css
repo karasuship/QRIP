@@ -1,69 +1,57 @@
 @import "tailwindcss";
 
-/* ── QRIP Design System: Terminal × Clean Dark ──────────── */
+/* ── QRIP Design System v2: Aurora Glass ──────────────────── */
 
 :root {
-  --bg-base:      #050508;
-  --bg-surface:   #0c0c15;
-  --bg-surface-2: #12121e;
-  --border-dim:   #16162a;
-  --border:       #1e1e32;
-  --border-light: #2a2a42;
-
-  --text-1: #e2e8f0;
-  --text-2: #64748b;
-  --text-3: #2e2e48;
-
-  --green:       #10b981;
-  --green-glow:  rgba(16,185,129,0.25);
-  --green-dim:   rgba(16,185,129,0.1);
-  --red:         #ef4444;
-  --red-glow:    rgba(239,68,68,0.25);
-  --red-dim:     rgba(239,68,68,0.1);
-  --amber:       #f59e0b;
-  --amber-glow:  rgba(245,158,11,0.25);
-  --cyan:        #06b6d4;
-  --violet:      #8b5cf6;
-  --violet-glow: rgba(139,92,246,0.25);
+  --cyan:        #38bdf8;
+  --cyan-glow:   rgba(56, 189, 248, 0.2);
+  --blue:        #818cf8;
+  --blue-glow:   rgba(129, 140, 248, 0.2);
+  --green:       #34d399;
+  --green-glow:  rgba(52, 211, 153, 0.2);
+  --red:         #f87171;
+  --red-glow:    rgba(248, 113, 113, 0.2);
+  --amber:       #fbbf24;
+  --amber-glow:  rgba(251, 191, 36, 0.2);
+  --violet:      #a78bfa;
+  --violet-glow: rgba(167, 139, 250, 0.2);
 }
 
 @theme inline {
-  --color-background: var(--bg-base);
-  --color-foreground: var(--text-1);
+  --color-background: #020c1b;
+  --color-foreground: #e8f4ff;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-/* ── Base ─────────────────────────────────────────────── */
+/* ── Base ─────────────────────────────────────────────────── */
 
 *, *::before, *::after { box-sizing: border-box; }
 
 body {
-  background: var(--bg-base);
-  color: var(--text-1);
+  background-color: #020c1b;
+  background-image:
+    radial-gradient(ellipse 90% 55% at -5% -5%,  rgba(56,189,248,0.08)  0%, transparent 55%),
+    radial-gradient(ellipse 70% 65% at 105% 105%, rgba(129,140,248,0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 50% 40% at 50% 120%,  rgba(56,189,248,0.04)  0%, transparent 50%);
+  background-attachment: fixed;
+  color: #e8f4ff;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Glow utilities ──────────────────────────────────── */
+/* ── Glow utilities ───────────────────────────────────────── */
 
-.glow-green {
-  box-shadow: 0 0 0 1px rgba(16,185,129,0.4), 0 0 20px var(--green-glow);
-}
-.glow-red {
-  box-shadow: 0 0 0 1px rgba(239,68,68,0.4), 0 0 20px var(--red-glow);
-}
-.glow-amber {
-  box-shadow: 0 0 0 1px rgba(245,158,11,0.4), 0 0 20px var(--amber-glow);
-}
-.glow-violet {
-  box-shadow: 0 0 0 1px rgba(139,92,246,0.4), 0 0 20px var(--violet-glow);
-}
+.glow-cyan   { box-shadow: 0 0 0 1px rgba(56,189,248,0.35),  0 0 28px rgba(56,189,248,0.15); }
+.glow-green  { box-shadow: 0 0 0 1px rgba(52,211,153,0.35),  0 0 28px rgba(52,211,153,0.15); }
+.glow-red    { box-shadow: 0 0 0 1px rgba(248,113,113,0.35), 0 0 28px rgba(248,113,113,0.15); }
+.glow-amber  { box-shadow: 0 0 0 1px rgba(251,191,36,0.35),  0 0 28px rgba(251,191,36,0.15); }
+.glow-violet { box-shadow: 0 0 0 1px rgba(167,139,250,0.35), 0 0 28px rgba(167,139,250,0.15); }
 
-.text-glow-green { text-shadow: 0 0 12px var(--green-glow); color: var(--green); }
-.text-glow-red   { text-shadow: 0 0 12px var(--red-glow);   color: var(--red);   }
-.text-glow-amber { text-shadow: 0 0 12px var(--amber-glow); color: var(--amber); }
+.text-glow-cyan  { text-shadow: 0 0 18px rgba(56,189,248,0.5);  color: #38bdf8; }
+.text-glow-green { text-shadow: 0 0 18px rgba(52,211,153,0.5);  color: #34d399; }
+.text-glow-red   { text-shadow: 0 0 18px rgba(248,113,113,0.5); color: #f87171; }
 
-/* ── Animations ──────────────────────────────────────── */
+/* ── Animations ───────────────────────────────────────────── */
 
 @keyframes ticker {
   0%   { transform: translateX(0); }
@@ -79,25 +67,7 @@ body {
 }
 .ping-slow { animation: ping-slow 2s cubic-bezier(0,0,0.2,1) infinite; }
 
-@keyframes blink {
-  0%, 100% { opacity: 1; }
-  50%       { opacity: 0; }
-}
-.cursor-blink::after {
-  content: '_';
-  animation: blink 1s step-end infinite;
-  color: var(--green);
-}
-
-/* subtle grid bg for hero areas */
-.grid-bg {
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-/* ── Scrollbar ────────────────────────────────────────── */
-::-webkit-scrollbar { width: 4px; height: 4px; }
-::-webkit-scrollbar-track { background: var(--bg-base); }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: #020c1b; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }

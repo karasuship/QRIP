@@ -33,28 +33,28 @@ function MetricTile({
   const flash = useFlash(numValue ?? null);
 
   const borderCls =
-    flash === "up"   ? "border-[#10b981]/50 glow-green" :
-    flash === "down" ? "border-[#ef4444]/50 glow-red"   :
-    state === "active" ? "border-[#10b981]/40 glow-green" :
-    state === "warn"   ? "border-[#f59e0b]/40 glow-amber" :
-    state === "dim"    ? "border-[#16162a]"                :
-    "border-[#1e1e32]";
+    flash === "up"      ? "border-[#34d399]/50 glow-green" :
+    flash === "down"    ? "border-[#f87171]/50 glow-red"   :
+    state === "active"  ? "border-[#34d399]/35 glow-green" :
+    state === "warn"    ? "border-amber-400/35 glow-amber" :
+    state === "dim"     ? "border-white/[0.04]"             :
+    "border-white/[0.08]";
 
   const valueCls =
-    flash === "up"   ? "text-glow-green" :
-    flash === "down" ? "text-glow-red"   :
-    state === "active" ? "text-[#10b981]" :
-    state === "warn"   ? "text-[#f59e0b]" :
-    state === "dim"    ? "text-[#2e2e48]" :
-    "text-[#e2e8f0]";
+    flash === "up"      ? "text-glow-green" :
+    flash === "down"    ? "text-glow-red"   :
+    state === "active"  ? "text-[#34d399]"  :
+    state === "warn"    ? "text-amber-400"  :
+    state === "dim"     ? "text-white/20"   :
+    "text-[#e8f4ff]";
 
   return (
-    <div className={`rounded-lg border bg-[#0c0c15] p-3 transition-all duration-300 ${borderCls}`}>
-      <p className="font-mono text-[9px] uppercase tracking-widest text-[#2e2e48]">{label}</p>
+    <div className={`rounded-2xl border bg-white/[0.05] p-3.5 backdrop-blur-md transition-all duration-300 ${borderCls}`}>
+      <p className="font-mono text-[9px] uppercase tracking-widest text-white/25">{label}</p>
       <p className={`mt-1 font-mono text-lg tabular-nums transition-colors duration-200 ${valueCls}`}>
         {value}
       </p>
-      <p className="mt-0.5 text-[10px] text-[#374151]">{sub}</p>
+      <p className="mt-0.5 text-[10px] text-white/25">{sub}</p>
     </div>
   );
 }
@@ -86,9 +86,9 @@ export default function LiveMetrics({ initial }: { initial: SignalData }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-[#2e2e48]">ライブ指標</p>
-        <span className="flex items-center gap-1.5 font-mono text-[10px] text-[#374151]">
-          {loading && <span className="h-1 w-1 rounded-full bg-[#10b981] animate-pulse" />}
+        <p className="font-mono text-[9px] uppercase tracking-widest text-white/25">ライブ指標</p>
+        <span className="flex items-center gap-1.5 font-mono text-[10px] text-white/25">
+          {loading && <span className="h-1 w-1 rounded-full bg-[#38bdf8] animate-pulse" />}
           {lastUpdate.toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
         </span>
       </div>
