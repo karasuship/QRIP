@@ -6,6 +6,7 @@ import PushSubscribe from "@/app/components/PushSubscribe";
 import CrsSizingCalc from "@/app/components/CrsSizingCalc";
 import MarketContext from "@/app/components/MarketContext";
 import EconCalendar from "@/app/components/EconCalendar";
+import EarningsCalendar from "@/app/components/EarningsCalendar";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -461,6 +462,9 @@ export default async function SignalPage() {
 
         {/* 経済カレンダー */}
         <EconCalendar />
+
+        {/* 決算カレンダー */}
+        <EarningsCalendar />
 
         <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
           データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。
