@@ -5,6 +5,7 @@ import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
 import { getSupabaseServer } from "@/lib/supabase";
 import { fetchPutCallRatio } from "@/lib/market-fetch";
+import { fetchMmf } from "@/lib/mmf-fetch";
 import type { NewsAnalysis } from "@/lib/news-analyze";
 import type { PutCallData } from "@/lib/market-fetch";
 import NewsSection from "./NewsSection";
@@ -173,8 +174,11 @@ export default async function NewsPage() {
     } catch { /* ライブフェッチも失敗したら null のまま */ }
   }
 
-  // Put/Call 比率（独立取得）
-  const pc = await fetchPutCallRatio().catch(() => null);
+  // Put/Call 比率・MMF（独立取得）
+  const [pc, mmf] = await Promise.all([
+    fetchPutCallRatio().catch(() => null),
+    fetchMmf().catch(() => null),
+  ]);
 
   // いいね数
   let likeCounts: Record<string, number> = {};
@@ -299,7 +303,36 @@ export default async function NewsPage() {
               </div>
             </div>
 
-            {/* ③ phi2・CRS との関係（phi2_watchがある場合のみ表示）*/}
+            {/* ③ MMF 燃料スコア */}
+            {mmf && (
+              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-md">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
+                  MMF 燃料スコア — 待機資金の規模
+                </p>
+                <div className="flex items-end gap-3 mb-3">
+                  <span className={`font-mono text-4xl font-bold tabular-nums leading-none ${
+                    mmf.fuel_score >= 7 ? "text-[#34d399]" : mmf.fuel_score >= 4 ? "text-amber-400" : "text-slate-400"
+                  }`}>{mmf.fuel_score}<span className="text-lg text-slate-500">/10</span></span>
+                  <span className="mb-1 text-sm text-slate-400">
+                    MMF残高 <span className="font-mono font-semibold text-slate-300">${mmf.current_billions.toLocaleString()}B</span>
+                    <span className="ml-2 text-slate-600 text-xs">（52週 min ${mmf.min_52w.toLocaleString()}B → max ${mmf.max_52w.toLocaleString()}B）</span>
+                  </span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      mmf.fuel_score >= 7 ? "bg-[#34d399]" : mmf.fuel_score >= 4 ? "bg-amber-400" : "bg-slate-500"
+                    }`}
+                    style={{ width: `${mmf.fuel_score * 10}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-slate-500">
+                  MMF残高が52週レンジの高位 = 現金待機が多い = 株への流入余地が大きい。（データ: FRED WRMFSL、{mmf.last_date}時点）
+                </p>
+              </div>
+            )}
+
+            {/* ⑤ phi2・CRS との関係（phi2_watchがある場合のみ表示）*/}
             {(phi2Watch || crsImpact !== "neutral") && (
               <div className="rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.04] px-5 py-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-2">
@@ -326,7 +359,7 @@ export default async function NewsPage() {
               </div>
             )}
 
-            {/* ④ Fed トーン */}
+            {/* ⑥ Fed トーン */}
             {(() => {
               const fed = FED_CONFIG[analysis.fed_tone] ?? FED_CONFIG.none;
               return (
@@ -338,7 +371,7 @@ export default async function NewsPage() {
               );
             })()}
 
-            {/* ⑤ 特記事項 */}
+            {/* ⑦ 特記事項 */}
             {analysis.notable_events && (
               <div className="rounded-2xl border border-white/[0.09] bg-white/[0.04] px-5 py-3.5 backdrop-blur-sm">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-1">特記事項</p>
@@ -346,7 +379,7 @@ export default async function NewsPage() {
               </div>
             )}
 
-            {/* ⑥ ヘッドライン */}
+            {/* ⑧ ヘッドライン */}
             {newsItems.length > 0 && (
               <div>
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-2">
