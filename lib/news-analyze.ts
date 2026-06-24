@@ -17,6 +17,9 @@ export interface NewsAnalysis {
   notable_events: string;
   headlines_ja: HeadlineJa[];
   model_used: string;
+  // phi2/CRS との接続（v2 追加）
+  crs_impact: "positive" | "negative" | "neutral";
+  phi2_watch: string;
 }
 
 export async function analyzeNews(headlines: Headline[]): Promise<NewsAnalysis | null> {
@@ -41,21 +44,22 @@ ${headlineText}
   "fed_tone": （"hawkish"=タカ派 | "dovish"=ハト派 | "neutral" | "none"=Fed言及なし）,
   "main_topics": （該当するものをリスト: "inflation" "recession" "fed" "geopolitics" "earnings" "tech" "energy" "credit" "other"）,
   "notable_events": （特記事項を日本語1文。特になければ空文字）,
+  "crs_impact": （"positive" = 今日のニュースはVIX上昇・信用収縮・ドル高・RSP弱化などCRS成分を高める方向 / "negative" = リスク後退・安心材料が多い / "neutral" = CRSへの影響限定的）,
+  "phi2_watch": （phi2シグナルやCRSスコアと関連するニュース文脈を1文で。例：「VIX急騰ニュースが複数あり、CRS上昇が続けばphi2が近づく局面」。関係なければ空文字）,
   "headlines_ja": [
     {
       "title": "日本語タイトル（簡潔に）",
       "description": "日本語説明（元のdescriptionが空なら空文字）",
       "sp500_impact": "bullish または bearish または neutral",
       "sp500_reason": "SP500への影響理由（15字以内の日本語）"
-    },
-    ...（入力と同じ順番・同じ本数）
+    }
   ]
 }`;
 
   try {
     const message = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
-      max_tokens: 2500,
+      max_tokens: 2800,
       messages: [{ role: "user", content: prompt }],
     });
 
@@ -66,24 +70,39 @@ ${headlineText}
     const parsed = JSON.parse(jsonMatch[0]);
 
     const VALID_IMPACTS = new Set(["bullish", "bearish", "neutral"]);
+    const VALID_CRS = new Set(["positive", "negative", "neutral"]);
+
     const headlinesJa: HeadlineJa[] = Array.isArray(parsed.headlines_ja)
-      ? parsed.headlines_ja.slice(0, headlines.length).map((h: { title?: string; description?: string; sp500_impact?: string; sp500_reason?: string }, i: number) => ({
-          title: String(h.title || headlines[i]?.title || ""),
-          description: String(h.description || ""),
-          source: headlines[i]?.source || "",
-          sp500_impact: VALID_IMPACTS.has(h.sp500_impact ?? "") ? (h.sp500_impact as HeadlineJa["sp500_impact"]) : "neutral",
+      ? parsed.headlines_ja.slice(0, headlines.length).map((h: {
+          title?: string; description?: string;
+          sp500_impact?: string; sp500_reason?: string;
+        }, i: number) => ({
+          title:        String(h.title || headlines[i]?.title || ""),
+          description:  String(h.description || ""),
+          source:       headlines[i]?.source || "",
+          sp500_impact: VALID_IMPACTS.has(h.sp500_impact ?? "")
+            ? (h.sp500_impact as HeadlineJa["sp500_impact"])
+            : "neutral",
           sp500_reason: String(h.sp500_reason || "").slice(0, 30),
         }))
-      : headlines.map((h) => ({ title: h.title, description: h.description, source: h.source, sp500_impact: "neutral" as const, sp500_reason: "" }));
+      : headlines.map((h) => ({
+          title: h.title, description: h.description,
+          source: h.source, sp500_impact: "neutral" as const, sp500_reason: "",
+        }));
 
     return {
-      sentiment_score: Math.max(-1, Math.min(1, Number(parsed.sentiment_score) || 0)),
+      sentiment_score:  Math.max(-1, Math.min(1, Number(parsed.sentiment_score) || 0)),
       crisis_relevance: Math.max(0, Math.min(5, Math.round(Number(parsed.crisis_relevance) || 0))),
-      fed_tone: ["hawkish", "dovish", "neutral", "none"].includes(parsed.fed_tone) ? parsed.fed_tone : "none",
-      main_topics: Array.isArray(parsed.main_topics) ? parsed.main_topics.slice(0, 6) : [],
-      notable_events: String(parsed.notable_events || "").slice(0, 200),
-      headlines_ja: headlinesJa,
-      model_used: message.model,
+      fed_tone:         ["hawkish", "dovish", "neutral", "none"].includes(parsed.fed_tone)
+                          ? parsed.fed_tone : "none",
+      main_topics:      Array.isArray(parsed.main_topics) ? parsed.main_topics.slice(0, 6) : [],
+      notable_events:   String(parsed.notable_events || "").slice(0, 200),
+      crs_impact:       VALID_CRS.has(parsed.crs_impact)
+                          ? (parsed.crs_impact as NewsAnalysis["crs_impact"])
+                          : "neutral",
+      phi2_watch:       String(parsed.phi2_watch || "").slice(0, 150),
+      headlines_ja:     headlinesJa,
+      model_used:       message.model,
     };
   } catch {
     return null;

@@ -661,3 +661,89 @@ export async function fetchMarketContext(): Promise<MarketQuote[]> {
   );
   return results.filter((r): r is MarketQuote => r !== null);
 }
+
+// ── Put/Call 比率（CBOE Equity） ─────────────────────────────────────────────
+// ^PCCE = CBOE Equity Put/Call Ratio。オプション市場で実際に払われたヘッジコストを見る。
+// 高い（>0.9）= 市場が恐怖でヘッジを積んでいる = コントラリアン的に注目。
+// 低い（<0.55）= 楽観過多 = 相場の過熱を示す。
+
+export type PutCallLevel =
+  | "extreme_fear"
+  | "fear"
+  | "neutral"
+  | "greed"
+  | "extreme_greed";
+
+export interface PutCallData {
+  value: number;
+  date: string;
+  level: PutCallLevel;
+  label: string;
+  note: string;
+}
+
+function classifyPutCall(v: number): { level: PutCallLevel; label: string; note: string } {
+  if (v > 1.10) return {
+    level: "extreme_fear",
+    label: "極度の恐怖",
+    note: "過去の暴落局面に近い水準。phi2発動条件との一致を確認。",
+  };
+  if (v > 0.88) return {
+    level: "fear",
+    label: "恐怖優位",
+    note: "ヘッジ需要が高まっている。CRSスコアと合わせて確認。",
+  };
+  if (v > 0.72) return {
+    level: "neutral",
+    label: "中立",
+    note: "恐怖も楽観も偏りなし。標準的な相場環境。",
+  };
+  if (v > 0.55) return {
+    level: "greed",
+    label: "楽観優位",
+    note: "リスク選好環境。ドライパウダーは温存が妥当。",
+  };
+  return {
+    level: "extreme_greed",
+    label: "過熱（楽観過多）",
+    note: "コール買い過多。相場の天井付近に注意。",
+  };
+}
+
+export async function fetchPutCallRatio(): Promise<PutCallData | null> {
+  try {
+    const url =
+      "https://query1.finance.yahoo.com/v8/finance/chart/%5EPCCE?range=5d&interval=1d";
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      next: { revalidate: 900 },
+    });
+    if (!res.ok) return null;
+
+    const json = await res.json();
+    const result = json?.chart?.result?.[0];
+    if (!result) return null;
+
+    const timestamps: number[] = result.timestamp ?? [];
+    const closes: (number | null)[] =
+      result.indicators?.quote?.[0]?.close ?? [];
+
+    // 最新の非null値を取得
+    let value: number | null = null;
+    let date = "";
+    for (let i = closes.length - 1; i >= 0; i--) {
+      if (closes[i] != null) {
+        value = closes[i]!;
+        date = new Date(timestamps[i] * 1000).toISOString().slice(0, 10);
+        break;
+      }
+    }
+
+    if (value === null) return null;
+
+    const { level, label, note } = classifyPutCall(value);
+    return { value: Math.round(value * 1000) / 1000, date, level, label, note };
+  } catch {
+    return null;
+  }
+}
