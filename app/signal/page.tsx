@@ -4,6 +4,8 @@ import Link from "next/link";
 import LiveMetrics from "@/app/components/LiveMetrics";
 import PushSubscribe from "@/app/components/PushSubscribe";
 import CrsSizingCalc from "@/app/components/CrsSizingCalc";
+import MarketContext from "@/app/components/MarketContext";
+import EconCalendar from "@/app/components/EconCalendar";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -328,6 +330,9 @@ export default async function SignalPage() {
           <LiveMetrics initial={signal} />
         </div>
 
+        {/* 市場文脈（NASDAQ100 / ラッセル2000 / KOSPI / 金 / 原油） */}
+        <MarketContext />
+
         {/* phi2 条件チェック */}
         <section className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
           <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-slate-400">phi2 v3 発動条件</p>
@@ -453,6 +458,9 @@ export default async function SignalPage() {
             </div>
           )}
         </section>
+
+        {/* 経済カレンダー */}
+        <EconCalendar />
 
         <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
           データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。

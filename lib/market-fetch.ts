@@ -610,3 +610,54 @@ export async function fetchMarketSnapshot(): Promise<MarketSnapshot> {
 export async function fetchSP500History(): Promise<[string[], number[]] | null> {
   return fetchTicker("%5EGSPC", "2y");
 }
+
+// ──────────────────────────────────────────────
+// 市場文脈表示用（/signal ページ補助表示）
+// ──────────────────────────────────────────────
+
+export interface MarketQuote {
+  symbol: string;
+  label: string;
+  price: number;
+  changePct: number;
+  category: "equity" | "commodity";
+}
+
+async function fetchQuoteDisplay(
+  symbol: string,
+  label: string,
+  category: MarketQuote["category"],
+): Promise<MarketQuote | null> {
+  try {
+    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(symbol)}?range=2d&interval=1d`;
+    const res = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      next: { revalidate: 900 },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const meta = json?.chart?.result?.[0]?.meta;
+    if (!meta) return null;
+    const price: number = meta.regularMarketPrice;
+    const prev: number = meta.previousClose ?? meta.chartPreviousClose;
+    if (!price || !prev) return null;
+    return { symbol, label, price, changePct: ((price - prev) / prev) * 100, category };
+  } catch {
+    return null;
+  }
+}
+
+const CONTEXT_TICKERS: { symbol: string; label: string; category: MarketQuote["category"] }[] = [
+  { symbol: "^NDX",  label: "NASDAQ100",    category: "equity"    },
+  { symbol: "^RUT",  label: "ラッセル2000", category: "equity"    },
+  { symbol: "^KS11", label: "KOSPI",        category: "equity"    },
+  { symbol: "GC=F",  label: "金先物",       category: "commodity" },
+  { symbol: "CL=F",  label: "WTI原油",      category: "commodity" },
+];
+
+export async function fetchMarketContext(): Promise<MarketQuote[]> {
+  const results = await Promise.all(
+    CONTEXT_TICKERS.map((t) => fetchQuoteDisplay(t.symbol, t.label, t.category)),
+  );
+  return results.filter((r): r is MarketQuote => r !== null);
+}

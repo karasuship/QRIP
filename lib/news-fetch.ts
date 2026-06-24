@@ -23,6 +23,10 @@ const RSS_SOURCES = [
     url: "https://www.cnbc.com/id/100003114/device/rss/rss.html",
     source: "CNBC",
   },
+  {
+    url: "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+    source: "MarketWatch",
+  },
 ];
 
 function extractTag(xml: string, tag: string): string {
