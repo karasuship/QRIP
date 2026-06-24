@@ -1,5 +1,12 @@
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { lessons, closing } from "../data/lessons";
+import { computeSimulation } from "@/lib/sim-compute";
+
+const SimulationChart = dynamic(
+  () => import("@/app/components/charts/SimulationChart"),
+  { ssr: false }
+);
 
 export const metadata = {
   title: "QRIP — 使い方と検証結果",
@@ -41,7 +48,13 @@ const STEPS = [
   { n: "04", title: "通知を設定する",         body: "シグナルページの「シグナル通知を受け取る」ボタンでWeb Push通知をオンにできる。毎日チェックしなくてもシグナル発動時に知れる。" },
 ];
 
-export default function Learn() {
+export default async function Learn() {
+  // シミュレーションデータ（CSV から計算、初回のみ時間がかかる）
+  let simResult = null;
+  try {
+    simResult = computeSimulation();
+  } catch { /* CSV が読めない環境（ブラウザなど）では無視 */ }
+
   return (
     <div className="min-h-screen">
       <main className="mx-auto max-w-4xl px-6 py-12">
@@ -58,6 +71,23 @@ export default function Learn() {
             数字の読み方と、その根拠となった検証を説明する。
           </p>
         </div>
+
+        {/* シミュレーションチャート */}
+        {simResult && simResult.monthly.length > 0 && (
+          <section className="mt-8">
+            <SimulationChart
+              monthly={simResult.monthly}
+              signals={simResult.signals}
+              dcaFinal={simResult.dcaFinal}
+              phi2Final={simResult.phi2Final}
+              alpha={simResult.alpha}
+            />
+            <div className="mt-2 flex flex-wrap gap-4 font-mono text-[10px] text-slate-600">
+              <span>発動回数（2008〜）: <span className="text-slate-400">{simResult.totalSignals}回</span></span>
+              <span>年平均: <span className="text-slate-400">{simResult.signalsPerYear}回</span></span>
+            </div>
+          </section>
+        )}
 
         {/* 使い方 4ステップ */}
         <section className="mt-10">
@@ -85,7 +115,7 @@ export default function Learn() {
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`h-2 w-2 rounded-full shrink-0 ${s.dot}`} />
                   <span className={`font-mono text-sm font-bold ${s.color}`}>{s.name}</span>
-                  <span className="ml-1 font-mono text-[9px] uppercase tracking-widest text-slate-400">{s.quality}</span>
+                  <span className="ml-1 font-mono text-[10px] uppercase tracking-widest text-slate-400">{s.quality}</span>
                 </div>
                 <p className="text-xs text-slate-400 mb-2">{s.condition}</p>
                 <div className="flex items-center gap-3">
@@ -109,7 +139,7 @@ export default function Learn() {
               <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                 <tr>
                   {["スコア","状態","対応"].map(h => (
-                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -143,7 +173,7 @@ export default function Learn() {
               <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                 <tr>
                   {["インデックス","TEST Z","63日後","推奨"].map(h => (
-                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -183,7 +213,7 @@ export default function Learn() {
               <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                 <tr>
                   {["保有期間","年率換算リターン","出口戦略","TEST Z"].map(h => (
-                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
                   ))}
                 </tr>
               </thead>
@@ -274,7 +304,7 @@ export default function Learn() {
               <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                 <tr>
                   {["体制","期間","特徴"].map(h => (
-                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
                   ))}
                 </tr>
               </thead>

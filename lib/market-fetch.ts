@@ -710,6 +710,52 @@ function classifyPutCall(v: number): { level: PutCallLevel; label: string; note:
   };
 }
 
+// ── 金利環境（米10年債 / 3ヶ月T-bill）────────────────────────────────────────
+// ^TNX = 米10年国債利回り、^IRX = 米3ヶ月T-bill利回り
+// スプレッド（10Y − 3M）でイールドカーブの形状を判定する
+
+export interface RateData {
+  tnx: number;       // 米10年債利回り（%）
+  irx: number;       // 米3ヶ月T-bill利回り（%）
+  spreadBp: number;  // スプレッド 10Y − 3M（ベーシスポイント）
+  date: string;
+  tnxLevel: "low" | "mid" | "high";
+  curveShape: "inverted" | "flat" | "normal";
+}
+
+export async function fetchInterestRates(): Promise<RateData | null> {
+  try {
+    const [tnxResult, irxResult] = await Promise.all([
+      fetchTicker("^TNX", "5d"),
+      fetchTicker("^IRX", "5d"),
+    ]);
+    if (!tnxResult || !irxResult) return null;
+
+    const [, tnxVals]      = tnxResult;
+    const [irxDates, irxVals] = irxResult;
+
+    const tnx = tnxVals.at(-1);
+    const irx = irxVals.at(-1);
+    if (tnx == null || irx == null) return null;
+
+    const spreadBp   = Math.round((tnx - irx) * 100);
+    const date       = irxDates.at(-1) ?? "";
+    const tnxLevel   = tnx < 3 ? "low" : tnx < 4.5 ? "mid" : "high";
+    const curveShape = spreadBp < -50 ? "inverted" : spreadBp < 50 ? "flat" : "normal";
+
+    return {
+      tnx:        Math.round(tnx * 100) / 100,
+      irx:        Math.round(irx * 100) / 100,
+      spreadBp,
+      date,
+      tnxLevel:   tnxLevel as RateData["tnxLevel"],
+      curveShape: curveShape as RateData["curveShape"],
+    };
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPutCallRatio(): Promise<PutCallData | null> {
   try {
     const url =

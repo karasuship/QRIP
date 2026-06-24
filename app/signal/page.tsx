@@ -1,12 +1,19 @@
 import { fetchSignal } from "@/lib/signal";
 import type { Metadata } from "next";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import LiveMetrics from "@/app/components/LiveMetrics";
 import PushSubscribe from "@/app/components/PushSubscribe";
 import CrsSizingCalc from "@/app/components/CrsSizingCalc";
 import MarketContext from "@/app/components/MarketContext";
 import EconCalendar from "@/app/components/EconCalendar";
 import EarningsCalendar from "@/app/components/EarningsCalendar";
+import { getRecentSp500 } from "@/lib/sim-compute";
+import { getSupabaseServer } from "@/lib/supabase";
+import type { CrsPoint } from "@/app/components/charts/CrsHistoryChart";
+
+const Sp500SignalChart = dynamic(() => import("@/app/components/charts/Sp500SignalChart"), { ssr: false });
+const CrsHistoryChart  = dynamic(() => import("@/app/components/charts/CrsHistoryChart"),  { ssr: false });
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -30,7 +37,7 @@ function CRSDot({ active, label }: { active: boolean; label: string }) {
           : "border-white/[0.18] bg-white/[0.06] text-white/25"
       }`}
     >
-      <span className={`inline-block h-1.5 w-1.5 rounded-full ${active ? "bg-red-400" : "bg-white/20"}`} />
+      <span className={`inline-block h-1.5 w-1.5 rounded-full ${active ? "bg-red-400" : "bg-white/30"}`} />
       {label}
     </span>
   );
@@ -54,13 +61,13 @@ function SignalBadge({
     ? quality === "high" ? "bg-[#34d399]"
     : quality === "mid"  ? "bg-amber-400"
     : "bg-sky-400"
-    : "bg-white/20";
+    : "bg-white/30";
 
   const text = active
     ? quality === "high" ? "text-[#34d399]"
     : quality === "mid"  ? "text-amber-400"
     : "text-sky-400"
-    : "text-white/25";
+    : "text-white/40";
 
   return (
     <div className={`rounded-2xl border p-3.5 backdrop-blur-sm ${border}`}>
@@ -69,7 +76,7 @@ function SignalBadge({
         <p className={`text-sm font-medium ${active ? text : "text-white/25"}`}>{label}</p>
         {active && <span className={`ml-auto font-mono text-xs font-semibold ${text}`}>発動中</span>}
       </div>
-      <p className="mt-1 pl-4 font-mono text-[10px] text-white/25">{sub}</p>
+      <p className="mt-1 pl-4 font-mono text-[10px] text-white/40">{sub}</p>
     </div>
   );
 }
@@ -85,6 +92,23 @@ function athQuality(dd: number): { label: string; color: string } | null {
 export default async function SignalPage() {
   let signal;
   let error: string | null = null;
+
+  // チャート用データを並列取得
+  const sp500ChartData = getRecentSp500();
+  let crsHistory: CrsPoint[] = [];
+  try {
+    const db = getSupabaseServer();
+    const { data: mhData } = await db
+      .from("market_daily")
+      .select("date, crs_score, phi2_active")
+      .order("date", { ascending: true })
+      .limit(90);
+    crsHistory = (mhData ?? []).map((r) => ({
+      date:   r.date as string,
+      crs:    r.crs_score as number,
+      signal: r.phi2_active as boolean,
+    }));
+  } catch { /* Supabase が空の場合は CSV のみ */ }
 
   try {
     signal = await fetchSignal();
@@ -225,6 +249,12 @@ export default async function SignalPage() {
         )}
         {/* CRS連動サイジング試算 (CRS>=2 で表示) */}
         {crs >= 2 && <CrsSizingCalc crs={crs} />}
+
+        {/* ── チャートセクション ── */}
+        <section className="mt-5 space-y-3">
+          <Sp500SignalChart data={sp500ChartData} currentCrs={crs} />
+          {crsHistory.length > 0 && <CrsHistoryChart data={crsHistory} />}
+        </section>
 
         {/* ④ 購入後の行動ガイド（シグナル発動時のみ） */}
         {anySignalActive && (
@@ -390,7 +420,7 @@ export default async function SignalPage() {
                 <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                   <tr>
                     {["日付","当日","ATH 乖離","今日まで","経過"].map(h => (
-                      <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
+                      <th key={h} className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -434,7 +464,7 @@ export default async function SignalPage() {
                 <thead className="border-b border-white/[0.13] bg-white/[0.06]">
                   <tr>
                     {["日付","当日","ATH 乖離","CRS","phi2 v3"].map(h => (
-                      <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
+                      <th key={h} className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -469,9 +499,9 @@ export default async function SignalPage() {
           <EarningsCalendar />
         </section>
 
-        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
+        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-500">
           データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。
-          phi2 v3: decisions/0021（TEST Z=+8.65）· HYG-8%: decisions/0016（TEST Z=+9.42）· B4: decisions/0018（TEST Z=+8.29）。
+          phi2 v3: TEST Z=+8.65 · HYG-8%: TEST Z=+9.42 · B4: TEST Z=+8.29 (decisions/0021, 0016, 0018)。
           R37: CRS=5→2x · R39: HOLD最良 · R42: EFA同等品質。
           これは投資助言ではありません。
         </p>

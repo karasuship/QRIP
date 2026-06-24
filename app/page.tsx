@@ -119,7 +119,7 @@ export default function Home() {
                     }`}>
                       {pct(h.median)}
                     </p>
-                    <p className="text-[10px] text-white/20">中央値</p>
+                    <p className="text-[10px] text-white/35">中央値</p>
                     <p className="mt-1.5 font-mono text-xs text-slate-400">勝率 {h.win}%</p>
                     <p className="font-mono text-[10px] text-[#f87171]/60">最悪 {pct(h.worst)}</p>
                   </div>
@@ -134,7 +134,7 @@ export default function Home() {
                 <span className="font-mono text-[#34d399]">{pct(cell!.horizons[2].median)}</span>
                 （勝率{cell!.horizons[2].win}%）だった。
               </p>
-              <p className="mt-2 font-mono text-[10px] text-white/20">
+              <p className="mt-2 font-mono text-[10px] text-white/35">
                 n = 約{cell!.n}（延べ該当局面数）
               </p>
             </>
