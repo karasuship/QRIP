@@ -131,6 +131,135 @@ export default function Learn() {
           </div>
         </section>
 
+        {/* ⑤ EFA 国際分散 */}
+        <section className="mt-10">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">EFA 先進国インデックスへの応用（Round 42）</p>
+          <p className="mt-2 mb-3 text-xs leading-6 text-slate-400">
+            phi2 v3 の条件（ATH乖離・vol・CRS）はSP500専用ではない。
+            CRSは米国指標だが、グローバルな金融危機は米国主導のため、世界市場にも機能する。
+          </p>
+          <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+                <tr>
+                  {["インデックス","TEST Z","63日後","推奨"].map(h => (
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { name: "SP500（VOO）",      z: "+8.65", ret: "+14.5%", rec: "◎", color: "text-[#34d399]" },
+                  { name: "EFA 先進国（VEA）", z: "+8.08", ret: "+15.6%", rec: "○", color: "text-[#34d399]" },
+                  { name: "EEM 新興国（VWO）", z: "+6.74", ret: "+12.1%", rec: "△", color: "text-amber-400" },
+                  { name: "QQQ NASDAQ100",      z: "+4.16", ret: "+9.4%",  rec: "△", color: "text-slate-400" },
+                ].map(r => (
+                  <tr key={r.name} className="border-t border-white/[0.09]">
+                    <td className="px-4 py-2.5 text-sm text-slate-300">{r.name}</td>
+                    <td className={`px-4 py-2.5 font-mono text-sm font-semibold ${r.color}`}>{r.z}</td>
+                    <td className={`px-4 py-2.5 font-mono text-sm ${r.color}`}>{r.ret}</td>
+                    <td className={`px-4 py-2.5 font-mono text-sm ${r.color}`}>{r.rec}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.05] px-4 py-3 backdrop-blur-sm">
+            <p className="text-sm font-medium leading-6 text-[#38bdf8]">
+              phi2発動時にSP500+EFA同時買いは統計的に支持される。QQQは過発動（TEST n=58）で希釈されるため非推奨。
+            </p>
+          </div>
+        </section>
+
+        {/* ⑥ 63日アルファ集中の構造 */}
+        <section className="mt-10">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">なぜ売らなくていいのか（Round 39 · 43）</p>
+          <p className="mt-2 text-xs leading-6 text-slate-400">
+            phi2のアルファ（超過リターン）は<strong className="text-slate-300">最初の63日に集中する</strong>。
+            63日後以降は「普通の市場リターン（年率約+7.8%）」に戻る。
+          </p>
+          <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
+            <table className="w-full text-sm">
+              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+                <tr>
+                  {["保有期間","年率換算リターン","出口戦略","TEST Z"].map(h => (
+                    <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-400">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { period: "63日（固定）",      rate: "+72.0%/年", strategy: "固定63日保有", z: "+8.41", highlight: true },
+                  { period: "126日（固定）",     rate: "+48.2%/年", strategy: "—",              z: "+13.79", highlight: false },
+                  { period: "252日（固定）",     rate: "+36.6%/年", strategy: "—",              z: "+25.01", highlight: false },
+                  { period: "CRS=0復帰",         rate: "+43.3%/年", strategy: "恐怖消滅後売り", z: "+10.46", highlight: false },
+                  { period: "RSI>55復帰（10日）",rate: "+48.8%/年", strategy: "素早い出口",     z: "−1.12 ✗", highlight: false },
+                ].map(r => (
+                  <tr key={r.period} className={`border-t border-white/[0.09] ${r.highlight ? "bg-[#34d399]/[0.04]" : ""}`}>
+                    <td className={`px-4 py-2.5 font-mono text-xs ${r.highlight ? "text-[#34d399]" : "text-slate-400"}`}>{r.period}</td>
+                    <td className={`px-4 py-2.5 font-mono text-xs font-semibold ${r.highlight ? "text-[#34d399]" : "text-slate-300"}`}>{r.rate}</td>
+                    <td className="px-4 py-2.5 text-xs text-slate-500">{r.strategy}</td>
+                    <td className={`px-4 py-2.5 font-mono text-xs ${r.z.includes("✗") ? "text-[#f87171]" : r.highlight ? "text-[#34d399]" : "text-slate-400"}`}>{r.z}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="mt-3 rounded-2xl border border-[#34d399]/20 bg-[#34d399]/[0.06] px-4 py-3 backdrop-blur-sm">
+            <p className="text-sm font-medium leading-6 text-[#34d399]">
+              売らずにHOLDするのが最良。30年シミュレーションで売り戦略との差は14〜16万（年5,000円未満）。
+              税金と手数料を考えると明確にHOLD優位。
+            </p>
+          </div>
+        </section>
+
+        {/* ⑦ 機能しなかった仮説 */}
+        <section className="mt-10">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">試して捨てた仮説</p>
+          <p className="mt-2 mb-3 text-xs leading-6 text-slate-400">
+            検証で「機能しない」と判明したもの。直感的に正しそうでも、データでは裏付けられなかった。
+          </p>
+          <div className="space-y-2">
+            {[
+              {
+                name: "RSI<25 単体",
+                why: "TRAIN Z=+0.06（ランダムと同等）。phi2条件と重なる局面でのみ意味を持つ。",
+                color: "border-white/[0.12] bg-white/[0.06]",
+              },
+              {
+                name: "分割買い（複数回に分けて購入）",
+                why: "全額即買いに負ける。phi2シグナルは「今日が統計的根拠のある日」であり、分割する意味がない。",
+                color: "border-white/[0.12] bg-white/[0.06]",
+              },
+              {
+                name: "ATHティア別加重（深いほど多く買う）",
+                why: "TRAIN/TESTで深度分布が逆転。GFC（-30%超）はTEST期間でゼロ。過去データへの過学習リスク。",
+                color: "border-white/[0.12] bg-white/[0.06]",
+              },
+              {
+                name: "金利シグナル（TNX・IRX）",
+                why: "QE前後で解釈が逆転。利上げ局面では「上がるから買い」、利下げ局面では「景気悪化の証拠」と真逆になる。体制依存で不採用。",
+                color: "border-white/[0.12] bg-white/[0.06]",
+              },
+              {
+                name: "CAPE割安フィルタ（高CAPEは買わない）",
+                why: "高CAPE（30〜35）環境でもTEST Z=+6.72。QE市場では割高でも回復が速い。CAPEは長期バリュエーションの参考にはなるが、シグナルフィルタには機能しない。",
+                color: "border-white/[0.12] bg-white/[0.06]",
+              },
+              {
+                name: "RSI>55での素早い出口（平均10日）",
+                why: "TEST Z=−1.12（負の方向）。短期バウンスへの反応に過ぎない。統計的に不安定。",
+                color: "border-white/[0.12] bg-white/[0.06]",
+              },
+            ].map(h => (
+              <div key={h.name} className={`rounded-2xl border px-4 py-3 backdrop-blur-sm ${h.color}`}>
+                <p className="text-sm font-medium text-slate-500 line-through">{h.name}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">{h.why}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* 区切り */}
         <div className="mt-12 border-t border-white/[0.12] pt-10">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">なぜこのアプローチか — 検証で分かったこと</p>
