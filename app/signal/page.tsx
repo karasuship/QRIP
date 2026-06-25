@@ -12,6 +12,7 @@ import type { CrsPoint } from "@/app/components/charts/CrsHistoryChart";
 import type { Sp500Point } from "@/app/components/charts/Sp500SignalChart";
 import Sp500SignalChart from "@/app/components/charts/Sp500SignalChartClient";
 import CrsHistoryChart  from "@/app/components/charts/CrsHistoryChartClient";
+import PriceChartClient from "@/app/signal/PriceChartClient";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -312,7 +313,16 @@ export default async function SignalPage() {
           );
         })()}
 
-        {/* ── チャートセクション ── */}
+        {/* ── ライブチャート（Yahoo Finance 15分遅延 / 5分ポーリング）── */}
+        <section className="mt-5">
+          <div className="mb-2 flex items-center gap-2">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">ライブチャート</p>
+            <span className="rounded-full border border-white/[0.10] px-2 py-0.5 font-mono text-[9px] text-slate-600">S&amp;P 500 · 15分遅延</span>
+          </div>
+          <PriceChartClient />
+        </section>
+
+        {/* ── チャートセクション（Supabase蓄積データ）── */}
         <section className="mt-5 space-y-3">
           <Sp500SignalChart data={sp500ChartData} currentCrs={crs} />
           {crsHistory.length > 0 && <CrsHistoryChart data={crsHistory} />}
