@@ -77,7 +77,7 @@ async function fetchRSS(url: string, source: string): Promise<Headline[]> {
         "User-Agent": "Mozilla/5.0",
         "Accept": "application/rss+xml,application/xml,text/xml",
       },
-      cache: "no-store",
+      next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
     return parseItems(await res.text(), source);
