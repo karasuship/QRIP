@@ -279,21 +279,58 @@ export default function SimulateClient() {
   const totalPct = assets.reduce((s, a) => s + a.pct, 0);
   const pctOk = Math.abs(totalPct - 100) < 0.5;
 
-  // ── 実行 ─────────────────────────────
-  const data = useMemo(() => runSim({
+  // ── 実行（メイン）────────────────────
+  const simParams = {
     initialLump, monthly, monthlyGrowthPct, bonusMonths, bonusAmount,
     accumYears, assets, nisaMode, enableDecum, decumYears,
     withdrawMode, fixedMonthly, scenario, crashYear, histStart,
-  }), [
+  };
+  const data = useMemo(() => runSim(simParams), [
     initialLump, monthly, monthlyGrowthPct, bonusMonths, bonusAmount,
     accumYears, assets, nisaMode, enableDecum, decumYears,
     withdrawMode, fixedMonthly, scenario, crashYear, histStart,
   ]);
 
+  // ── 参照シミュレーション ──────────────
+  // ① ボーナスなし（月次のみ・同リターン率）
+  const noBonusData = useMemo(() => runSim({
+    ...simParams,
+    bonusMonths: new Set<number>(),
+    bonusAmount: 0,
+  }), [
+    initialLump, monthly, monthlyGrowthPct, accumYears, assets, nisaMode,
+    enableDecum, decumYears, withdrawMode, fixedMonthly, scenario, crashYear, histStart,
+  ]);
+
+  // ② 同額均等DCA（同じ総資金を毎月均等投入・同リターン率）
+  // ボーナス分を月割りにして再分配。月額増加率は適用しない（均等なので）
+  const uniformData = useMemo(() => {
+    const bonusPerYear = bonusAmount * bonusMonths.size;
+    const uniformMonthly = monthly + bonusPerYear / 12;
+    return runSim({
+      ...simParams,
+      monthly: uniformMonthly,
+      monthlyGrowthPct: 0,  // 均等のため成長なし
+      bonusMonths: new Set<number>(),
+      bonusAmount: 0,
+    });
+  }, [
+    initialLump, monthly, bonusMonths, bonusAmount, accumYears, assets, nisaMode,
+    enableDecum, decumYears, withdrawMode, fixedMonthly, scenario, crashYear, histStart,
+  ]);
+
   const last = data[data.length - 1];
   const endAccum = data[accumYears - 1];
   const tableData = showAllYears ? data : data.filter((d) => d.year % 5 === 0 || d.year === 1 || d.year === (enableDecum ? accumYears + decumYears : accumYears));
-  const chartData = data.filter((d) => d.year % 5 === 0 || d.year === 1 || d.year === last.year);
+
+  // チャート用: 各年末の3本線をマージ
+  const chartData = data
+    .filter((d) => d.year % 5 === 0 || d.year === 1 || d.year === last.year)
+    .map((d) => ({
+      ...d,
+      noBonusPf:  noBonusData[d.year - 1]?.portfolio  ?? 0,
+      uniformPf:  uniformData[d.year - 1]?.portfolio  ?? 0,
+    }));
 
   // ── 資産編集 ─────────────────────────
   const updateAsset = useCallback((id: string, key: keyof Asset, val: unknown) => {
@@ -537,11 +574,21 @@ export default function SimulateClient() {
       </section>
 
       {/* ━━ 結果サマリー ━━━━━━━━━━━━━━━━━━━━ */}
-      {last && (
+      {last && (() => {
+        const noBonusLast  = noBonusData[noBonusData.length - 1];
+        const uniformLast  = uniformData[uniformData.length - 1];
+        const bonusEffect  = last.portfolio - noBonusLast.portfolio;   // ボーナス資金の貢献
+        const timingEffect = last.portfolio - uniformLast.portfolio;   // 投入タイミングの貢献（±）
+        const totalBonus   = bonusAmount * bonusMonths.size * accumYears;
+        const bonusRoi     = totalBonus > 0 ? bonusEffect / totalBonus : 0; // ボーナス資金の増殖率
+
+        return (
         <section>
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
             {enableDecum ? `${accumYears}年積立→${decumYears}年取り崩しの試算` : `${accumYears}年後の試算`}
           </p>
+
+          {/* 4メインカード */}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
               { l:"総投資元本",   v:fMan(last.invested),    c:"text-slate-400",  s:"累計投入額" },
@@ -556,6 +603,71 @@ export default function SimulateClient() {
               </div>
             ))}
           </div>
+
+          {/* ━ 資金効果の内訳 ━━━━━━━━━━━━━━━━━━━━━ */}
+          {bonusMonths.size > 0 && (
+            <div className="mt-3 rounded-2xl border border-white/[0.12] bg-white/[0.03] p-4">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
+                資金効果の内訳 — 「追加投入分でどれだけ増えるか」
+              </p>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+
+                {/* 月次DCAのみ */}
+                <div className="rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-3">
+                  <p className="font-mono text-[9px] uppercase text-slate-600">月次DCAのみ（ボーナスなし）</p>
+                  <p className="font-mono text-base font-bold text-slate-300 mt-1">{fMan(noBonusLast.portfolio)}</p>
+                  <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                    元本 {fMan(noBonusLast.invested)} → ×{(noBonusLast.portfolio/Math.max(noBonusLast.invested,1)).toFixed(1)}
+                  </p>
+                </div>
+
+                {/* ボーナス追加の貢献 */}
+                <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-3 py-3">
+                  <p className="font-mono text-[9px] uppercase text-amber-400/70">ボーナス追加投入の貢献</p>
+                  <p className="font-mono text-base font-bold text-amber-400 mt-1">+{fMan(bonusEffect)}</p>
+                  <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                    ボーナス総投入額 {fMan(totalBonus)} が
+                    {totalBonus > 0 ? `×${(1 + bonusRoi).toFixed(2)}に増殖` : "なし"}
+                  </p>
+                  <p className="font-mono text-[9px] text-slate-700 mt-1">
+                    ↑ これが「追加投入してるから当然高い」分
+                  </p>
+                </div>
+
+                {/* タイミング効果 */}
+                <div className={`rounded-xl border px-3 py-3 ${
+                  timingEffect > 0
+                    ? "border-[#34d399]/20 bg-[#34d399]/[0.04]"
+                    : "border-white/[0.10] bg-white/[0.03]"
+                }`}>
+                  <p className="font-mono text-[9px] uppercase text-slate-600">
+                    投入タイミングの効果
+                    <span className="ml-1 text-slate-700">（同額均等配分との比較）</span>
+                  </p>
+                  <p className={`font-mono text-base font-bold mt-1 ${
+                    timingEffect > 0 ? "text-[#34d399]" : timingEffect < 0 ? "text-[#f87171]" : "text-slate-400"
+                  }`}>
+                    {timingEffect > 0 ? "+" : ""}{fMan(timingEffect)}
+                  </p>
+                  <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                    同額を毎月均等投入した場合: {fMan(uniformLast.portfolio)}
+                  </p>
+                  <p className="font-mono text-[9px] text-slate-700 mt-1">
+                    {timingEffect > 0
+                      ? "↑ ボーナス月に集中投入することで複利を多く得た分"
+                      : timingEffect < 0
+                      ? "↑ 均等配分の方がわずかに有利（月次分散効果）"
+                      : "タイミング効果なし（均等と同等）"}
+                  </p>
+                </div>
+              </div>
+
+              <p className="mt-2 font-mono text-[9px] text-slate-700 leading-5">
+                ※「タイミング効果」はシグナルによるリターン率アップを含まない。シグナル（phi2等）でリターン率が上がる場合は、
+                上の年率リターン欄を変えて比較してください（例: VOO 10.4% → phi2適用後 12.7%）。
+              </p>
+            </div>
+          )}
 
           <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
             {/* NISA進捗 */}
@@ -586,7 +698,8 @@ export default function SimulateClient() {
             )}
           </div>
         </section>
-      )}
+        );
+      })()}
 
       {/* ━━ チャート ━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section>
@@ -610,10 +723,11 @@ export default function SimulateClient() {
               <Tooltip content={<ChartTip/>}/>
               <Legend formatter={(v)=><span className="font-mono text-[10px] text-slate-400">{v}</span>}/>
               {chartMode === "wealth" && <>
-                <Area type="monotone" dataKey="invested"  name="元本"     stroke="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.03)" strokeWidth={1} strokeDasharray="4 2" dot={false}/>
-                {nisaMode !== "taxable" && <Area type="monotone" dataKey="nisa" name="NISA" stroke="#38bdf8" fill="#38bdf840" strokeWidth={1.5} dot={false}/>}
-                <Area type="monotone" dataKey="portfolio" name="資産合計"  stroke="#34d399" fill="#34d39920" strokeWidth={2} dot={false}/>
-                <Area type="monotone" dataKey="afterTax"  name="税引後"    stroke="#e8f4ff" fill="transparent" strokeWidth={1} strokeDasharray="2 2" dot={false}/>
+                <Area type="monotone" dataKey="invested"    name="元本"              stroke="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.03)" strokeWidth={1} strokeDasharray="4 2" dot={false}/>
+                {bonusMonths.size > 0 && <Area type="monotone" dataKey="noBonusPf"  name="月次DCAのみ"           stroke="#64748b" fill="transparent" strokeWidth={1.5} strokeDasharray="5 3" dot={false}/>}
+                {bonusMonths.size > 0 && <Area type="monotone" dataKey="uniformPf"  name="同額均等配分"           stroke="#f59e0b" fill="transparent" strokeWidth={1}  strokeDasharray="3 3" dot={false}/>}
+                {nisaMode !== "taxable" && <Area type="monotone" dataKey="nisa"     name="NISA"                  stroke="#38bdf8" fill="#38bdf840" strokeWidth={1.5} dot={false}/>}
+                <Area type="monotone" dataKey="portfolio"   name="現在の設定"         stroke="#34d399" fill="#34d39920" strokeWidth={2.5} dot={false}/>
               </>}
               {chartMode === "dividend" && <>
                 <Bar dataKey="divCash"    name="年間現金配当" fill="#f59e0b60" radius={2}/>
@@ -623,6 +737,14 @@ export default function SimulateClient() {
             </ComposedChart>
           </ResponsiveContainer>
         </div>
+        {bonusMonths.size > 0 && chartMode === "wealth" && (
+          <div className="mt-2 flex flex-wrap gap-3 font-mono text-[9px] text-slate-600">
+            <span><span className="text-[#34d399]">━</span> 現在の設定（月次+ボーナス）</span>
+            <span><span className="text-amber-400">┅</span> 同額均等配分（同じ総資金を毎月均等）</span>
+            <span><span className="text-slate-400">╌</span> 月次DCAのみ（ボーナスなし）</span>
+            <span><span className="text-white/30">╌</span> 元本（累計投入額）</span>
+          </div>
+        )}
       </section>
 
       {/* ━━ 年次テーブル ━━━━━━━━━━━━━━━━━━━━━ */}
