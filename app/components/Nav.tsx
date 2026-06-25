@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/",            label: "ホーム",   desc: "過去の相場分布" },
   { href: "/signal",      label: "シグナル", desc: "今日の買い場判定" },
   { href: "/news",        label: "ニュース", desc: "市場の空気感" },
+  { href: "/simulate",    label: "試算",     desc: "30年資産シミュレーション" },
   { href: "/portfolio",   label: "実績",     desc: "ポートフォリオ記録" },
   { href: "/journal",     label: "日誌",     desc: "投資日誌・暴落時の記録" },
   { href: "/learn",       label: "検証",     desc: "バックテスト結果" },
