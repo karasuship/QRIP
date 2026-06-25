@@ -1,501 +1,682 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
+  ResponsiveContainer, ComposedChart, Area, Bar,
+  XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
 
-// ── 定数（バックテスト由来） ──────────────────────────────────────────────────
+// ── 定数 ─────────────────────────────────────────────────────
+const TAX      = 0.20315;
+const NISA_MAX = 18_000_000;   // 1800万生涯上限
+const NISA_ANN = 3_600_000;    // 年360万上限
 
-const ANNUAL_RATE = {
-  savings:  0.001,   // 普通預金 0.1%
-  dca:      0.104,   // SP500 歴史的平均
-  phi2:     0.127,   // phi2戦略（+2.3%アルファ）
-  dividend: 0.065,   // NTT・JT型配当株（配当3.5%+株価成長3%）
+// SP500実績年次リターン（1994〜2024）
+const SP500_HIST: Record<number, number> = {
+  1994:-0.015, 1995:0.342, 1996:0.230, 1997:0.331, 1998:0.285,
+  1999:0.210,  2000:-0.091,2001:-0.119,2002:-0.221,2003:0.287,
+  2004:0.108,  2005:0.048, 2006:0.158, 2007:0.055, 2008:-0.370,
+  2009:0.265,  2010:0.151, 2011:0.021, 2012:0.160, 2013:0.323,
+  2014:0.137,  2015:0.014, 2016:0.119, 2017:0.218, 2018:-0.044,
+  2019:0.314,  2020:0.184, 2021:0.287, 2022:-0.183,2023:0.264,
+  2024:0.231,
 };
+const HIST_YRS = Object.keys(SP500_HIST).map(Number);
 
-const TAX_RATE = 0.20315; // 譲渡益課税
-
-// ── プリセット ────────────────────────────────────────────────────────────────
-
-interface Preset {
-  label: string;
-  sub: string;
-  monthly: number;
-  bonusJune: number;
-  bonusDec: number;
-  years: number;
-  nisa: "new" | "taxable" | "both";
-  strategy: "dca" | "phi2" | "dividend";
+// ── 型 ────────────────────────────────────────────────────────
+interface Asset {
+  id: string;
+  name: string;
+  pct: number;        // 配分%
+  totalRet: number;   // 年率トータルリターン%（DRIP前提）
+  divYield: number;   // 配当利回り%
+  drip: boolean;      // 配当再投資
 }
 
-const PRESETS: Preset[] = [
-  {
-    label: "積立NISA専念",
-    sub: "新NISA枠を最大活用。毎月コツコツ型。",
-    monthly: 100000,
-    bonusJune: 0,
-    bonusDec: 0,
-    years: 30,
-    nisa: "new",
-    strategy: "dca",
-  },
-  {
-    label: "積立＋ボーナス活用",
-    sub: "月次積立＋年2回ボーナスを一括投下。",
-    monthly: 50000,
-    bonusJune: 200000,
-    bonusDec: 200000,
-    years: 25,
-    nisa: "both",
-    strategy: "dca",
-  },
-  {
-    label: "phi2シグナル活用",
-    sub: "DCA継続＋シグナル発動時に追加投入。",
-    monthly: 50000,
-    bonusJune: 100000,
-    bonusDec: 100000,
-    years: 30,
-    nisa: "new",
-    strategy: "phi2",
-  },
-  {
-    label: "CF配当重視",
-    sub: "NTT・JT型配当株中心。毎年の配当収入を確保。",
-    monthly: 80000,
-    bonusJune: 200000,
-    bonusDec: 200000,
-    years: 30,
-    nisa: "new",
-    strategy: "dividend",
-  },
+interface SimPoint {
+  label: string;
+  year: number;
+  month: number;        // 1-12
+  portfolio: number;
+  nisa: number;
+  taxable: number;
+  afterTax: number;
+  invested: number;
+  divCash: number;      // この期間の現金配当
+  withdrawal: number;   // この期間の取り崩し額
+  safe4pct: number;     // 4%ルール月額
+  nisaProgress: number;
+}
+
+// ── 資産プリセット ────────────────────────────────────────────
+const PRESETS: Omit<Asset,"id"|"pct">[] = [
+  { name:"VOO（S&P500）",    totalRet:10.4, divYield:1.3, drip:true  },
+  { name:"QQQ（NASDAQ-100）",totalRet:13.8, divYield:0.6, drip:true  },
+  { name:"VEA（先進国）",    totalRet:6.8,  divYield:3.2, drip:true  },
+  { name:"VWO（新興国）",    totalRet:4.5,  divYield:3.5, drip:true  },
+  { name:"NTT・JT配当株",    totalRet:6.5,  divYield:3.5, drip:false },
+  { name:"TOPIX（日本全体）",totalRet:5.2,  divYield:2.1, drip:true  },
+  { name:"カスタム",         totalRet:8.0,  divYield:2.0, drip:true  },
 ];
 
-// ── シミュレーション ──────────────────────────────────────────────────────────
-
-interface YearPoint {
-  year: number;
-  savings: number;
-  main: number;
-  mainAfterTax: number;
-  totalInvested: number;
-  annualDividend?: number;
+function newAsset(preset: number, pct: number): Asset {
+  return { id: crypto.randomUUID(), pct, ...PRESETS[Math.min(preset, PRESETS.length-1)] };
 }
 
-function runSimulation(params: {
+// ── シミュレーション ──────────────────────────────────────────
+function runSim(p: {
+  initialLump: number;
   monthly: number;
-  bonusJune: number;
-  bonusDec: number;
-  years: number;
-  nisa: "new" | "taxable" | "both";
-  strategy: "dca" | "phi2" | "dividend";
-}): YearPoint[] {
-  const { monthly, bonusJune, bonusDec, years, nisa, strategy } = params;
+  monthlyGrowthPct: number;
+  bonusMonths: Set<number>;
+  bonusAmount: number;
+  accumYears: number;
+  assets: Asset[];
+  nisaMode: "new"|"taxable"|"both";
+  enableDecum: boolean;
+  decumYears: number;
+  withdrawMode: "fixed"|"4pct"|"yield";
+  fixedMonthly: number;
+  scenario: "base"|"bear"|"crash"|"hist";
+  crashYear: number;
+  histStart: number;
+}): SimPoint[] {
+  const {
+    initialLump, monthly, monthlyGrowthPct, bonusMonths, bonusAmount,
+    accumYears, assets, nisaMode, enableDecum, decumYears,
+    withdrawMode, fixedMonthly, scenario, crashYear, histStart,
+  } = p;
 
-  const annualRate = ANNUAL_RATE[strategy === "phi2" ? "phi2" : strategy === "dividend" ? "dividend" : "dca"];
-  const monthlyRate = Math.pow(1 + annualRate, 1 / 12) - 1;
-  const savingsMonthlyRate = Math.pow(1 + ANNUAL_RATE.savings, 1 / 12) - 1;
-
-  // 新NISA年間上限: 360万
-  const NISA_ANNUAL_LIMIT = 3_600_000;
-
-  let portfolio = 0;
-  let savingsPortfolio = 0;
-  let totalInvested = 0;
-  let nisaBalance = 0;  // NISA枠に入れた累計元本
-  const result: YearPoint[] = [];
-
-  for (let y = 1; y <= years; y++) {
-    let nisaUsedThisYear = 0;
-
-    for (let m = 1; m <= 12; m++) {
-      // 月次積立
-      let invest = monthly;
-      // ボーナス
-      if (m === 6)  invest += bonusJune;
-      if (m === 12) invest += bonusDec;
-
-      totalInvested += invest;
-
-      // NISA枠判定
-      let nisaInvest = 0;
-      if (nisa !== "taxable") {
-        const canUse = Math.max(0, NISA_ANNUAL_LIMIT - nisaUsedThisYear);
-        nisaInvest = Math.min(invest, canUse);
-        nisaUsedThisYear += nisaInvest;
-        nisaBalance += nisaInvest;
-      }
-
-      portfolio = (portfolio + invest) * (1 + monthlyRate);
-      savingsPortfolio = (savingsPortfolio + invest) * (1 + savingsMonthlyRate);
-    }
-
-    // 税引き後計算
-    let afterTax = portfolio;
-    if (nisa !== "new") {
-      const gains = Math.max(0, portfolio - totalInvested);
-      // NISA分は非課税。残りに課税（簡易: NISA枠は元本比例で非課税）
-      const taxableRatio = nisa === "both"
-        ? Math.max(0, 1 - nisaBalance / totalInvested)
-        : 1;
-      const taxableGains = gains * taxableRatio;
-      afterTax = portfolio - taxableGains * TAX_RATE;
-    }
-
-    // 配当株の年間配当（配当利回り × 現在価値）
-    const annualDividend = strategy === "dividend"
-      ? Math.round(portfolio * 0.035)
-      : undefined;
-
-    result.push({
-      year: y,
-      savings: Math.round(savingsPortfolio),
-      main: Math.round(portfolio),
-      mainAfterTax: Math.round(afterTax),
-      totalInvested: Math.round(totalInvested),
-      annualDividend,
-    });
+  // 加重平均の有効コンパウンドリターン（DRIP分のみ再投資）
+  function wEffRet(assets: Asset[]) {
+    return assets.reduce((s, a) => {
+      const eff = a.drip ? a.totalRet / 100 : (a.totalRet - a.divYield) / 100;
+      return s + eff * (a.pct / 100);
+    }, 0);
+  }
+  // 現金配当利回り（DRIP=falseの分）
+  function wCashDiv(assets: Asset[]) {
+    return assets.reduce((s, a) => s + (a.drip ? 0 : a.divYield / 100) * (a.pct / 100), 0);
   }
 
+  let nisaV = 0, taxV = 0;
+  let nisaInvested = 0, taxInvested = 0;
+  let totalInvested = 0;
+  let curMonthly = monthly;
+
+  // 初期一括
+  if (initialLump > 0) {
+    totalInvested += initialLump;
+    if (nisaMode !== "taxable") {
+      const toN = Math.min(initialLump, NISA_MAX, NISA_ANN);
+      nisaV += toN; nisaInvested += toN;
+      taxV += initialLump - toN; taxInvested += initialLump - toN;
+    } else {
+      taxV += initialLump; taxInvested += initialLump;
+    }
+  }
+
+  const totalYears = accumYears + (enableDecum ? decumYears : 0);
+  const result: SimPoint[] = [];
+
+  // 退職時ポートフォリオ（4%ルール計算用）
+  let retirePf = 0;
+
+  for (let y = 1; y <= totalYears; y++) {
+    // この年の有効リターン
+    let effRet = wEffRet(assets);
+    const cdYield = wCashDiv(assets);
+
+    if (scenario === "bear")  effRet -= 0.03;
+    else if (scenario === "crash" && y === crashYear) effRet = -0.40;
+    else if (scenario === "hist") {
+      const yr = histStart + y - 1;
+      const idx = ((yr - HIST_YRS[0]) % HIST_YRS.length + HIST_YRS.length) % HIST_YRS.length;
+      effRet = SP500_HIST[HIST_YRS[idx]] - cdYield;
+    }
+
+    const mRet = Math.pow(1 + Math.max(effRet, -0.99), 1 / 12) - 1;
+    const isAccum = y <= accumYears;
+    let nisaUsedY = 0;
+    let yearDiv = 0, yearWith = 0;
+
+    if (!isAccum && y === accumYears + 1) {
+      retirePf = nisaV + taxV;
+    }
+
+    for (let m = 0; m < 12; m++) {
+      const pf = nisaV + taxV;
+      const divCash = pf * cdYield / 12;
+      yearDiv += divCash;
+
+      // 複利成長
+      nisaV *= (1 + mRet);
+      taxV  *= (1 + mRet);
+
+      if (isAccum) {
+        let invest = curMonthly;
+        if (bonusMonths.has(m)) invest += bonusAmount;
+        totalInvested += invest;
+
+        if (nisaMode !== "taxable") {
+          const remLife = Math.max(0, NISA_MAX - nisaInvested);
+          const remAnn  = Math.max(0, NISA_ANN - nisaUsedY);
+          const toN = Math.min(invest, remLife, remAnn);
+          nisaV += toN; nisaInvested += toN; nisaUsedY += toN;
+          const toT = invest - toN;
+          taxV += toT; taxInvested += toT;
+        } else {
+          taxV += invest; taxInvested += invest;
+        }
+      } else {
+        // 取り崩し
+        let mWith = 0;
+        if (withdrawMode === "4pct")  mWith = (retirePf * 0.04) / 12;
+        else if (withdrawMode === "fixed") mWith = fixedMonthly;
+        else mWith = divCash; // yield only
+        yearWith += mWith;
+
+        // 課税口座から先に取り崩す（NISAを温存）
+        const fromT = Math.min(mWith, taxV);
+        taxV -= fromT;
+        if (taxInvested > 0 && taxV > 0) taxInvested *= taxV / (taxV + fromT);
+        else taxInvested = 0;
+        nisaV = Math.max(0, nisaV - (mWith - fromT));
+      }
+    }
+
+    // 月次積立額の増加
+    if (isAccum) curMonthly *= (1 + monthlyGrowthPct / 100);
+
+    const pf = nisaV + taxV;
+    const gain = Math.max(0, taxV - taxInvested);
+    const afterTax = nisaV + taxV - gain * TAX;
+
+    // 毎年12月末にスナップショット
+    result.push({
+      label: `${y}年後`,
+      year: y,
+      month: 12,
+      portfolio: Math.round(pf),
+      nisa: Math.round(nisaV),
+      taxable: Math.round(taxV),
+      afterTax: Math.round(afterTax),
+      invested: Math.round(totalInvested),
+      divCash: Math.round(yearDiv),
+      withdrawal: Math.round(yearWith),
+      safe4pct: Math.round(pf * 0.04 / 12),
+      nisaProgress: Math.round(nisaInvested),
+    });
+  }
   return result;
 }
 
-// ── フォーマット ──────────────────────────────────────────────────────────────
-
-function fmtMan(n: number): string {
-  const man = Math.round(n / 10000);
-  if (man >= 10000) return `${(man / 10000).toFixed(1)}億`;
-  return `${man.toLocaleString("ja-JP")}万`;
+// ── フォーマット ──────────────────────────────────────────────
+function fMan(n: number) {
+  const m = Math.round(n / 10000);
+  if (m >= 10000) return `${(m / 10000).toFixed(1)}億`;
+  return `${m.toLocaleString("ja-JP")}万`;
 }
+function fYen(n: number) { return `¥${n.toLocaleString("ja-JP")}`; }
 
-function fmtYen(n: number): string {
-  return `¥${n.toLocaleString("ja-JP")}`;
-}
-
-// ── チャート Tooltip ──────────────────────────────────────────────────────────
-
+// ── Tooltip ───────────────────────────────────────────────────
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function CustomTooltip({ active, payload, label }: any) {
+function ChartTip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
     <div className="rounded-xl border border-white/[0.12] bg-[#0d1117]/95 px-3 py-2 text-xs backdrop-blur-sm">
-      <p className="font-mono text-[10px] text-slate-500 mb-1">{label}年後</p>
+      <p className="font-mono text-[10px] text-slate-500 mb-1">{label}</p>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((p: any) => (
-        <p key={p.name} style={{ color: p.color }} className="font-mono">
-          {p.name}: {fmtMan(p.value)}
+        <p key={p.name} style={{ color: p.color ?? p.fill }} className="font-mono">
+          {p.name}: {fMan(p.value)}
         </p>
       ))}
     </div>
   );
 }
 
-// ── メインコンポーネント ──────────────────────────────────────────────────────
+const MONTH_NAMES = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const ASSET_COLORS = ["#34d399","#38bdf8","#f59e0b"];
 
+// ── メイン ────────────────────────────────────────────────────
 export default function SimulateClient() {
-  const [selectedPreset, setSelectedPreset] = useState(0);
-  const [monthly, setMonthly] = useState(PRESETS[0].monthly);
-  const [bonusJune, setBonusJune] = useState(PRESETS[0].bonusJune);
-  const [bonusDec, setBonusDec] = useState(PRESETS[0].bonusDec);
-  const [years, setYears] = useState(PRESETS[0].years);
-  const [nisa, setNisa] = useState<"new" | "taxable" | "both">(PRESETS[0].nisa);
-  const [strategy, setStrategy] = useState<"dca" | "phi2" | "dividend">(PRESETS[0].strategy);
 
-  const applyPreset = (i: number) => {
-    const p = PRESETS[i];
-    setSelectedPreset(i);
-    setMonthly(p.monthly);
-    setBonusJune(p.bonusJune);
-    setBonusDec(p.bonusDec);
-    setYears(p.years);
-    setNisa(p.nisa);
-    setStrategy(p.strategy);
-  };
+  // ── 積立設定 ─────────────────────────
+  const [initialLump, setInitialLump] = useState(0);
+  const [monthly, setMonthly] = useState(50000);
+  const [monthlyGrowthPct, setMonthlyGrowthPct] = useState(0);
+  const [bonusMonths, setBonusMonths] = useState<Set<number>>(new Set([5, 11]));
+  const [bonusAmount, setBonusAmount] = useState(200000);
+  const [accumYears, setAccumYears] = useState(30);
 
-  const data = useMemo(
-    () => runSimulation({ monthly, bonusJune, bonusDec, years, nisa, strategy }),
-    [monthly, bonusJune, bonusDec, years, nisa, strategy]
-  );
+  // ── 資産配分 ─────────────────────────
+  const [assets, setAssets] = useState<Asset[]>([
+    newAsset(0, 50),
+    newAsset(2, 30),
+    newAsset(1, 20),
+  ]);
+
+  // ── NISA設定 ─────────────────────────
+  const [nisaMode, setNisaMode] = useState<"new"|"taxable"|"both">("new");
+
+  // ── 取り崩し ─────────────────────────
+  const [enableDecum, setEnableDecum] = useState(false);
+  const [decumYears, setDecumYears] = useState(20);
+  const [withdrawMode, setWithdrawMode] = useState<"fixed"|"4pct"|"yield">("4pct");
+  const [fixedMonthly, setFixedMonthly] = useState(150000);
+
+  // ── シナリオ ─────────────────────────
+  const [scenario, setScenario] = useState<"base"|"bear"|"crash"|"hist">("base");
+  const [crashYear, setCrashYear] = useState(10);
+  const [histStart, setHistStart] = useState(1994);
+
+  // ── 表示 ─────────────────────────────
+  const [chartMode, setChartMode] = useState<"wealth"|"dividend"|"withdrawal">("wealth");
+  const [showAllYears, setShowAllYears] = useState(false);
+
+  // ── 配分合計バリデーション ────────────
+  const totalPct = assets.reduce((s, a) => s + a.pct, 0);
+  const pctOk = Math.abs(totalPct - 100) < 0.5;
+
+  // ── 実行 ─────────────────────────────
+  const data = useMemo(() => runSim({
+    initialLump, monthly, monthlyGrowthPct, bonusMonths, bonusAmount,
+    accumYears, assets, nisaMode, enableDecum, decumYears,
+    withdrawMode, fixedMonthly, scenario, crashYear, histStart,
+  }), [
+    initialLump, monthly, monthlyGrowthPct, bonusMonths, bonusAmount,
+    accumYears, assets, nisaMode, enableDecum, decumYears,
+    withdrawMode, fixedMonthly, scenario, crashYear, histStart,
+  ]);
 
   const last = data[data.length - 1];
-  const totalInvested = last?.totalInvested ?? 0;
-  const finalMain = last?.main ?? 0;
-  const finalAfterTax = last?.mainAfterTax ?? 0;
-  const finalSavings = last?.savings ?? 0;
-  const taxSaved = finalMain - finalAfterTax;
-  const vsNisaSavings = finalMain - finalSavings;
+  const endAccum = data[accumYears - 1];
+  const tableData = showAllYears ? data : data.filter((d) => d.year % 5 === 0 || d.year === 1 || d.year === (enableDecum ? accumYears + decumYears : accumYears));
+  const chartData = data.filter((d) => d.year % 5 === 0 || d.year === 1 || d.year === last.year);
 
-  // チャートデータ（5年刻み + 最終年）
-  const chartData = data.filter((d) => d.year % 5 === 0 || d.year === years);
+  // ── 資産編集 ─────────────────────────
+  const updateAsset = useCallback((id: string, key: keyof Asset, val: unknown) => {
+    setAssets((prev) => prev.map((a) => a.id === id ? { ...a, [key]: val } : a));
+  }, []);
 
-  const strategyLabel = strategy === "phi2" ? "phi2戦略" : strategy === "dividend" ? "配当株" : "SP500 DCA";
-  const strategyColor = strategy === "phi2" ? "#34d399" : strategy === "dividend" ? "#f59e0b" : "#38bdf8";
+  const removeAsset = useCallback((id: string) => {
+    setAssets((prev) => prev.filter((a) => a.id !== id));
+  }, []);
+
+  const addAsset = useCallback(() => {
+    if (assets.length >= 3) return;
+    setAssets((prev) => [...prev, newAsset(0, Math.max(0, 100 - totalPct))]);
+  }, [assets.length, totalPct]);
+
+  const toggleBonus = (m: number) => {
+    setBonusMonths((prev) => {
+      const next = new Set(prev);
+      if (next.has(m)) next.delete(m); else next.add(m);
+      return next;
+    });
+  };
 
   return (
     <div className="mt-6 space-y-8">
 
-      {/* プリセット選択 */}
+      {/* ━━ 積立設定 ━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
-          プロフィールを選ぶ
-        </p>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-          {PRESETS.map((p, i) => (
-            <button
-              key={i}
-              onClick={() => applyPreset(i)}
-              className={`text-left rounded-2xl border px-4 py-3 transition-all ${
-                selectedPreset === i
-                  ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.08]"
-                  : "border-white/[0.10] bg-white/[0.03] hover:bg-white/[0.06]"
-              }`}
-            >
-              <p className={`text-sm font-semibold ${selectedPreset === i ? "text-[#e8f4ff]" : "text-slate-300"}`}>
-                {p.label}
-              </p>
-              <p className="mt-0.5 text-xs text-slate-500">{p.sub}</p>
-            </button>
-          ))}
-        </div>
-      </section>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">積立設定</p>
+        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4 space-y-4">
 
-      {/* カスタム入力 */}
-      <section>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
-          条件を調整する
-        </p>
-        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4">
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div className="space-y-1">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <label className="space-y-1">
+              <p className="font-mono text-[9px] uppercase text-slate-600">初期一括投入（円）</p>
+              <input type="number" value={initialLump} onChange={(e)=>setInitialLump(+e.target.value)} step={100000}
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+            </label>
+            <label className="space-y-1">
               <p className="font-mono text-[9px] uppercase text-slate-600">月次積立（円）</p>
-              <input
-                type="number"
-                value={monthly}
-                onChange={(e) => { setMonthly(Number(e.target.value)); setSelectedPreset(-1); }}
-                step={10000}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"
-              />
+              <input type="number" value={monthly} onChange={(e)=>setMonthly(+e.target.value)} step={10000}
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+            </label>
+            <label className="space-y-1">
+              <p className="font-mono text-[9px] uppercase text-slate-600">月額の年率増加（%）</p>
+              <input type="number" value={monthlyGrowthPct} onChange={(e)=>setMonthlyGrowthPct(+e.target.value)} step={0.5} min={0} max={10}
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+            </label>
+            <label className="space-y-1">
+              <p className="font-mono text-[9px] uppercase text-slate-600">積立期間（年）</p>
+              <input type="number" value={accumYears} onChange={(e)=>setAccumYears(Math.max(1,Math.min(40,+e.target.value)))} step={1} min={1} max={40}
+                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+            </label>
+          </div>
+
+          {/* ボーナス月 */}
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <p className="font-mono text-[9px] uppercase text-slate-600">ボーナス投下月（複数選択可）</p>
+              <input type="number" value={bonusAmount} onChange={(e)=>setBonusAmount(+e.target.value)} step={50000}
+                className="w-36 rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"
+                placeholder="金額（円）"/>
             </div>
-            <div className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">6月ボーナス（円）</p>
-              <input
-                type="number"
-                value={bonusJune}
-                onChange={(e) => { setBonusJune(Number(e.target.value)); setSelectedPreset(-1); }}
-                step={50000}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">12月ボーナス（円）</p>
-              <input
-                type="number"
-                value={bonusDec}
-                onChange={(e) => { setBonusDec(Number(e.target.value)); setSelectedPreset(-1); }}
-                step={50000}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">運用期間（年）</p>
-              <input
-                type="number"
-                value={years}
-                onChange={(e) => { setYears(Math.min(40, Math.max(5, Number(e.target.value)))); setSelectedPreset(-1); }}
-                min={5}
-                max={40}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">NISA設定</p>
-              <select
-                value={nisa}
-                onChange={(e) => { setNisa(e.target.value as "new" | "taxable" | "both"); setSelectedPreset(-1); }}
-                className="w-full rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"
-              >
-                <option value="new">新NISA（非課税）</option>
-                <option value="both">NISA＋課税口座</option>
-                <option value="taxable">課税口座のみ</option>
-              </select>
-            </div>
-            <div className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">投資戦略</p>
-              <select
-                value={strategy}
-                onChange={(e) => { setStrategy(e.target.value as "dca" | "phi2" | "dividend"); setSelectedPreset(-1); }}
-                className="w-full rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"
-              >
-                <option value="dca">SP500 DCA（10.4%/年）</option>
-                <option value="phi2">phi2戦略（12.7%/年）</option>
-                <option value="dividend">配当株（6.5%/年）</option>
-              </select>
+            <div className="flex flex-wrap gap-1.5">
+              {MONTH_NAMES.map((n, i) => (
+                <button key={i} onClick={()=>toggleBonus(i)}
+                  className={`rounded-lg border px-2.5 py-1 font-mono text-[10px] transition-colors ${
+                    bonusMonths.has(i) ? "border-amber-400/40 bg-amber-400/[0.12] text-amber-400" : "border-white/[0.10] text-slate-600 hover:text-slate-400"
+                  }`}>
+                  {n}
+                </button>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* 結果サマリー */}
+      {/* ━━ 資産配分 ━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
-          {years}年後の試算
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {[
-            { label: "投資元本", value: fmtMan(totalInvested), color: "text-slate-400", sub: "総投入額" },
-            { label: strategyLabel, value: fmtMan(finalMain), color: `text-[${strategyColor}]`, sub: "税引前" },
-            { label: "税引後", value: fmtMan(finalAfterTax), color: "text-[#e8f4ff]", sub: nisa === "new" ? "NISA非課税" : `課税後 (${TAX_RATE * 100}%)` },
-            { label: "普通預金", value: fmtMan(finalSavings), color: "text-slate-600", sub: "0.1%/年" },
-          ].map((c) => (
-            <div key={c.label} className="rounded-2xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-center">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">{c.label}</p>
-              <p className={`font-mono text-xl font-bold mt-1 ${c.color}`}>{c.value}</p>
-              <p className="font-mono text-[9px] text-slate-700 mt-0.5">{c.sub}</p>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">資産配分（最大3銘柄）</p>
+          <div className="flex items-center gap-3">
+            <span className={`font-mono text-xs ${pctOk ? "text-[#34d399]" : "text-[#f87171]"}`}>
+              合計 {totalPct.toFixed(0)}%{!pctOk && " ← 100%にする"}
+            </span>
+            {assets.length < 3 && (
+              <button onClick={addAsset}
+                className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] transition-colors">
+                + 銘柄追加
+              </button>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {assets.map((a, ai) => (
+            <div key={a.id} className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-2 w-2 rounded-sm shrink-0" style={{backgroundColor: ASSET_COLORS[ai]}} />
+                <select value={PRESETS.findIndex(p=>p.name===a.name)} onChange={(e)=>{
+                  const pr = PRESETS[+e.target.value];
+                  setAssets(prev=>prev.map(x=>x.id===a.id?{...x,...pr}:x));
+                }} className="flex-1 rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-1.5 font-mono text-xs text-slate-200 outline-none">
+                  {PRESETS.map((p,i)=><option key={i} value={i}>{p.name}</option>)}
+                </select>
+                {assets.length > 1 && (
+                  <button onClick={()=>removeAsset(a.id)} className="font-mono text-[10px] text-slate-700 hover:text-[#f87171] transition-colors px-1">✕</button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <label className="space-y-0.5">
+                  <p className="font-mono text-[9px] uppercase text-slate-600">配分%</p>
+                  <input type="number" value={a.pct} onChange={(e)=>updateAsset(a.id,"pct",+e.target.value)} step={5} min={0} max={100}
+                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                </label>
+                <label className="space-y-0.5">
+                  <p className="font-mono text-[9px] uppercase text-slate-600">年率リターン%</p>
+                  <input type="number" value={a.totalRet} onChange={(e)=>updateAsset(a.id,"totalRet",+e.target.value)} step={0.5}
+                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                </label>
+                <label className="space-y-0.5">
+                  <p className="font-mono text-[9px] uppercase text-slate-600">配当利回り%</p>
+                  <input type="number" value={a.divYield} onChange={(e)=>updateAsset(a.id,"divYield",+e.target.value)} step={0.1} min={0}
+                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                </label>
+                <label className="space-y-0.5">
+                  <p className="font-mono text-[9px] uppercase text-slate-600">配当</p>
+                  <button onClick={()=>updateAsset(a.id,"drip",!a.drip)}
+                    className={`w-full rounded-xl border px-2 py-1.5 font-mono text-[10px] transition-colors ${
+                      a.drip ? "border-[#34d399]/40 bg-[#34d399]/[0.08] text-[#34d399]" : "border-amber-400/40 bg-amber-400/[0.08] text-amber-400"
+                    }`}>
+                    {a.drip ? "再投資（DRIP）" : "現金受取"}
+                  </button>
+                </label>
+              </div>
             </div>
           ))}
         </div>
-
-        {/* キー指標 */}
-        <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <div className="rounded-xl border border-[#34d399]/20 bg-[#34d399]/[0.05] px-4 py-3">
-            <p className="font-mono text-[9px] uppercase text-[#34d399]/70">vs 預金の差</p>
-            <p className="font-mono text-lg font-bold text-[#34d399] mt-0.5">{fmtMan(vsNisaSavings)}</p>
-            <p className="font-mono text-[9px] text-slate-600">投資で得られる追加資産</p>
-          </div>
-          {nisa !== "new" && (
-            <div className="rounded-xl border border-[#f87171]/20 bg-[#f87171]/[0.05] px-4 py-3">
-              <p className="font-mono text-[9px] uppercase text-[#f87171]/70">課税で失う額</p>
-              <p className="font-mono text-lg font-bold text-[#f87171] mt-0.5">{fmtMan(taxSaved)}</p>
-              <p className="font-mono text-[9px] text-slate-600">NISA なら節約できた税金</p>
-            </div>
-          )}
-          {strategy === "dividend" && last?.annualDividend && (
-            <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-4 py-3">
-              <p className="font-mono text-[9px] uppercase text-amber-400/70">{years}年後の年間配当</p>
-              <p className="font-mono text-lg font-bold text-amber-400 mt-0.5">{fmtYen(last.annualDividend)}</p>
-              <p className="font-mono text-[9px] text-slate-600">配当利回り 3.5% 想定</p>
-            </div>
-          )}
-          {strategy === "phi2" && (
-            <div className="rounded-xl border border-[#34d399]/20 bg-[#34d399]/[0.05] px-4 py-3">
-              <p className="font-mono text-[9px] uppercase text-[#34d399]/70">phi2アルファ（累積）</p>
-              <p className="font-mono text-lg font-bold text-[#34d399] mt-0.5">
-                {fmtMan(finalMain - (() => {
-                  const d = runSimulation({ monthly, bonusJune, bonusDec, years, nisa, strategy: "dca" });
-                  return d[d.length - 1]?.main ?? 0;
-                })())}
-              </p>
-              <p className="font-mono text-[9px] text-slate-600">DCA比 +2.3%/年の複利効果</p>
-            </div>
-          )}
-        </div>
       </section>
 
-      {/* 成長チャート */}
+      {/* ━━ NISA設定 ━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
-          資産推移
-        </p>
-        <div className="h-64 rounded-2xl border border-white/[0.10] bg-white/[0.03] p-4">
+        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">NISA設定</p>
+        <div className="flex gap-2 flex-wrap">
+          {([["new","新NISA（非課税）"],["both","NISA＋課税口座"],["taxable","課税口座のみ"]] as const).map(([v,l])=>(
+            <button key={v} onClick={()=>setNisaMode(v)}
+              className={`rounded-xl border px-4 py-2 font-mono text-xs transition-colors ${
+                nisaMode===v ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]" : "border-white/[0.10] text-slate-500 hover:text-slate-300"
+              }`}>{l}</button>
+          ))}
+        </div>
+        {nisaMode !== "taxable" && (
+          <p className="mt-2 font-mono text-[10px] text-slate-600">
+            新NISA生涯上限 1,800万円 · 年間上限 360万円。NISA枠が埋まった後は課税口座へ。
+          </p>
+        )}
+      </section>
+
+      {/* ━━ 取り崩し設定 ━━━━━━━━━━━━━━━━━━━━ */}
+      <section>
+        <div className="flex items-center gap-3 mb-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">取り崩しフェーズ</p>
+          <button onClick={()=>setEnableDecum(v=>!v)}
+            className={`rounded-full border px-3 py-1 font-mono text-[10px] transition-colors ${
+              enableDecum ? "border-[#34d399]/40 bg-[#34d399]/[0.10] text-[#34d399]" : "border-white/[0.10] text-slate-600 hover:text-slate-400"
+            }`}>
+            {enableDecum ? "ON" : "OFF — 積立のみ"}
+          </button>
+        </div>
+        {enableDecum && (
+          <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4 space-y-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+              <label className="space-y-1">
+                <p className="font-mono text-[9px] uppercase text-slate-600">取り崩し期間（年）</p>
+                <input type="number" value={decumYears} onChange={(e)=>setDecumYears(Math.max(1,+e.target.value))} step={5}
+                  className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+              </label>
+              <label className="space-y-1">
+                <p className="font-mono text-[9px] uppercase text-slate-600">方式</p>
+                <select value={withdrawMode} onChange={(e)=>setWithdrawMode(e.target.value as typeof withdrawMode)}
+                  className="w-full rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-2 font-mono text-xs text-slate-200 outline-none">
+                  <option value="4pct">4%ルール（積立額の4%/年）</option>
+                  <option value="fixed">固定額</option>
+                  <option value="yield">配当のみ（元本を減らさない）</option>
+                </select>
+              </label>
+              {withdrawMode === "fixed" && (
+                <label className="space-y-1">
+                  <p className="font-mono text-[9px] uppercase text-slate-600">月額取り崩し（円）</p>
+                  <input type="number" value={fixedMonthly} onChange={(e)=>setFixedMonthly(+e.target.value)} step={10000}
+                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                </label>
+              )}
+            </div>
+            <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-3 py-2">
+              <p className="text-xs text-amber-400/80">
+                取り崩しは<strong className="text-amber-400">課税口座→NISA</strong>の順で行います。課税口座が尽きた後にNISA（非課税）を使用。
+                {nisaMode !== "taxable" && " NISA枠での取り崩しは非課税（1800万枠は取り崩し後に翌年回復）。"}
+              </p>
+            </div>
+          </div>
+        )}
+      </section>
+
+      {/* ━━ シナリオ ━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section>
+        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">シナリオ</p>
+        <div className="flex flex-wrap gap-2 mb-3">
+          {([
+            ["base",  "期待値（平均）"],
+            ["bear",  "弱気（−3%/年）"],
+            ["crash", "暴落シナリオ"],
+            ["hist",  "SP500実績を当てはめ"],
+          ] as const).map(([v,l])=>(
+            <button key={v} onClick={()=>setScenario(v)}
+              className={`rounded-xl border px-3 py-1.5 font-mono text-[10px] transition-colors ${
+                scenario===v ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]" : "border-white/[0.10] text-slate-500 hover:text-slate-300"
+              }`}>{l}</button>
+          ))}
+        </div>
+        {scenario === "crash" && (
+          <div className="flex items-center gap-3">
+            <p className="font-mono text-[9px] uppercase text-slate-600">暴落発生年（積立開始から）</p>
+            <input type="number" value={crashYear} onChange={(e)=>setCrashYear(Math.max(1,+e.target.value))} min={1} max={accumYears}
+              className="w-24 rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+            <p className="font-mono text-[10px] text-slate-600">年目に −40%（GFC相当）</p>
+          </div>
+        )}
+        {scenario === "hist" && (
+          <div className="flex items-center gap-3">
+            <p className="font-mono text-[9px] uppercase text-slate-600">開始年</p>
+            <select value={histStart} onChange={(e)=>setHistStart(+e.target.value)}
+              className="rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-1.5 font-mono text-xs text-slate-200 outline-none">
+              {HIST_YRS.map(y=><option key={y} value={y}>{y}年〜（{y}=+{((SP500_HIST[y]??0)*100).toFixed(1)}%）</option>)}
+            </select>
+            <p className="font-mono text-[10px] text-slate-600">SP500の実際の年次リターン配列を使用。枠外は循環。</p>
+          </div>
+        )}
+        {scenario === "bear" && (
+          <p className="font-mono text-[10px] text-slate-600">設定リターンから毎年3%引く。低成長・デフレシナリオの確認用。</p>
+        )}
+      </section>
+
+      {/* ━━ 結果サマリー ━━━━━━━━━━━━━━━━━━━━ */}
+      {last && (
+        <section>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
+            {enableDecum ? `${accumYears}年積立→${decumYears}年取り崩しの試算` : `${accumYears}年後の試算`}
+          </p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { l:"総投資元本",   v:fMan(last.invested),    c:"text-slate-400",  s:"累計投入額" },
+              { l:"最終資産",     v:fMan(last.portfolio),   c:"text-[#34d399]",  s:"税引前" },
+              { l:"税引後",       v:fMan(last.afterTax),    c:"text-[#e8f4ff]",  s:nisaMode==="new"?"NISA非課税":"課税後(20.315%)" },
+              { l:"vs 元本",      v:`×${(last.portfolio/Math.max(last.invested,1)).toFixed(1)}`,c:"text-[#38bdf8]",s:"何倍になったか" },
+            ].map(c=>(
+              <div key={c.l} className="rounded-2xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-center">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">{c.l}</p>
+                <p className={`font-mono text-xl font-bold mt-0.5 ${c.c}`}>{c.v}</p>
+                <p className="font-mono text-[9px] text-slate-700 mt-0.5">{c.s}</p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-3">
+            {/* NISA進捗 */}
+            {nisaMode !== "taxable" && endAccum && (
+              <div className="rounded-xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.05] px-4 py-3">
+                <p className="font-mono text-[9px] uppercase text-[#38bdf8]/70">NISA枠進捗</p>
+                <p className="font-mono text-lg font-bold text-[#38bdf8] mt-0.5">{fMan(endAccum.nisaProgress)}<span className="text-xs font-normal text-slate-500"> / 1800万</span></p>
+                <div className="mt-1.5 h-1.5 w-full rounded-full bg-white/[0.06]">
+                  <div className="h-1.5 rounded-full bg-[#38bdf8]/60" style={{width:`${Math.min(100,endAccum.nisaProgress/180000)}%`}}/>
+                </div>
+              </div>
+            )}
+            {/* 4%ルール */}
+            {endAccum && (
+              <div className="rounded-xl border border-[#34d399]/20 bg-[#34d399]/[0.05] px-4 py-3">
+                <p className="font-mono text-[9px] uppercase text-[#34d399]/70">取り崩し可能額（4%ルール）</p>
+                <p className="font-mono text-lg font-bold text-[#34d399] mt-0.5">{fYen(endAccum.safe4pct)}<span className="text-xs font-normal text-slate-500">/月</span></p>
+                <p className="font-mono text-[9px] text-slate-600">{accumYears}年後の資産×4%÷12</p>
+              </div>
+            )}
+            {/* 配当収入 */}
+            {endAccum && (
+              <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-4 py-3">
+                <p className="font-mono text-[9px] uppercase text-amber-400/70">{accumYears}年後の年間現金配当</p>
+                <p className="font-mono text-lg font-bold text-amber-400 mt-0.5">{fMan(endAccum.divCash)}</p>
+                <p className="font-mono text-[9px] text-slate-600">DRIP=OFFの銘柄からの現金配当</p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ━━ チャート ━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <section>
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">資産推移</p>
+          <div className="flex gap-1">
+            {([["wealth","資産"],["dividend","配当・取崩"]] as const).map(([v,l])=>(
+              <button key={v} onClick={()=>setChartMode(v)}
+                className={`rounded-xl border px-3 py-1 font-mono text-[10px] transition-colors ${
+                  chartMode===v?"border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]":"border-white/[0.10] text-slate-500 hover:text-slate-300"
+                }`}>{l}</button>
+            ))}
+          </div>
+        </div>
+        <div className="h-64 rounded-2xl border border-white/[0.10] bg-white/[0.03] p-3">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis
-                dataKey="year"
-                tickFormatter={(v) => `${v}年`}
-                tick={{ fill: "#64748b", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis
-                tickFormatter={(v) => fmtMan(v)}
-                tick={{ fill: "#64748b", fontSize: 10, fontFamily: "ui-monospace, monospace" }}
-                axisLine={false}
-                tickLine={false}
-                width={60}
-              />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend
-                formatter={(v) => <span className="font-mono text-[10px] text-slate-400">{v}</span>}
-              />
-              <Area
-                type="monotone"
-                dataKey="savings"
-                name="普通預金"
-                stroke="#475569"
-                fill="rgba(71,85,105,0.08)"
-                strokeWidth={1}
-                dot={false}
-              />
-              <Area
-                type="monotone"
-                dataKey="totalInvested"
-                name="投資元本"
-                stroke="rgba(255,255,255,0.2)"
-                fill="rgba(255,255,255,0.03)"
-                strokeWidth={1}
-                strokeDasharray="4 2"
-                dot={false}
-              />
-              <Area
-                type="monotone"
-                dataKey="main"
-                name={strategyLabel}
-                stroke={strategyColor}
-                fill={`${strategyColor}18`}
-                strokeWidth={2}
-                dot={false}
-              />
-            </AreaChart>
+            <ComposedChart data={chartData} margin={{top:4,right:8,bottom:0,left:0}}>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)"/>
+              <XAxis dataKey="label" tick={{fill:"#64748b",fontSize:10,fontFamily:"ui-monospace,monospace"}} axisLine={false} tickLine={false}/>
+              <YAxis tickFormatter={fMan} tick={{fill:"#64748b",fontSize:10,fontFamily:"ui-monospace,monospace"}} axisLine={false} tickLine={false} width={56}/>
+              <Tooltip content={<ChartTip/>}/>
+              <Legend formatter={(v)=><span className="font-mono text-[10px] text-slate-400">{v}</span>}/>
+              {chartMode === "wealth" && <>
+                <Area type="monotone" dataKey="invested"  name="元本"     stroke="rgba(255,255,255,0.2)" fill="rgba(255,255,255,0.03)" strokeWidth={1} strokeDasharray="4 2" dot={false}/>
+                {nisaMode !== "taxable" && <Area type="monotone" dataKey="nisa" name="NISA" stroke="#38bdf8" fill="#38bdf840" strokeWidth={1.5} dot={false}/>}
+                <Area type="monotone" dataKey="portfolio" name="資産合計"  stroke="#34d399" fill="#34d39920" strokeWidth={2} dot={false}/>
+                <Area type="monotone" dataKey="afterTax"  name="税引後"    stroke="#e8f4ff" fill="transparent" strokeWidth={1} strokeDasharray="2 2" dot={false}/>
+              </>}
+              {chartMode === "dividend" && <>
+                <Bar dataKey="divCash"    name="年間現金配当" fill="#f59e0b60" radius={2}/>
+                {enableDecum && <Bar dataKey="withdrawal" name="年間取り崩し" fill="#f8717160" radius={2}/>}
+                <Area type="monotone" dataKey="safe4pct" name="4%月額" stroke="#34d399" fill="transparent" strokeWidth={1.5} dot={false}/>
+              </>}
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </section>
 
-      {/* 年次テーブル（10年ごと） */}
+      {/* ━━ 年次テーブル ━━━━━━━━━━━━━━━━━━━━━ */}
       <section>
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">年次推移（10年ごと）</p>
-        <div className="overflow-hidden rounded-2xl border border-white/[0.12]">
-          <table className="w-full text-sm">
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">年次推移</p>
+          <button onClick={()=>setShowAllYears(v=>!v)} className="font-mono text-[10px] text-slate-500 hover:text-slate-300 transition-colors">
+            {showAllYears ? "5年ごとに戻す" : "全年表示"}
+          </button>
+        </div>
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.12]">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="border-b border-white/[0.10] bg-white/[0.05]">
               <tr>
-                {["経過年", "投資元本", strategyLabel, "税引後", "普通預金"].map((h) => (
-                  <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-500">{h}</th>
+                {["年",nisaMode!=="taxable"?"NISA":"",nisaMode!=="taxable"?"課税":"","資産合計","税引後","元本","年間配当",enableDecum?"年間取崩":"4%月額"].filter(Boolean).map(h=>(
+                  <th key={h} className="px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-500">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {data.filter((d) => d.year % 10 === 0 || d.year === years).map((d) => (
-                <tr key={d.year} className="border-t border-white/[0.08] hover:bg-white/[0.03]">
-                  <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{d.year}年後</td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-slate-500">{fmtMan(d.totalInvested)}</td>
-                  <td className={`px-4 py-2.5 font-mono text-xs font-semibold`} style={{ color: strategyColor }}>{fmtMan(d.main)}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-[#e8f4ff]">{fmtMan(d.mainAfterTax)}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-slate-600">{fmtMan(d.savings)}</td>
-                </tr>
-              ))}
+              {tableData.map((d)=>{
+                const isRetire = enableDecum && d.year === accumYears;
+                return (
+                  <tr key={d.year} className={`border-t border-white/[0.08] hover:bg-white/[0.03] ${isRetire ? "bg-[#34d399]/[0.04]" : ""}`}>
+                    <td className={`px-3 py-2.5 font-mono text-xs ${isRetire?"text-[#34d399]":"text-slate-400"}`}>
+                      {d.label}{isRetire?" ⬅ 積立終了":""}
+                    </td>
+                    {nisaMode!=="taxable" && <td className="px-3 py-2.5 font-mono text-xs text-[#38bdf8]">{fMan(d.nisa)}</td>}
+                    {nisaMode!=="taxable" && <td className="px-3 py-2.5 font-mono text-xs text-slate-500">{fMan(d.taxable)}</td>}
+                    <td className="px-3 py-2.5 font-mono text-xs font-semibold text-[#34d399]">{fMan(d.portfolio)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-[#e8f4ff]">{fMan(d.afterTax)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-slate-600">{fMan(d.invested)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-amber-400">{fMan(d.divCash)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-[#34d399]">
+                      {enableDecum && d.year > accumYears ? fYen(d.withdrawal/12) : fYen(d.safe4pct)}
+                      <span className="text-slate-700">/月</span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </section>
 
-      {/* 注意書き */}
-      <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3 space-y-1">
-        <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">前提・免責</p>
-        <ul className="mt-1 space-y-0.5 font-mono text-[10px] leading-5 text-slate-700">
-          <li>· SP500 DCA: 年率10.4%（1993〜2024 幾何平均、実際のリターンは変動します）</li>
-          <li>· phi2戦略: 年率12.7%（DCA + バックテスト由来+2.3%アルファ。将来の保証なし）</li>
-          <li>· 配当株: 年率6.5%（配当3.5%+株価成長3%の仮定。銘柄・時期により大きく異なります）</li>
-          <li>· 新NISA: 年間360万まで非課税。超過分は課税口座として計算</li>
-          <li>· 課税: 利益の20.315%を最終年に一括徴収として簡易計算（実際は売却時に課税）</li>
-          <li>· これは投資助言ではありません。最終判断はご自身でお願いします。</li>
+      {/* ━━ 免責 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+      <div className="rounded-xl border border-white/[0.08] px-4 py-3">
+        <ul className="space-y-0.5 font-mono text-[10px] leading-5 text-slate-700">
+          <li>· 年率リターンはプリセット値（公開データの長期幾何平均）。実際のリターンは変動します</li>
+          <li>· NISA取り崩し時の1800万枠回復は翌年。本シミュレーションは枠回復の再利用は考慮外</li>
+          <li>· 課税計算は「最終時点での未実現益×20.315%」として簡易計算（毎年の確定申告は考慮外）</li>
+          <li>· 4%ルール: 積立終了時の資産×4%÷12を月額取り崩しと定義。インフレ調整なし</li>
+          <li>· 配当は現地課税（米国株10%）を考慮していません。実際の手取りはやや低くなります</li>
+          <li>· これは投資助言ではありません。最終判断はご自身でお願いします</li>
         </ul>
       </div>
     </div>
