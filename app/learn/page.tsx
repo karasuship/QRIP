@@ -1,7 +1,8 @@
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { lessons, closing } from "../data/lessons";
-import { computeSimulation } from "@/lib/sim-compute";
+import simRaw from "@/app/data/sim-result.json";
+import type { SimMonthly, Phi2Signal } from "@/app/components/charts/SimulationChart";
 
 const SimulationChart = dynamic(
   () => import("@/app/components/charts/SimulationChart"),
@@ -48,12 +49,19 @@ const STEPS = [
   { n: "04", title: "通知を設定する",         body: "シグナルページの「シグナル通知を受け取る」ボタンでWeb Push通知をオンにできる。毎日チェックしなくてもシグナル発動時に知れる。" },
 ];
 
-export default async function Learn() {
-  // シミュレーションデータ（CSV から計算、初回のみ時間がかかる）
-  let simResult = null;
-  try {
-    simResult = computeSimulation();
-  } catch { /* CSV が読めない環境（ブラウザなど）では無視 */ }
+// シミュレーションデータは scripts/compute-sim.mjs で生成した JSON をそのまま使う
+// CSV ファイルや外部 API に依存しないので Vercel で確実に動く
+const simResult = {
+  monthly:         simRaw.monthly  as SimMonthly[],
+  signals:         simRaw.signals  as Phi2Signal[],
+  totalSignals:    simRaw.totalSignals,
+  signalsPerYear:  simRaw.signalsPerYear,
+  dcaFinal:        simRaw.dcaFinal,
+  phi2Final:       simRaw.phi2Final,
+  alpha:           simRaw.alpha,
+};
+
+export default function Learn() {
 
   return (
     <div className="min-h-screen">

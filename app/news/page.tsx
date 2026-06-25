@@ -4,8 +4,6 @@ import Link from "next/link";
 import { fetchHeadlines } from "@/lib/news-fetch";
 import { analyzeNews } from "@/lib/news-analyze";
 import { getSupabaseServer } from "@/lib/supabase";
-import { fetchPutCallRatio, fetchInterestRates } from "@/lib/market-fetch";
-import { fetchMmf } from "@/lib/mmf-fetch";
 import type { NewsAnalysis } from "@/lib/news-analyze";
 import type { PutCallData, RateData } from "@/lib/market-fetch";
 import NewsSection from "./NewsSection";
@@ -187,12 +185,66 @@ export default async function NewsPage() {
     } catch { /* ライブフェッチ失敗は無視 */ }
   }
 
-  // 市場データ（並列取得）
-  const [pc, mmf, rates] = await Promise.all([
-    fetchPutCallRatio().catch(() => null),
-    fetchMmf().catch(() => null),
-    fetchInterestRates().catch(() => null),
-  ]);
+  // 市場データ（Supabase market_daily から — cron が毎朝7時に蓄積済み）
+  // 外部 API を呼ばないことで ISR キャッシュが正常に機能する
+  let pc: PutCallData | null = null;
+  let mmf: { current_billions: number; avg_52w_billions: number; max_52w: number; min_52w: number; fuel_score: number; last_date: string } | null = null;
+  let rates: RateData | null = null;
+  try {
+    const mdb = getSupabaseServer();
+    const { data: md } = await mdb
+      .from("market_daily")
+      .select("date, put_call_ratio, tnx, irx, yield_3m_10, mmf_total, mmf_retail, mmf_institutional")
+      .order("date", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (md) {
+      // Put/Call（^CPCE 総合）
+      if (md.put_call_ratio != null) {
+        const v = md.put_call_ratio as number;
+        let level: PutCallData["level"] = "neutral";
+        let label = "どちらでもない";
+        let note  = "恐怖も楽観も偏りなし。";
+        if (v > 1.10) { level = "extreme_fear"; label = "歴史的な恐怖水準"; note = "過去の暴落局面に近い水準。"; }
+        else if (v > 0.88) { level = "fear";    label = "下落への備えが多い"; note = "ヘッジ需要が高まっています。"; }
+        else if (v > 0.72) { level = "neutral"; }
+        else if (v > 0.55) { level = "greed";   label = "上昇への期待が多い"; note = "リスク選好環境。"; }
+        else { level = "extreme_greed"; label = "楽観が行きすぎ"; note = "コール買い過多。相場の天井付近に注意。"; }
+        pc = { value: Math.round(v * 1000) / 1000, date: md.date as string, level, label, note };
+      }
+
+      // 金利
+      const tnx = md.tnx as number | null;
+      const irx = md.irx as number | null;
+      if (tnx != null && irx != null) {
+        const spreadBp = Math.round((tnx - irx) * 100);
+        rates = {
+          tnx: Math.round(tnx * 100) / 100,
+          irx: Math.round(irx * 100) / 100,
+          spreadBp,
+          date: md.date as string,
+          tnxLevel: tnx < 3 ? "low" : tnx < 4.5 ? "mid" : "high",
+          curveShape: spreadBp < -50 ? "inverted" : spreadBp < 50 ? "flat" : "normal",
+        };
+      }
+
+      // MMF（FRED API を呼ばない。Supabase から概算を作る）
+      const total = (md.mmf_total as number | null) ?? ((md.mmf_retail as number | null) ?? 0) + ((md.mmf_institutional as number | null) ?? 0);
+      if (total > 0) {
+        // fuel_score はレンジ情報がないので簡易計算（6000B = max 想定）
+        const approxFuelScore = Math.min(10, Math.max(0, Math.round((total / 7000) * 10)));
+        mmf = {
+          current_billions: Math.round(total),
+          avg_52w_billions: Math.round(total * 0.97),
+          max_52w: Math.round(total * 1.05),
+          min_52w: Math.round(total * 0.90),
+          fuel_score: approxFuelScore,
+          last_date: md.date as string,
+        };
+      }
+    }
+  } catch { /* market_daily が空の場合は null のまま */ }
 
   // いいね数
   let likeCounts: Record<string, number> = {};

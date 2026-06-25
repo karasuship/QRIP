@@ -5,7 +5,20 @@ import {
   Area, Line, XAxis, YAxis, CartesianGrid,
   Tooltip, ReferenceDot, Legend,
 } from "recharts";
-import type { SimMonthly, Phi2Signal } from "@/lib/sim-compute";
+// JSON から直接読み込む軽量な型（CSV 依存なし）
+export interface SimMonthly {
+  date: string;  // YYYY-MM
+  dca: number;
+  phi2: number;
+  sp500: number;
+}
+
+export interface Phi2Signal {
+  date: string;  // YYYY-MM-DD
+  price: number;
+  crs: number;
+  athDd: number;
+}
 
 interface Props {
   monthly: SimMonthly[];
@@ -21,14 +34,10 @@ const TICK_STYLE = {
   fontFamily: "ui-monospace, monospace",
 };
 
-// グラフに表示するシグナルマーカー（多すぎると重いので信頼度高い年にのみ）
+// グラフに表示するシグナルマーカー（月次データにある月のもののみ）
 function filterSignals(signals: Phi2Signal[], monthly: SimMonthly[]) {
-  const monthSet = new Set(monthly.map((m) => m.dateRaw));
-  return signals.filter((s) => {
-    // 月次データにある日付周辺のシグナルのみ採用（重複防止）
-    const m = s.date.slice(0, 7);
-    return monthly.some((mm) => mm.date === m);
-  });
+  const monthSet = new Set(monthly.map((m) => m.date));
+  return signals.filter((s) => monthSet.has(s.date.slice(0, 7)));
 }
 
 const CustomTooltip = ({

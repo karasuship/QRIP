@@ -15,7 +15,7 @@ async function fetchYahooNews(query: string): Promise<Headline[]> {
       `?q=${query}&newsCount=8&enableFuzzyQuery=false&lang=en-US&region=US`;
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
-      cache: "no-store",
+      next: { revalidate: 3600 },
     });
     if (!res.ok) return [];
     const json = await res.json();

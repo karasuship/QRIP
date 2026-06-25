@@ -5,7 +5,13 @@ import {
   Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ReferenceLine,
 } from "recharts";
-import type { Sp500Point } from "@/lib/sim-compute";
+
+export interface Sp500Point {
+  date: string;
+  price: number;
+  signal: boolean;
+  crs: number;
+}
 
 interface Props {
   data: Sp500Point[];

@@ -8,9 +8,9 @@ import CrsSizingCalc from "@/app/components/CrsSizingCalc";
 import MarketContext from "@/app/components/MarketContext";
 import EconCalendar from "@/app/components/EconCalendar";
 import EarningsCalendar from "@/app/components/EarningsCalendar";
-import { getRecentSp500 } from "@/lib/sim-compute";
 import { getSupabaseServer } from "@/lib/supabase";
 import type { CrsPoint } from "@/app/components/charts/CrsHistoryChart";
+import type { Sp500Point } from "@/app/components/charts/Sp500SignalChart";
 
 const Sp500SignalChart = dynamic(() => import("@/app/components/charts/Sp500SignalChart"), { ssr: false });
 const CrsHistoryChart  = dynamic(() => import("@/app/components/charts/CrsHistoryChart"),  { ssr: false });
@@ -93,22 +93,28 @@ export default async function SignalPage() {
   let signal;
   let error: string | null = null;
 
-  // チャート用データを並列取得
-  const sp500ChartData = getRecentSp500();
+  // チャート用データ（Supabase market_daily から — CSV に依存しない）
   let crsHistory: CrsPoint[] = [];
+  let sp500ChartData: Sp500Point[] = [];
   try {
     const db = getSupabaseServer();
     const { data: mhData } = await db
       .from("market_daily")
-      .select("date, crs_score, phi2_active")
+      .select("date, crs_score, phi2_active, sp500_close")
       .order("date", { ascending: true })
-      .limit(90);
+      .limit(180);
     crsHistory = (mhData ?? []).map((r) => ({
       date:   r.date as string,
-      crs:    r.crs_score as number,
-      signal: r.phi2_active as boolean,
+      crs:    (r.crs_score as number) ?? 0,
+      signal: (r.phi2_active as boolean) ?? false,
     }));
-  } catch { /* Supabase が空の場合は CSV のみ */ }
+    sp500ChartData = (mhData ?? []).map((r) => ({
+      date:   r.date as string,
+      price:  Math.round((r.sp500_close as number) ?? 0),
+      signal: (r.phi2_active as boolean) ?? false,
+      crs:    (r.crs_score as number) ?? 0,
+    }));
+  } catch { /* Supabase が空の場合はチャートなし */ }
 
   try {
     signal = await fetchSignal();
