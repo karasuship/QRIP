@@ -1,13 +1,8 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { lessons, closing } from "../data/lessons";
 import simRaw from "@/app/data/sim-result.json";
 import type { SimMonthly, Phi2Signal } from "@/app/components/charts/SimulationChart";
-
-const SimulationChart = dynamic(
-  () => import("@/app/components/charts/SimulationChart"),
-  { ssr: false }
-);
+import SimulationChart from "@/app/components/charts/SimulationChartClient";
 
 export const metadata = {
   title: "QRIP — 使い方と検証結果",

@@ -1,7 +1,6 @@
 import { fetchSignal } from "@/lib/signal";
 import type { Metadata } from "next";
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import LiveMetrics from "@/app/components/LiveMetrics";
 import PushSubscribe from "@/app/components/PushSubscribe";
 import CrsSizingCalc from "@/app/components/CrsSizingCalc";
@@ -11,9 +10,8 @@ import EarningsCalendar from "@/app/components/EarningsCalendar";
 import { getSupabaseServer } from "@/lib/supabase";
 import type { CrsPoint } from "@/app/components/charts/CrsHistoryChart";
 import type { Sp500Point } from "@/app/components/charts/Sp500SignalChart";
-
-const Sp500SignalChart = dynamic(() => import("@/app/components/charts/Sp500SignalChart"), { ssr: false });
-const CrsHistoryChart  = dynamic(() => import("@/app/components/charts/CrsHistoryChart"),  { ssr: false });
+import Sp500SignalChart from "@/app/components/charts/Sp500SignalChartClient";
+import CrsHistoryChart  from "@/app/components/charts/CrsHistoryChartClient";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
