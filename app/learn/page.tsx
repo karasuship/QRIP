@@ -441,6 +441,57 @@ export default function Learn() {
           </Link>
         </div>
 
+        {/* 証券口座開設 アフィリエイト */}
+        <section className="mt-10">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">口座開設</p>
+          <p className="mt-1 mb-4 text-xs leading-6 text-slate-500">
+            このサイトのシグナルを使うには証券口座が必要。セルフバック（口座開設ポイント）が初手で最もリスクゼロのアルファ。
+          </p>
+          <div className="space-y-2">
+            {[
+              {
+                name: "SBI証券",
+                desc: "業界最大手。NISA・米国株・ETF全対応。手数料ゼロ。",
+                tag: "国内No.1",
+                tagColor: "text-[#34d399] border-[#34d399]/30",
+                url: "#affiliate-sbi",
+              },
+              {
+                name: "楽天証券",
+                desc: "楽天ポイント連動。楽天経済圏ユーザーに最適。米国株・ETF完備。",
+                tag: "ポイント還元",
+                tagColor: "text-amber-400 border-amber-400/30",
+                url: "#affiliate-rakuten",
+              },
+              {
+                name: "マネックス証券",
+                desc: "米国株の銘柄数が最多。個別株派・ETF多様化派向け。",
+                tag: "米国株最多",
+                tagColor: "text-[#38bdf8] border-[#38bdf8]/30",
+                url: "#affiliate-monex",
+              },
+            ].map((b) => (
+              <a
+                key={b.name}
+                href={b.url}
+                target="_blank"
+                rel="noopener noreferrer sponsored"
+                className="flex items-center gap-4 rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all group"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-sm font-semibold text-slate-200 group-hover:text-white transition-colors">{b.name}</span>
+                    <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[9px] ${b.tagColor}`}>{b.tag}</span>
+                  </div>
+                  <p className="text-xs text-slate-500">{b.desc}</p>
+                </div>
+                <span className="shrink-0 font-mono text-[10px] text-slate-600 group-hover:text-slate-400 transition-colors">開設 →</span>
+              </a>
+            ))}
+          </div>
+          <p className="mt-2 font-mono text-[9px] text-slate-700">※ アフィリエイトリンクを含みます。推奨内容はデータに基づき独立して決定しています。</p>
+        </section>
+
         <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">
           数値はS&P500等の過去データに対する自前バックテスト（engine/archive）由来。
           過去の分布であり、将来を保証しません。これは投資助言ではなく事実の提示です。

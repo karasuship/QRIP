@@ -91,16 +91,21 @@ export default async function SignalPage() {
   let signal;
   let error: string | null = null;
 
-  // チャート用データ（Supabase market_daily から — CSV に依存しない）
+  // チャート用データ + 過熱判定用 Put/Call（Supabase market_daily から）
   let crsHistory: CrsPoint[] = [];
   let sp500ChartData: Sp500Point[] = [];
+  let putCallRatio: number | null = null;
   try {
     const db = getSupabaseServer();
     const { data: mhData } = await db
       .from("market_daily")
-      .select("date, crs_score, phi2_active, sp500_close")
+      .select("date, crs_score, phi2_active, sp500_close, put_call_ratio")
       .order("date", { ascending: true })
       .limit(180);
+    if (mhData && mhData.length > 0) {
+      const latest = mhData[mhData.length - 1];
+      putCallRatio = (latest.put_call_ratio as number | null) ?? null;
+    }
     crsHistory = (mhData ?? []).map((r) => ({
       date:   r.date as string,
       crs:    (r.crs_score as number) ?? 0,
@@ -253,6 +258,45 @@ export default async function SignalPage() {
         )}
         {/* CRS連動サイジング試算 (CRS>=2 で表示) */}
         {crs >= 2 && <CrsSizingCalc crs={crs} />}
+
+        {/* ── 過熱判定 ── */}
+        {(() => {
+          let heatScore = 0;
+          const heatReasons: string[] = [];
+          if (athDd > -0.05) { heatScore++; heatReasons.push(`ATH近傍（乖離${(athDd*100).toFixed(1)}%）`); }
+          if (vix !== null && vix < 15) { heatScore++; heatReasons.push(`VIX低水準（${vix.toFixed(1)}）`); }
+          if (crs === 0) { heatScore++; heatReasons.push("CRS=0（恐怖なし）"); }
+          if (putCallRatio !== null && putCallRatio < 0.6) { heatScore++; heatReasons.push(`Put/Call楽観（${putCallRatio.toFixed(2)}）`); }
+          if (heatScore === 0) return null;
+          const cfg =
+            heatScore >= 3
+              ? { label: "強過熱", sub: "追加投入より積立継続が有利な局面", cls: "border-[#f87171]/30 bg-[#f87171]/[0.06] text-[#f87171]" }
+              : heatScore === 2
+              ? { label: "過熱気味", sub: "急いで追加投入する局面ではない", cls: "border-amber-400/25 bg-amber-400/[0.05] text-amber-400" }
+              : { label: "やや過熱", sub: "通常積立を継続。シグナル待ち", cls: "border-white/[0.18] bg-white/[0.05] text-slate-400" };
+          return (
+            <div className={`mt-4 rounded-2xl border px-5 py-4 backdrop-blur-sm ${cfg.cls}`}>
+              <div className="flex items-center justify-between gap-3 mb-1.5">
+                <p className="font-mono text-[9px] uppercase tracking-[0.25em] opacity-60">過熱判定</p>
+                <span className={`font-mono text-xs font-bold ${cfg.cls.split(" ").find(c => c.startsWith("text-")) ?? ""}`}>
+                  {cfg.label}（{heatScore}/4）
+                </span>
+              </div>
+              <p className="text-sm font-medium">{cfg.sub}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {heatReasons.map((r) => (
+                  <span key={r} className="rounded-full border border-current/20 bg-current/[0.06] px-2 py-0.5 font-mono text-[10px] opacity-80">
+                    {r}
+                  </span>
+                ))}
+              </div>
+              <p className="mt-2 text-[10px] leading-5 opacity-50">
+                憲法第三条「恐怖と過熱を分ける」の実装。phi2圏外でも過熱を検知できる。
+                <Link href="/glossary#heat" className="ml-1 underline decoration-dotted">→ 用語集</Link>
+              </p>
+            </div>
+          );
+        })()}
 
         {/* ── チャートセクション ── */}
         <section className="mt-5 space-y-3">

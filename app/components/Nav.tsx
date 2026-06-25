@@ -9,6 +9,8 @@ const LINKS = [
   { href: "/news",      label: "ニュース",    desc: "市場の空気感" },
   { href: "/portfolio", label: "実績",        desc: "ポートフォリオ記録" },
   { href: "/learn",     label: "検証",        desc: "バックテスト結果" },
+  { href: "/research",  label: "書庫",        desc: "Round 01〜43 検証アーカイブ" },
+  { href: "/board",     label: "掲示板",      desc: "仮説・銘柄・考察" },
 ];
 
 export default function Nav() {
