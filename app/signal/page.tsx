@@ -1,3 +1,4 @@
+import React from "react";
 import { fetchSignal } from "@/lib/signal";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -13,6 +14,8 @@ import type { Sp500Point } from "@/app/components/charts/Sp500SignalChart";
 import Sp500SignalChart from "@/app/components/charts/Sp500SignalChartClient";
 import CrsHistoryChart  from "@/app/components/charts/CrsHistoryChartClient";
 import PriceChartClient from "@/app/signal/PriceChartClient";
+import TermTooltip from "@/app/components/TermTooltip";
+import QuickRef from "@/app/components/QuickRef";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -27,7 +30,7 @@ function pct(n: number, sign = true): string {
   return sign && n >= 0 ? "+" + s : s;
 }
 
-function CRSDot({ active, label }: { active: boolean; label: string }) {
+function CRSDot({ active, label }: { active: boolean; label: React.ReactNode }) {
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wide ${
@@ -405,11 +408,11 @@ export default async function SignalPage() {
             <span className={crs >= 5 ? "text-violet-300 font-semibold" : ""}>5-6 で 2x 投入検討</span>
           </p>
           <div className="flex flex-wrap gap-1.5">
-            <CRSDot active={crsComponents.c1} label="VIX>30" />
-            <CRSDot active={crsComponents.c2} label="HYG3日落" />
-            <CRSDot active={crsComponents.c3} label="DXY5日高" />
-            <CRSDot active={crsComponents.c4} label="ATH90日内" />
-            <CRSDot active={crsComponents.c5} label="HYG60日-8%" />
+            <CRSDot active={crsComponents.c1} label={<TermTooltip term="vix">VIX&gt;30</TermTooltip>} />
+            <CRSDot active={crsComponents.c2} label={<TermTooltip term="hyg">HYG3日落</TermTooltip>} />
+            <CRSDot active={crsComponents.c3} label={<TermTooltip term="dxy">DXY5日高</TermTooltip>} />
+            <CRSDot active={crsComponents.c4} label={<TermTooltip term="ath">ATH90日内</TermTooltip>} />
+            <CRSDot active={crsComponents.c5} label={<TermTooltip term="hyg">HYG60日-8%</TermTooltip>} />
             <CRSDot active={crsComponents.c6} label="RSP弱" />
           </div>
           {/* CRS品質ガイド */}
@@ -441,14 +444,36 @@ export default async function SignalPage() {
           <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-slate-400">phi2 v3 発動条件</p>
           {(
             [
-              { label: "ATH 乖離 ≤ −10%",    ok: athDd <= -0.1,                              val: pct(athDd) },
-              { label: "当日リターン ≤ −2%", ok: dayRet !== null && dayRet <= -0.02,           val: dayRet !== null ? pct(dayRet) : "—" },
-              { label: "vol20 > 25%",         ok: vol20 !== null && vol20 > 0.25,              val: vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—" },
-              { label: "age_ath ∉ [91-252]",  ok: ageAthOk,                                   val: `${ageAth}日` },
-              { label: "CRS ≥ 2",             ok: crs >= 2,                                   val: `${crs}/6` },
-            ] as { label: string; ok: boolean; val: string }[]
-          ).map(({ label, ok, val }) => (
-            <div key={label} className="flex items-center justify-between border-b border-white/[0.12] py-2 last:border-0">
+              {
+                key: "ath-cond",
+                label: <><TermTooltip term="ath">ATH 乖離</TermTooltip> ≤ −10%</>,
+                ok: athDd <= -0.1, val: pct(athDd),
+              },
+              {
+                key: "day-ret",
+                label: <>当日リターン ≤ −2%</>,
+                ok: dayRet !== null && dayRet <= -0.02,
+                val: dayRet !== null ? pct(dayRet) : "—",
+              },
+              {
+                key: "vol20-cond",
+                label: <><TermTooltip term="vol20">vol20</TermTooltip> &gt; 25%</>,
+                ok: vol20 !== null && vol20 > 0.25,
+                val: vol20 !== null ? (vol20 * 100).toFixed(1) + "%" : "—",
+              },
+              {
+                key: "age-ath",
+                label: <>age_ath ∉ [91-252]</>,
+                ok: ageAthOk, val: `${ageAth}日`,
+              },
+              {
+                key: "crs-cond",
+                label: <><TermTooltip term="crs">CRS</TermTooltip> ≥ 2</>,
+                ok: crs >= 2, val: `${crs}/6`,
+              },
+            ] as { key: string; label: React.ReactNode; ok: boolean; val: string }[]
+          ).map(({ key, label, ok, val }) => (
+            <div key={key} className="flex items-center justify-between border-b border-white/[0.12] py-2 last:border-0">
               <span className="flex items-center gap-2 text-sm">
                 <span className={`font-mono ${ok ? "text-[#34d399]" : "text-slate-400"}`}>{ok ? "✓" : "○"}</span>
                 <span className={ok ? "text-[#e8f4ff]" : "text-slate-600"}>{label}</span>
@@ -571,7 +596,20 @@ export default async function SignalPage() {
           <EarningsCalendar />
         </section>
 
-        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-500">
+        {/* ━ このページの用語・根拠 ━━━━━━━━━━━━━━━━━━━━━━ */}
+        <section className="mt-8">
+          <QuickRef
+            terms={["phi2","crs","ath","vol20","vix","hyg","dxy","b4","rsi25","efa","dca"]}
+            relatedPages={[
+              { label: "/research — 検証書庫", href: "/research", note: "phi2・CRS等のバックテスト根拠" },
+              { label: "/glossary — 用語集",   href: "/glossary", note: "全用語の完全定義" },
+              { label: "/simulate — 試算",      href: "/simulate", note: "この数字でシミュレーション" },
+              { label: "/learn — 使い方",        href: "/learn",    note: "シグナルの活用ステップ" },
+            ]}
+          />
+        </section>
+
+        <p className="mt-4 font-mono text-[10px] leading-6 text-slate-500">
           データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。
           phi2 v3: TEST Z=+8.65 · HYG-8%: TEST Z=+9.42 · B4: TEST Z=+8.29 (decisions/0021, 0016, 0018)。
           R37: CRS=5→2x · R39: HOLD最良 · R42: EFA同等品質。

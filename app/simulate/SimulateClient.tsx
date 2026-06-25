@@ -5,6 +5,8 @@ import {
   ResponsiveContainer, ComposedChart, Area, Bar,
   XAxis, YAxis, Tooltip, CartesianGrid, Legend,
 } from "recharts";
+import TermTooltip from "@/app/components/TermTooltip";
+import QuickRef from "@/app/components/QuickRef";
 
 // ── 定数 ─────────────────────────────────────────────────────
 const TAX      = 0.20315;
@@ -446,9 +448,22 @@ export default function SimulateClient() {
                     className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
                 </label>
                 <label className="space-y-0.5">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">年率リターン%</p>
+                  <p className="font-mono text-[9px] uppercase text-slate-600">
+                    年率リターン%
+                    {(a.totalRet === 10.4 || a.totalRet === 13.8) && (
+                      <span className="ml-1 text-slate-700 normal-case">
+                        {a.totalRet === 10.4 && "← DCA基準"}
+                        {a.totalRet === 13.8 && "← QQQ長期平均"}
+                      </span>
+                    )}
+                  </p>
                   <input type="number" value={a.totalRet} onChange={(e)=>updateAsset(a.id,"totalRet",+e.target.value)} step={0.5}
                     className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                  {a.totalRet === 10.4 && (
+                    <p className="font-mono text-[8px] text-slate-700 leading-3">
+                      <TermTooltip term="phi2">phi2シグナル</TermTooltip>適用なら <button className="text-[#38bdf8] hover:underline" onClick={()=>updateAsset(a.id,"totalRet",12.7)}>12.7%に変更 →</button>
+                    </p>
+                  )}
                 </label>
                 <label className="space-y-0.5">
                   <p className="font-mono text-[9px] uppercase text-slate-600">配当利回り%</p>
@@ -789,6 +804,16 @@ export default function SimulateClient() {
           </table>
         </div>
       </section>
+
+      {/* ━━ このページの用語・根拠 ━━━━━━━━━━━━━━━━━━ */}
+      <QuickRef
+        terms={["dca","phi2","crs","drip","rule4pct","nisa","efa"]}
+        relatedPages={[
+          { label: "/signal — シグナル",   href: "/signal",   note: "今日の発動状態とCRSスコア" },
+          { label: "/research — 検証書庫", href: "/research", note: "年率12.7%の根拠・バックテスト" },
+          { label: "/glossary — 用語集",   href: "/glossary", note: "DCA・DRIP・4%ルールの完全定義" },
+        ]}
+      />
 
       {/* ━━ 免責 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <div className="rounded-xl border border-white/[0.08] px-4 py-3">
