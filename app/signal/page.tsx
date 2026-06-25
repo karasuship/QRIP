@@ -229,6 +229,20 @@ export default async function SignalPage() {
           <PushSubscribe />
         </div>
 
+        {/* このページでわかること */}
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[
+            { num: "01", text: "今日「追加投入すべきか」を1行で判定。詳細を読まなくてもわかるよう設計している" },
+            { num: "02", text: "CRSスコア（0〜6）が今の恐怖の深さを示す。5〜6なら通常の2倍投入を統計が支持する" },
+            { num: "03", text: "シグナル発動時に通知を受け取れる。毎日チェックしなくていい" },
+          ].map((c) => (
+            <div key={c.num} className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+              <span className="font-mono text-sm font-bold text-white/[0.08] shrink-0">{c.num}</span>
+              <p className="text-[11px] leading-5 text-slate-500">{c.text}</p>
+            </div>
+          ))}
+        </div>
+
         {/* 今日の結論 */}
         <div className={`mt-5 rounded-2xl border px-5 py-4 backdrop-blur-sm ${conclusion.cls}`}>
           <p className="font-mono text-[9px] uppercase tracking-[0.25em] mb-1.5 text-slate-400">今日の結論</p>

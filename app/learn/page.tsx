@@ -75,6 +75,20 @@ export default function Learn() {
           </p>
         </div>
 
+        {/* このページで得られるもの */}
+        <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-3">
+          {[
+            { label: "DCA vs phi2の差", body: "毎月同額投信を積み立てるだけ（DCA）と、シグナルを活用した場合で30年後にいくら違うかをチャートで確認できる" },
+            { label: "捨てた仮説の一覧", body: "「高いときは買わない（CAPE）」「分割買い」「金利シグナル」など直感的に正しそうで実際は機能しなかった仮説の検証結果" },
+            { label: "シグナルの読み方", body: "phi2・CRS・B4・HYG-8%の条件と統計的根拠。4体制がいずれかOR発動で累計TEST Z=+14.79" },
+          ].map((c) => (
+            <div key={c.label} className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+              <p className="font-mono text-[10px] font-semibold text-[#38bdf8]/80">{c.label}</p>
+              <p className="mt-1 text-[11px] leading-5 text-slate-500">{c.body}</p>
+            </div>
+          ))}
+        </div>
+
         {/* シミュレーションチャート */}
         {simResult && simResult.monthly.length > 0 && (
           <section className="mt-8">
