@@ -4,13 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const LINKS = [
-  { href: "/",          label: "ホーム",      desc: "過去の相場分布" },
-  { href: "/signal",    label: "シグナル",    desc: "今日の買い場判定" },
-  { href: "/news",      label: "ニュース",    desc: "市場の空気感" },
-  { href: "/portfolio", label: "実績",        desc: "ポートフォリオ記録" },
-  { href: "/learn",     label: "検証",        desc: "バックテスト結果" },
-  { href: "/research",  label: "書庫",        desc: "Round 01〜43 検証アーカイブ" },
-  { href: "/board",     label: "掲示板",      desc: "仮説・銘柄・考察" },
+  { href: "/",            label: "ホーム",   desc: "過去の相場分布" },
+  { href: "/signal",      label: "シグナル", desc: "今日の買い場判定" },
+  { href: "/news",        label: "ニュース", desc: "市場の空気感" },
+  { href: "/portfolio",   label: "実績",     desc: "ポートフォリオ記録" },
+  { href: "/journal",     label: "日誌",     desc: "投資日誌・暴落時の記録" },
+  { href: "/learn",       label: "検証",     desc: "バックテスト結果" },
+  { href: "/research",    label: "書庫",     desc: "Round 01〜43 検証アーカイブ" },
+  { href: "/hypotheses",  label: "仮説",     desc: "次の検証仮説を提案・投票" },
+  { href: "/board",       label: "掲示板",   desc: "銘柄・考察・議論" },
 ];
 
 export default function Nav() {
