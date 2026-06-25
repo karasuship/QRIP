@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import SimulateClient from "./SimulateClient";
+import AssetAllocation from "./AssetAllocation";
 
 export const metadata: Metadata = {
-  title: "QRIP — 資産シミュレーション",
-  description: "月次積立・ボーナス投下・NISA活用・phi2戦略の30年シミュレーション。",
+  title: "QRIP — 資産シミュレーション・配分例",
+  description: "月次積立・ボーナス・NISA・phi2戦略の30年試算。インデックス比較と推奨ポートフォリオ例。",
 };
 
 export default function SimulatePage() {
@@ -25,6 +26,7 @@ export default function SimulatePage() {
         </div>
 
         <SimulateClient />
+        <AssetAllocation />
       </main>
     </div>
   );
