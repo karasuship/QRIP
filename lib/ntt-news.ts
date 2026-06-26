@@ -5,7 +5,7 @@ export interface NttNewsItem {
   publishedAt: string;
 }
 
-async function fetchNewsForTicker(ticker: string): Promise<NttNewsItem[]> {
+export async function fetchNewsForTicker(ticker: string): Promise<NttNewsItem[]> {
   const url =
     `https://query1.finance.yahoo.com/v1/finance/search` +
     `?q=${ticker}&quotesCount=0&newsCount=4&enableFuzzyQuery=false`;

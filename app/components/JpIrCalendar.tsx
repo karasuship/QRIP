@@ -62,9 +62,10 @@ function todayJst(): string {
   return new Date(Date.now() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
 }
 
-export default function JpIrCalendar() {
+export default function JpIrCalendar({ stock }: { stock?: "NTT" | "JT" | "KDDI" }) {
   const today = todayJst();
-  const upcoming = EVENTS.filter((e) => e.date >= today).slice(0, 12);
+  const filtered = stock ? EVENTS.filter((e) => e.stock === stock || e.stock === "ALL") : EVENTS;
+  const upcoming = filtered.filter((e) => e.date >= today).slice(0, 12);
   if (upcoming.length === 0) return null;
 
   const grouped = upcoming.reduce<Record<string, JpEvent[]>>((acc, e) => {
