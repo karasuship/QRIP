@@ -55,6 +55,8 @@ export interface SignalData {
   signalTier: "NONE" | "NEAR" | "PHI2" | "RSI25" | "DOUBLE";
   history: TriggerDay[];
   pastEpisodes: PastEpisode[];
+  // 日本株（個別）decisions/0033
+  nttSignal: import("@/lib/ntt-signal").NttSignal | null;
 }
 
 type Nullable<T> = T | null;
@@ -221,7 +223,9 @@ function computeGlobalPhi2(
 }
 
 export async function fetchSignal(): Promise<SignalData> {
-  const [spResult, vixResult, hygResult, dxyResult, rspResult, efaResult, eemResult] =
+  const { fetchNttSignal } = await import("@/lib/ntt-signal");
+
+  const [spResult, vixResult, hygResult, dxyResult, rspResult, efaResult, eemResult, nttSignal] =
     await Promise.all([
       fetchTicker("%5EGSPC", "2y"),
       fetchTicker("%5EVIX", "6mo").catch(() => null),
@@ -230,6 +234,7 @@ export async function fetchSignal(): Promise<SignalData> {
       fetchTicker("RSP", "6mo").catch(() => null),
       fetchTicker("EFA", "2y").catch(() => null),
       fetchTicker("EEM", "2y").catch(() => null),
+      fetchNttSignal().catch(() => null),
     ]);
 
   if (!spResult) throw new Error("SP500データ取得失敗");
@@ -430,5 +435,6 @@ export async function fetchSignal(): Promise<SignalData> {
     signalTier,
     history,
     pastEpisodes,
+    nttSignal: nttSignal ?? null,
   };
 }

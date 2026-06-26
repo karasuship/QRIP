@@ -90,6 +90,15 @@ Round 01〜36 主要発見まとめ：
 取得済みデータ: `engine/data/vix.csv` / `dxy.csv` / `rsp.csv` / `irx.csv` / `n225.csv` / `usdjpy.csv` / `cape.csv` / `EFA_stock.csv` / `EEM_stock.csv`
 全アーカイブ：`engine/archive/round-05〜43.md` + `RESEARCH-NARRATIVE.md`（フェーズ01〜20）
 
+## 次期研究仮説（Round 44〜45、**完結・棄却**）
+
+**権利落ち後過剰落ち仮説**（decisions/0032、2026-06-26 クローズ）：
+- JT(2914) Round 44・NTT(9432) Round 45 で検証完了
+- **過剰落ち仮説は棄却**。タイミング優位（Z=5.27）は確認されたが配当利回りと等価
+- **NISA優先順位が低い**（節税0.69%/年 vs 成長ETFの2%+/年）
+- 高配当・低成長株はQRIPの投資対象スコープ外と判断
+- アーカイブ: `engine/archive/round-44-jt-exdate.md` / `round-45-ntt-exdate.md`
+
 ## サービスコンセプト（decisions/0022 確定）
 
 **「証拠と文脈の提示」** — 予測ではなく、30年統計に基づいた行動根拠を渡す。

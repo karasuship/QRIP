@@ -151,6 +151,7 @@ export default async function SignalPage() {
     hygSignal, b4Active, b4BaseDate,
     efaAthDd, efaActive, eemAthDd, eemActive,
     signalTier, history, pastEpisodes,
+    nttSignal,
   } = signal;
 
   const anySignalActive = phi2Active || hygSignal || b4Active || signalTier === "DOUBLE";
@@ -390,6 +391,61 @@ export default async function SignalPage() {
           )}
         </section>
 
+        {/* ── 日本株シグナル（NTT 配当利回り）decisions/0033 ── */}
+        {nttSignal && (
+          <section className="mt-5 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">
+              日本株シグナル — NTT (9432)
+            </p>
+            <div className="flex items-center gap-3 mb-3">
+              <span className={`rounded-full px-3 py-1 font-mono text-sm font-bold ${
+                nttSignal.signal === "BUY"  ? "bg-[#34d399]/15 text-[#34d399]"
+                : nttSignal.signal === "SELL" ? "bg-[#f87171]/15 text-[#f87171]"
+                : "bg-white/[0.06] text-slate-400"
+              }`}>
+                {nttSignal.signal === "BUY" ? "割安シグナル" : nttSignal.signal === "SELL" ? "割高シグナル" : "中立"}
+              </span>
+              <span className="font-mono text-xs text-slate-400">{nttSignal.date}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mb-3">
+              <div className="rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2">
+                <p className="font-mono text-[9px] text-slate-500 mb-0.5">株価</p>
+                <p className="font-mono text-sm font-bold text-[#e8f4ff]">¥{nttSignal.price.toFixed(0)}</p>
+              </div>
+              <div className={`rounded-xl border px-3 py-2 ${
+                nttSignal.divYield >= 0.035 ? "border-[#34d399]/30 bg-[#34d399]/[0.06]" : "border-white/[0.10] bg-white/[0.04]"
+              }`}>
+                <p className="font-mono text-[9px] text-slate-500 mb-0.5">配当利回り</p>
+                <p className={`font-mono text-sm font-bold ${nttSignal.divYield >= 0.035 ? "text-[#34d399]" : "text-[#e8f4ff]"}`}>
+                  {(nttSignal.divYield * 100).toFixed(2)}%
+                </p>
+              </div>
+              <div className={`rounded-xl border px-3 py-2 ${
+                nttSignal.w52Pos <= 0.20 ? "border-[#34d399]/30 bg-[#34d399]/[0.06]" : "border-white/[0.10] bg-white/[0.04]"
+              }`}>
+                <p className="font-mono text-[9px] text-slate-500 mb-0.5">52週位置</p>
+                <p className={`font-mono text-sm font-bold ${nttSignal.w52Pos <= 0.20 ? "text-[#34d399]" : "text-[#e8f4ff]"}`}>
+                  {(nttSignal.w52Pos * 100).toFixed(0)}%
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 text-[10px] font-mono">
+              <span className={nttSignal.divYield >= 0.035 ? "text-[#34d399]" : "text-slate-500"}>
+                {nttSignal.divYield >= 0.035 ? "✓" : "○"} 利回り≥3.5%
+              </span>
+              <span className="text-slate-600">·</span>
+              <span className={nttSignal.w52Pos <= 0.20 ? "text-[#34d399]" : "text-slate-500"}>
+                {nttSignal.w52Pos <= 0.20 ? "✓" : "○"} 52週下位20%
+              </span>
+            </div>
+            <p className="mt-2 text-[10px] leading-5 text-slate-500">
+              根拠: 26年統計 Z=1.88。利回り≥3.5%時の12ヶ月平均+24.6%（n=20）。
+              上昇しなくても配当利回りが損失をカバー。
+              <span className="text-slate-600"> · 年間配当 ¥{nttSignal.annualDiv}/株</span>
+            </p>
+          </section>
+        )}
+
         {/* CRS スコア */}
         <section className="mt-5 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
           <div className="flex items-center justify-between">
@@ -610,8 +666,9 @@ export default async function SignalPage() {
         </section>
 
         <p className="mt-4 font-mono text-[10px] leading-6 text-slate-500">
-          データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM)。
+          データ: Yahoo Finance (^GSPC · ^VIX · HYG · DX-Y.NYB · RSP · EFA · EEM · 9432.T)。
           phi2 v3: TEST Z=+8.65 · HYG-8%: TEST Z=+9.42 · B4: TEST Z=+8.29 (decisions/0021, 0016, 0018)。
+          NTT配当利回りシグナル: Z=1.88, n=20, 26年統計 (decisions/0033)。
           R37: CRS=5→2x · R39: HOLD最良 · R42: EFA同等品質。
           これは投資助言ではありません。
         </p>

@@ -7,6 +7,7 @@ import { fetchSocialData } from "@/lib/social-fetch";
 import { notifySignal } from "@/lib/email-notify";
 import { notifySignalTelegram } from "@/lib/telegram-notify";
 import { sendWebPushToAll, buildSignalPayload } from "@/lib/web-push-notify";
+import { fetchNttSignal } from "@/lib/ntt-signal";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -221,6 +222,47 @@ export async function GET(req: NextRequest) {
     console.error("[cron] news analysis failed:", e instanceof Error ? e.message : String(e));
   }
 
+  // ──────────────────────────────────────────────
+  // 7. NTT 配当利回りシグナル（decisions/0033）
+  // ──────────────────────────────────────────────
+  let nttResult: { signal: string; price: number; divYield: number } | null = null;
+  try {
+    const ntt = await fetchNttSignal();
+    if (ntt) {
+      nttResult = { signal: ntt.signal, price: ntt.price, divYield: ntt.divYield };
+      console.log(`[cron] NTT: ¥${ntt.price.toFixed(0)} yield=${(ntt.divYield * 100).toFixed(2)}% w52pos=${(ntt.w52Pos * 100).toFixed(0)}% signal=${ntt.signal}`);
+
+      if (ntt.signal === "BUY") {
+        const pushPayload = buildSignalPayload({
+          signalType: "NTT_BUY",
+          athDd: ntt.w52Pos - 1,
+          crsScore: 0,
+        });
+        const detail = `配当利回り ${(ntt.divYield * 100).toFixed(2)}%（歴史的高水準）・52週レンジ下位 ${(ntt.w52Pos * 100).toFixed(0)}%。根拠: 26年統計 Z=1.88。`;
+        await Promise.allSettled([
+          notifySignal({
+            date: snapshot.date,
+            signalType: "NTT_BUY",
+            sp500Price: ntt.price,
+            athDd: ntt.w52Pos - 1,
+            crsScore: 0,
+            detail,
+          }),
+          notifySignalTelegram({
+            date: snapshot.date,
+            signalType: "NTT_BUY",
+            sp500Price: ntt.price,
+            athDd: ntt.w52Pos - 1,
+            crsScore: 0,
+          }),
+          sendWebPushToAll(pushPayload),
+        ]);
+      }
+    }
+  } catch (e) {
+    console.error("[cron] NTT signal failed:", e instanceof Error ? e.message : String(e));
+  }
+
   console.log(
     `[cron] ${snapshot.date} done. tier=${snapshot.signal_tier} crs=${snapshot.crs_score} fired=[${fired.join(",")}]`
   );
@@ -234,5 +276,6 @@ export async function GET(req: NextRequest) {
     rsi25_crossunder: snapshot.rsi25_crossunder,
     fired,
     news: newsResult,
+    ntt: nttResult,
   });
 }
