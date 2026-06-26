@@ -1,291 +1,236 @@
-"use client";
-
-import { useState } from "react";
 import Link from "next/link";
-import behavior from "./data/behavior.json";
+import { fetchSignal } from "@/lib/signal";
+import type { Metadata } from "next";
 
-const DEPTHS = ["5〜10%", "10〜20%", "20〜35%", "35%以上"];
-const SPEEDS: { key: string; label: string }[] = [
-  { key: "fast", label: "急落（1ヶ月で-10%以上）" },
-  { key: "gradual", label: "じわじわ" },
-];
+export const metadata: Metadata = {
+  title: "QRIP — 今日、買うべきか",
+  description:
+    "30年分の相場データをもとに「今日、追加で買うべきか」を毎日判定する。予測ではなく統計的根拠の提示。",
+};
 
-function pct(n: number | null) {
-  return n === null ? "—" : `${n > 0 ? "+" : ""}${n}%`;
+export const revalidate = 900;
+
+// ジャーゴンなしで今日の状態を説明する
+function toPlainJapanese(
+  signalTier: string,
+  athDd: number
+): { verdict: string; reason: string; cls: string } {
+  const drop = Math.abs(athDd * 100).toFixed(1);
+
+  switch (signalTier) {
+    case "DOUBLE":
+      return {
+        verdict: "強い買い場",
+        reason:
+          "30年間で8回しか見たことのない水準の急落。コロナショック・リーマンショックと同じ条件が揃っている。",
+        cls: "border-violet-400/40 bg-violet-400/[0.07] text-violet-300",
+      };
+    case "PHI2":
+      return {
+        verdict: "買い場",
+        reason: `高値から ${drop}% 下落。過去30年の同じ条件、2ヶ月後の平均リターンは通常の約2倍だった。`,
+        cls: "border-[#34d399]/40 bg-[#34d399]/[0.07] text-[#34d399]",
+      };
+    case "NEAR":
+      return {
+        verdict: "条件待ち",
+        reason: `高値から ${drop}% 下落。あと少しで「買い場」の条件が揃う。定期積立を続けながら待つ局面。`,
+        cls: "border-amber-400/25 bg-amber-400/[0.05] text-amber-400",
+      };
+    case "RSI25":
+      return {
+        verdict: "弱いシグナル",
+        reason:
+          "短期的に売られすぎているが、単独では根拠として薄い。定期積立の継続が無難。",
+        cls: "border-white/[0.20] bg-white/[0.06] text-slate-300",
+      };
+    default:
+      return {
+        verdict: "様子見",
+        reason: `高値からまだ ${drop}% しか下がっていない。焦って動くより、毎月の定期積立を続けるほうが合理的。`,
+        cls: "border-white/[0.15] bg-white/[0.06] text-slate-400",
+      };
+  }
 }
 
-export default function Home() {
-  const [depth, setDepth] = useState("10〜20%");
-  const [speed, setSpeed] = useState("fast");
-  const cell = behavior.cells.find((c) => c.depth === depth && c.speed === speed);
-  const hasData = cell && cell.horizons.some((h) => h.median !== null);
+// 実際にシグナルが発動した過去の局面（実績値）
+const PAST_SIGNALS = [
+  {
+    period: "2020年3月",
+    context: "コロナショック",
+    drop: "−34%",
+    ret: "+40%",
+    note: "1ヶ月で株価が3分の2になった底で発動した。",
+  },
+  {
+    period: "2018年12月",
+    context: "米中貿易戦争",
+    drop: "−20%",
+    ret: "+20%",
+    note: "クリスマス直前の急落。FRBへの不信感が重なった。",
+  },
+  {
+    period: "2023年10月",
+    context: "中東紛争 · 金利不安",
+    drop: "−11%",
+    ret: "+14%",
+    note: "イスラエル・ハマス衝突と長期金利5%超が重なった。",
+  },
+  {
+    period: "2022年9月",
+    context: "インフレ · 利上げ",
+    drop: "−25%",
+    ret: "+11%",
+    note: "40年ぶりのインフレ。FRBが前例のない速度で利上げした。",
+  },
+];
+
+export default async function HomePage() {
+  let verdict = "様子見";
+  let reason = "データを取得中です。";
+  let cls = "border-white/[0.15] bg-white/[0.06] text-slate-400";
+  let date = "";
+
+  try {
+    const signal = await fetchSignal();
+    const plain = toPlainJapanese(signal.signalTier, signal.athDd);
+    verdict = plain.verdict;
+    reason = plain.reason;
+    cls = plain.cls;
+    date = signal.date;
+  } catch {
+    // データ取得失敗時はフォールバック表示
+  }
 
   return (
     <div className="min-h-screen">
-      {/* Hero */}
-      <div className="relative border-b border-white/[0.14]">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-400/[0.07] via-sky-400/[0.02] to-transparent" />
+      {/* ── ヒーロー ── */}
+      <div className="relative border-b border-white/[0.08]">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sky-400/[0.05] via-transparent to-transparent" />
         <main className="relative mx-auto max-w-4xl px-6 py-20">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#38bdf8]/70">
-            市場観測 / QRIP
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-[#38bdf8]/60">
+            QRIP
           </p>
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#e8f4ff] sm:text-4xl">
-            いま、売るべきか？
-            <span className="block text-slate-400">過去はこうだった。</span>
+          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#e8f4ff] sm:text-4xl leading-tight">
+            今日、追加で買うべきか。
+            <span className="block text-slate-500">30年分の統計が答える。</span>
           </h1>
-          <p className="mt-4 max-w-lg text-sm leading-7 text-slate-400">
-            相場が下げると最初の判断を忘れて投げ売りしたくなる。でも「どこまで下がる」は誰にも当てられない。
-            このツールは予測しない。
-            <span className="text-slate-400">「過去、同じような局面はどうなったか」という事実だけ</span>を見せる。
-          </p>
-          <div className="mt-6 flex gap-3">
+
+          {/* 今日の答え */}
+          <div className={`mt-8 rounded-2xl border px-6 py-5 backdrop-blur-sm ${cls}`}>
+            <p className="font-mono text-[9px] uppercase tracking-[0.25em] opacity-50 mb-2">
+              今日の答え{date ? ` — ${date}` : ""}
+            </p>
+            <p className="text-2xl font-bold tracking-tight">{verdict}</p>
+            <p className="mt-2 text-sm leading-6 opacity-70">{reason}</p>
             <Link
               href="/signal"
-              className="rounded-xl border border-[#38bdf8]/30 bg-[#38bdf8]/10 px-5 py-2.5 font-mono text-xs text-[#38bdf8] hover:bg-[#38bdf8]/20 transition-colors tracking-wide backdrop-blur-sm"
+              className="mt-4 inline-block font-mono text-xs opacity-60 hover:opacity-100 transition-opacity"
             >
-              → リアルタイム シグナル
-            </Link>
-            <Link
-              href="/learn"
-              className="rounded-xl border border-white/[0.18] bg-white/[0.07] px-5 py-2.5 font-mono text-xs text-slate-400 hover:text-slate-300 hover:bg-white/[0.06] transition-colors tracking-wide backdrop-blur-sm"
-            >
-              検証データを読む
+              根拠と詳細を見る →
             </Link>
           </div>
         </main>
       </div>
 
-      {/* ===== このサイトでできること ===== */}
-      <div className="border-b border-white/[0.08] bg-white/[0.02]">
-        <div className="mx-auto max-w-4xl px-6 py-12">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-slate-600">What you can do</p>
-          <h2 className="mt-1 text-lg font-semibold text-[#e8f4ff]">
-            脳死積立を、根拠のある積立に変える
+      {/* ── 過去の実績 ── */}
+      <div className="border-b border-white/[0.08]">
+        <div className="mx-auto max-w-4xl px-6 py-14">
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600 mb-1">
+            過去の実績
+          </p>
+          <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
+            「買い場」と判定した日、その後どうなったか
           </h2>
-          <p className="mt-1 text-xs leading-6 text-slate-500">
-            毎月同額を投信に投げているだけでは得られない、数値で証明された3つの改善がここにある。
+          <p className="text-xs text-slate-600 mb-6">
+            判定から2ヶ月後（約63営業日）のS&amp;P 500リターン。
           </p>
 
-          <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {/* ① いつ買うか */}
-            <Link href="/signal" className="group rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-[#38bdf8]/70">① いつ買うか</p>
-              <p className="mt-2 text-sm font-semibold leading-snug text-[#e8f4ff] group-hover:text-white transition-colors">
-                「暴落の翌日は買い場か？」を30年分のデータで判定する
-              </p>
-              <div className="mt-3 rounded-xl border border-[#34d399]/20 bg-[#34d399]/[0.07] px-3 py-2">
-                <p className="font-mono text-xs font-bold text-[#34d399]">+14.5%</p>
-                <p className="font-mono text-[9px] text-slate-500">phi2シグナル発動の63日後平均リターン（TEST）</p>
-              </div>
-              <p className="mt-3 text-[11px] leading-5 text-slate-500">
-                特定の条件が揃った暴落日だけに絞ると、ランダム購入より統計的に優位だと分かった。そのシグナルが今日発動しているかをリアルタイムで見られる。
-              </p>
-              <p className="mt-3 font-mono text-[10px] text-[#38bdf8]">シグナルを確認 →</p>
-            </Link>
-
-            {/* ② いくら買うか */}
-            <Link href="/simulate" className="group rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-amber-400/70">② 何に・いくら買うか</p>
-              <p className="mt-2 text-sm font-semibold leading-snug text-[#e8f4ff] group-hover:text-white transition-colors">
-                年利0.5%の改善で、30年後の資産はいくら変わるか知っているか
-              </p>
-              <div className="mt-3 rounded-xl border border-amber-400/20 bg-amber-400/[0.07] px-3 py-2">
-                <p className="font-mono text-xs font-bold text-amber-400">+1,200万円</p>
-                <p className="font-mono text-[9px] text-slate-500">月5万×30年、年利10.4%→10.9%の差額</p>
-              </div>
-              <p className="mt-3 text-[11px] leading-5 text-slate-500">
-                月5万を30年積み立てると約1.1億円。ここにphi2アルファ（+2.3%/年）が乗ると約1.2億円超になる。NISAの活用・ボーナス投下のタイミングも試算できる。
-              </p>
-              <p className="mt-3 font-mono text-[10px] text-amber-400">30年を試算する →</p>
-            </Link>
-
-            {/* ③ 売らずに持てるか */}
-            <Link href="/journal" className="group rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-[#a78bfa]/70">③ 暴落中に売らない</p>
-              <p className="mt-2 text-sm font-semibold leading-snug text-[#e8f4ff] group-hover:text-white transition-colors">
-                「なぜ買ったか」を記録すれば、暴落中に読み返して冷静でいられる
-              </p>
-              <div className="mt-3 rounded-xl border border-[#a78bfa]/20 bg-[#a78bfa]/[0.07] px-3 py-2">
-                <p className="font-mono text-xs font-bold text-[#a78bfa]">HOLD が最良</p>
-                <p className="font-mono text-[9px] text-slate-500">売り戦略との30年差は年5,000円未満（Round 43）</p>
-              </div>
-              <p className="mt-3 text-[11px] leading-5 text-slate-500">
-                投資の最大の敵は暴落時の感情。「CRS=5、phi2発動、だから買った」と記録しておくと、暴落中に読み返して手を止められる。
-              </p>
-              <p className="mt-3 font-mono text-[10px] text-[#a78bfa]">投資日誌を記録する →</p>
-            </Link>
-          </div>
-
-          {/* サブ機能 */}
-          <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            {[
-              { href: "/news",        label: "ニュース",   desc: "世界ニュースをAIが3行に凝縮。相場への影響を毎朝判定",          color: "text-slate-400" },
-              { href: "/research",    label: "検証書庫",   desc: "Round 01〜43の全バックテスト結果を公開。採用・不採用の根拠",    color: "text-slate-400" },
-              { href: "/hypotheses",  label: "仮説投票",   desc: "「これも検証してほしい」を投稿。票数で研究キューが決まる",      color: "text-slate-400" },
-              { href: "/board",       label: "掲示板",     desc: "銘柄・考察・サイトへの質問を自由に投稿",                        color: "text-slate-400" },
-            ].map((f) => (
-              <Link
-                key={f.href}
-                href={f.href}
-                className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2.5 hover:bg-white/[0.05] hover:border-white/[0.14] transition-all"
+          <div className="overflow-hidden rounded-2xl border border-white/[0.12] backdrop-blur-sm">
+            {PAST_SIGNALS.map((s, i) => (
+              <div
+                key={s.period}
+                className={`flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 ${
+                  i !== PAST_SIGNALS.length - 1 ? "border-b border-white/[0.08]" : ""
+                }`}
               >
-                <p className={`font-mono text-[10px] font-semibold ${f.color}`}>{f.label} →</p>
-                <p className="mt-0.5 text-[10px] leading-4 text-slate-600">{f.desc}</p>
-              </Link>
+                {/* 日付・コンテキスト */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-0.5">
+                    <span className="font-mono text-xs text-slate-400">{s.period}</span>
+                    <span className="rounded-full border border-white/[0.10] bg-white/[0.04] px-2 py-0.5 font-mono text-[9px] text-slate-500">
+                      {s.context}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-600">{s.note}</p>
+                </div>
+
+                {/* 数値 */}
+                <div className="flex items-center gap-6 sm:shrink-0">
+                  <div className="text-center">
+                    <p className="font-mono text-[9px] text-slate-600 mb-0.5">高値からの下落</p>
+                    <p className="font-mono text-sm font-bold text-[#f87171]">{s.drop}</p>
+                  </div>
+                  <div className="font-mono text-slate-700 text-lg">→</div>
+                  <div className="text-center">
+                    <p className="font-mono text-[9px] text-slate-600 mb-0.5">2ヶ月後</p>
+                    <p className="font-mono text-sm font-bold text-[#34d399]">{s.ret}</p>
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
+
+          <p className="mt-3 font-mono text-[9px] text-slate-700">
+            過去30年（1994〜2024）の検証結果。将来のリターンを保証するものではありません。
+          </p>
         </div>
       </div>
 
-      <main className="mx-auto max-w-4xl px-6 py-10">
-        {/* 過去分布インタラクティブ */}
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-4">
-          過去の相場分布 — いま「売るべきか」の根拠を確認する
+      {/* ── 3つの機能 ── */}
+      <div className="mx-auto max-w-4xl px-6 py-14">
+        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600 mb-6">
+          このサイトでできること
         </p>
 
-        {/* 下落幅セレクタ */}
-        <section>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
-            Step 1 — 高値からの下落幅
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {DEPTHS.map((d) => (
-              <button
-                key={d}
-                onClick={() => setDepth(d)}
-                className={`rounded-xl border px-4 py-1.5 font-mono text-xs transition-all backdrop-blur-sm ${
-                  depth === d
-                    ? "border-[#38bdf8]/40 bg-[#38bdf8]/10 text-[#38bdf8]"
-                    : "border-white/[0.18] bg-white/[0.06] text-slate-400 hover:border-white/[0.14] hover:text-slate-300"
-                }`}
-              >
-                {d}
-              </button>
-            ))}
-          </div>
-
-          <p className="mt-5 font-mono text-[10px] uppercase tracking-widest text-slate-400">
-            Step 2 — 下がり方
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {SPEEDS.map((s) => (
-              <button
-                key={s.key}
-                onClick={() => setSpeed(s.key)}
-                className={`rounded-xl border px-4 py-1.5 font-mono text-xs transition-all backdrop-blur-sm ${
-                  speed === s.key
-                    ? "border-[#38bdf8]/40 bg-[#38bdf8]/10 text-[#38bdf8]"
-                    : "border-white/[0.18] bg-white/[0.06] text-slate-400 hover:border-white/[0.14] hover:text-slate-300"
-                }`}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        {/* 結果カード */}
-        <section className="mt-6 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-6 backdrop-blur-md">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
-            {behavior.source} — 過去の分布
-          </p>
-          <p className="mt-1 text-sm text-slate-400">
-            高値から<span className="text-slate-300 font-medium">{depth}</span>・
-            <span className="text-slate-300 font-medium">{speed === "fast" ? "急落" : "じわじわ"}</span>
-            の局面から——
-          </p>
-
-          {hasData ? (
-            <>
-              <div className="mt-4 grid grid-cols-3 gap-3">
-                {cell!.horizons.map((h) => (
-                  <div key={h.h} className="rounded-2xl border border-white/[0.14] bg-white/[0.07] p-4 text-center backdrop-blur-sm">
-                    <p className="font-mono text-[9px] uppercase tracking-widest text-slate-400">{h.h}後</p>
-                    <p className={`mt-1.5 font-mono text-2xl font-bold ${
-                      h.median !== null && h.median > 0 ? "text-[#34d399]" : "text-[#f87171]"
-                    }`}>
-                      {pct(h.median)}
-                    </p>
-                    <p className="text-[10px] text-white/35">中央値</p>
-                    <p className="mt-1.5 font-mono text-xs text-slate-400">勝率 {h.win}%</p>
-                    <p className="font-mono text-[10px] text-[#f87171]/60">最悪 {pct(h.worst)}</p>
-                  </div>
-                ))}
-              </div>
-              <p className="mt-5 text-sm leading-7 text-slate-400">
-                最悪{" "}
-                <span className="font-mono text-[#f87171]">{pct(cell!.horizons[0].worst)}</span>
-                {" "}まで落ちた事例もある。でも 1 年持てば中央値{" "}
-                <span className="font-mono text-[#34d399]">{pct(cell!.horizons[1].median)}</span>
-                （勝率{cell!.horizons[1].win}%）、3 年で{" "}
-                <span className="font-mono text-[#34d399]">{pct(cell!.horizons[2].median)}</span>
-                （勝率{cell!.horizons[2].win}%）だった。
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            {
+              href: "/signal",
+              title: "今日、買うべきかを確認する",
+              desc: "毎日更新。「買い場」かどうかを一言で判定し、根拠の数字を添えて表示する。通知設定もできる。",
+              cta: "シグナルを見る",
+              color: "text-[#38bdf8]",
+            },
+            {
+              href: "/simulate",
+              title: "30年積み立てたらいくらになるか試算する",
+              desc: "月5万円を30年積み立てると約1.1億円。銘柄・金額・期間・ボーナスを変えて試算できる。",
+              cta: "試算を始める",
+              color: "text-amber-400",
+            },
+            {
+              href: "/news",
+              title: "世界のニュースを3行で読む",
+              desc: "相場に影響しそうな世界ニュースを毎朝AIが要約。長い記事を読まなくても「今日の空気感」がわかる。",
+              cta: "ニュースを読む",
+              color: "text-[#a78bfa]",
+            },
+          ].map((f) => (
+            <Link
+              key={f.href}
+              href={f.href}
+              className="group rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all"
+            >
+              <p className="text-sm font-semibold leading-snug text-[#e8f4ff] group-hover:text-white transition-colors mb-2">
+                {f.title}
               </p>
-              <p className="mt-2 font-mono text-[10px] text-white/35">
-                n = 約{cell!.n}（延べ該当局面数）
-              </p>
-            </>
-          ) : (
-            <p className="mt-4 text-sm text-slate-600">
-              この組み合わせは過去の該当事例が少なく、信頼できる分布を出せません。
-            </p>
-          )}
-        </section>
-
-        {/* 下落確率表 */}
-        <section className="mt-8">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
-            大きな下落はどれくらい来るか
-          </p>
-          <p className="mt-1 text-xs text-slate-600">
-            「待っていれば安く買える」は幻想。大きな下落は滅多に来ない。
-          </p>
-          <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
-            <table className="w-full text-center text-xs">
-              <thead className="border-b border-white/[0.14] bg-white/[0.06]">
-                <tr>
-                  <th className="py-2.5 font-mono text-[9px] uppercase tracking-widest text-slate-400">下落幅</th>
-                  {behavior.dropProb[0].within.map((w) => (
-                    <th key={w.days} className="py-2.5 font-mono text-[9px] uppercase tracking-widest text-slate-400">
-                      {w.days}以内
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {behavior.dropProb.map((row) => (
-                  <tr key={row.x} className="border-t border-white/[0.10]">
-                    <td className="py-2.5 font-mono text-xs text-slate-400">{row.x}下落</td>
-                    {row.within.map((w) => (
-                      <td key={w.days} className="py-2.5 font-mono text-xs text-slate-400">
-                        {w.p}%
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        {/* Learn link */}
-        <section className="mt-10 border-t border-white/[0.05] pt-6">
-          <p className="text-xs text-slate-600">なぜ「予測しない」のか？</p>
-          <p className="mt-1 text-[11px] text-slate-700">
-            DCA を超える方法は 3 つだけ——を 30 年分のデータで検証しました。
-          </p>
-          <Link
-            href="/learn"
-            className="mt-3 inline-block font-mono text-xs text-[#38bdf8] hover:text-sky-300 transition-colors"
-          >
-            タイミングという幻想 — 検証で分かった事実 →
-          </Link>
-        </section>
-
-        <p className="mt-8 font-mono text-[10px] leading-5 text-slate-400">
-          {behavior.note} これは投資助言ではなく、過去データの分布提示です。
-        </p>
-      </main>
+              <p className="text-[11px] leading-5 text-slate-500 mb-4">{f.desc}</p>
+              <p className={`font-mono text-[10px] ${f.color}`}>{f.cta} →</p>
+            </Link>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
