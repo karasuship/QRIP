@@ -1,4 +1,4 @@
-import { fetchNttNews } from "@/lib/ntt-news";
+import { fetchJpStockNews } from "@/lib/ntt-news";
 
 function relativeTime(iso: string): string {
   if (!iso) return "";
@@ -6,18 +6,17 @@ function relativeTime(iso: string): string {
   const h = Math.floor(diff / 3600000);
   if (h < 1) return "1時間以内";
   if (h < 24) return `${h}時間前`;
-  const d = Math.floor(h / 24);
-  return `${d}日前`;
+  return `${Math.floor(h / 24)}日前`;
 }
 
 export default async function NttNews() {
-  const news = await fetchNttNews();
+  const news = await fetchJpStockNews();
   if (news.length === 0) return null;
 
   return (
     <div>
       <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
-        NTT 関連ニュース
+        関連ニュース — NTT · JT · KDDI
       </p>
       <div className="space-y-1.5">
         {news.map((n) => (

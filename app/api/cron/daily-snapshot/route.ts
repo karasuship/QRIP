@@ -7,7 +7,7 @@ import { fetchSocialData } from "@/lib/social-fetch";
 import { notifySignal } from "@/lib/email-notify";
 import { notifySignalTelegram } from "@/lib/telegram-notify";
 import { sendWebPushToAll, buildSignalPayload } from "@/lib/web-push-notify";
-import { fetchNttSignal } from "@/lib/ntt-signal";
+import { fetchJpStockSignals } from "@/lib/jp-stock-signal";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -223,44 +223,29 @@ export async function GET(req: NextRequest) {
   }
 
   // ──────────────────────────────────────────────
-  // 7. NTT 配当利回りシグナル（decisions/0033）
+  // 7. 日本株 配当利回りシグナル（decisions/0033）
+  //    NTT(9432) · JT(2914) · KDDI(9433)
   // ──────────────────────────────────────────────
-  let nttResult: { signal: string; price: number; divYield: number } | null = null;
+  const jpResults: { name: string; signal: string; price: number; divYield: number }[] = [];
   try {
-    const ntt = await fetchNttSignal();
-    if (ntt) {
-      nttResult = { signal: ntt.signal, price: ntt.price, divYield: ntt.divYield };
-      console.log(`[cron] NTT: ¥${ntt.price.toFixed(0)} yield=${(ntt.divYield * 100).toFixed(2)}% w52pos=${(ntt.w52Pos * 100).toFixed(0)}% signal=${ntt.signal}`);
+    const stocks = await fetchJpStockSignals();
+    for (const s of stocks) {
+      jpResults.push({ name: s.name, signal: s.signal, price: s.price, divYield: s.divYield });
+      console.log(`[cron] ${s.name}: ¥${s.price.toFixed(0)} yield=${(s.divYield*100).toFixed(2)}% w52=${(s.w52Pos*100).toFixed(0)}% signal=${s.signal}`);
 
-      if (ntt.signal === "BUY") {
-        const pushPayload = buildSignalPayload({
-          signalType: "NTT_BUY",
-          athDd: ntt.w52Pos - 1,
-          crsScore: 0,
-        });
-        const detail = `配当利回り ${(ntt.divYield * 100).toFixed(2)}%（歴史的高水準）・52週レンジ下位 ${(ntt.w52Pos * 100).toFixed(0)}%。根拠: 26年統計 Z=1.88。`;
+      if (s.signal === "BUY") {
+        const signalType = `${s.name}_BUY`;
+        const pushPayload = buildSignalPayload({ signalType, athDd: s.w52Pos - 1, crsScore: 0 });
+        const detail = `${s.fullName}(${s.code}) 配当利回り ${(s.divYield*100).toFixed(2)}%・52週レンジ下位 ${(s.w52Pos*100).toFixed(0)}%。根拠: Z=1.88、26年統計。`;
         await Promise.allSettled([
-          notifySignal({
-            date: snapshot.date,
-            signalType: "NTT_BUY",
-            sp500Price: ntt.price,
-            athDd: ntt.w52Pos - 1,
-            crsScore: 0,
-            detail,
-          }),
-          notifySignalTelegram({
-            date: snapshot.date,
-            signalType: "NTT_BUY",
-            sp500Price: ntt.price,
-            athDd: ntt.w52Pos - 1,
-            crsScore: 0,
-          }),
+          notifySignal({ date: snapshot.date, signalType, sp500Price: s.price, athDd: s.w52Pos - 1, crsScore: 0, detail }),
+          notifySignalTelegram({ date: snapshot.date, signalType, sp500Price: s.price, athDd: s.w52Pos - 1, crsScore: 0 }),
           sendWebPushToAll(pushPayload),
         ]);
       }
     }
   } catch (e) {
-    console.error("[cron] NTT signal failed:", e instanceof Error ? e.message : String(e));
+    console.error("[cron] JP stocks signal failed:", e instanceof Error ? e.message : String(e));
   }
 
   console.log(
@@ -276,6 +261,6 @@ export async function GET(req: NextRequest) {
     rsi25_crossunder: snapshot.rsi25_crossunder,
     fired,
     news: newsResult,
-    ntt: nttResult,
+    jp: jpResults,
   });
 }
