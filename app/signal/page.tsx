@@ -16,6 +16,8 @@ import CrsHistoryChart  from "@/app/components/charts/CrsHistoryChartClient";
 import PriceChartClient from "@/app/signal/PriceChartClient";
 import TermTooltip from "@/app/components/TermTooltip";
 import QuickRef from "@/app/components/QuickRef";
+import NttCalendar from "@/app/components/NttCalendar";
+import NttNews from "@/app/components/NttNews";
 
 export const metadata: Metadata = {
   title: "QRIP — 今日のシグナル",
@@ -254,8 +256,15 @@ export default async function SignalPage() {
           <p className="text-base font-semibold leading-snug">{conclusion.text}</p>
         </div>
 
+        {/* ━━━ SP500 セクション ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className="mt-6 flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">S&amp;P 500</span>
+          <span className="flex-1 border-t border-white/[0.08]" />
+          <span className="font-mono text-[9px] text-slate-700">phi2 v3 · CRS · RSI · HYG · B4 · EFA</span>
+        </div>
+
         {/* メインステータス */}
-        <div className={`mt-4 rounded-2xl border p-5 backdrop-blur-sm ${st.border}`}>
+        <div className={`mt-3 rounded-2xl border p-5 backdrop-blur-sm ${st.border}`}>
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-2">シグナル状態</p>
           <p className="text-xl font-semibold text-[#e8f4ff]">{st.label}</p>
           <p className="mt-1 font-mono text-xs text-slate-400">{st.sub}</p>
@@ -391,60 +400,100 @@ export default async function SignalPage() {
           )}
         </section>
 
-        {/* ── 日本株シグナル（NTT 配当利回り）decisions/0033 ── */}
+        {/* ━━━ NTT セクション ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
+        <div className="mt-8 flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">NTT (9432)</span>
+          <span className="flex-1 border-t border-white/[0.08]" />
+          <span className="font-mono text-[9px] text-slate-700">配当利回り · 52週レンジ</span>
+        </div>
+
+        {/* NTT シグナル状態 */}
         {nttSignal && (
-          <section className="mt-5 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">
-              日本株シグナル — NTT (9432)
-            </p>
-            <div className="flex items-center gap-3 mb-3">
+          <div className={`mt-3 rounded-2xl border p-5 backdrop-blur-sm ${
+            nttSignal.signal === "BUY"  ? "border-[#34d399]/40 bg-[#34d399]/[0.07]"
+            : nttSignal.signal === "SELL" ? "border-[#f87171]/40 bg-[#f87171]/[0.07]"
+            : "border-white/[0.15] bg-white/[0.06]"
+          }`}>
+            <div className="flex items-center gap-3 mb-4">
               <span className={`rounded-full px-3 py-1 font-mono text-sm font-bold ${
                 nttSignal.signal === "BUY"  ? "bg-[#34d399]/15 text-[#34d399]"
                 : nttSignal.signal === "SELL" ? "bg-[#f87171]/15 text-[#f87171]"
                 : "bg-white/[0.06] text-slate-400"
               }`}>
-                {nttSignal.signal === "BUY" ? "割安シグナル" : nttSignal.signal === "SELL" ? "割高シグナル" : "中立"}
+                {nttSignal.signal === "BUY" ? "割安シグナル" : nttSignal.signal === "SELL" ? "割高シグナル" : "中立 — 待機"}
               </span>
-              <span className="font-mono text-xs text-slate-400">{nttSignal.date}</span>
+              <span className="font-mono text-xs text-slate-500">{nttSignal.date}</span>
             </div>
-            <div className="grid grid-cols-3 gap-2 mb-3">
-              <div className="rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2">
+
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2.5">
                 <p className="font-mono text-[9px] text-slate-500 mb-0.5">株価</p>
-                <p className="font-mono text-sm font-bold text-[#e8f4ff]">¥{nttSignal.price.toFixed(0)}</p>
+                <p className="font-mono text-lg font-bold text-[#e8f4ff]">¥{nttSignal.price.toFixed(0)}</p>
+                <p className="font-mono text-[9px] text-slate-600 mt-0.5">52週 ¥{nttSignal.w52Lo.toFixed(0)}〜¥{nttSignal.w52Hi.toFixed(0)}</p>
               </div>
-              <div className={`rounded-xl border px-3 py-2 ${
-                nttSignal.divYield >= 0.035 ? "border-[#34d399]/30 bg-[#34d399]/[0.06]" : "border-white/[0.10] bg-white/[0.04]"
+              <div className={`rounded-xl border px-3 py-2.5 ${
+                nttSignal.divYield >= 0.035 ? "border-[#34d399]/30 bg-[#34d399]/[0.06]"
+                : nttSignal.divYield <= 0.030 ? "border-[#f87171]/30 bg-[#f87171]/[0.06]"
+                : "border-white/[0.10] bg-white/[0.04]"
               }`}>
                 <p className="font-mono text-[9px] text-slate-500 mb-0.5">配当利回り</p>
-                <p className={`font-mono text-sm font-bold ${nttSignal.divYield >= 0.035 ? "text-[#34d399]" : "text-[#e8f4ff]"}`}>
+                <p className={`font-mono text-lg font-bold ${
+                  nttSignal.divYield >= 0.035 ? "text-[#34d399]"
+                  : nttSignal.divYield <= 0.030 ? "text-[#f87171]"
+                  : "text-[#e8f4ff]"
+                }`}>
                   {(nttSignal.divYield * 100).toFixed(2)}%
                 </p>
+                <p className="font-mono text-[9px] text-slate-600 mt-0.5">年間 ¥{nttSignal.annualDiv}/株</p>
               </div>
-              <div className={`rounded-xl border px-3 py-2 ${
-                nttSignal.w52Pos <= 0.20 ? "border-[#34d399]/30 bg-[#34d399]/[0.06]" : "border-white/[0.10] bg-white/[0.04]"
+              <div className={`rounded-xl border px-3 py-2.5 ${
+                nttSignal.w52Pos <= 0.20 ? "border-[#34d399]/30 bg-[#34d399]/[0.06]"
+                : nttSignal.w52Pos >= 0.80 ? "border-[#f87171]/30 bg-[#f87171]/[0.06]"
+                : "border-white/[0.10] bg-white/[0.04]"
               }`}>
-                <p className="font-mono text-[9px] text-slate-500 mb-0.5">52週位置</p>
-                <p className={`font-mono text-sm font-bold ${nttSignal.w52Pos <= 0.20 ? "text-[#34d399]" : "text-[#e8f4ff]"}`}>
+                <p className="font-mono text-[9px] text-slate-500 mb-0.5">52週レンジ位置</p>
+                <p className={`font-mono text-lg font-bold ${
+                  nttSignal.w52Pos <= 0.20 ? "text-[#34d399]"
+                  : nttSignal.w52Pos >= 0.80 ? "text-[#f87171]"
+                  : "text-[#e8f4ff]"
+                }`}>
                   {(nttSignal.w52Pos * 100).toFixed(0)}%
+                </p>
+                <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                  {nttSignal.w52Pos <= 0.20 ? "底圏" : nttSignal.w52Pos >= 0.80 ? "高値圏" : "中間帯"}
                 </p>
               </div>
             </div>
-            <div className="flex gap-2 text-[10px] font-mono">
+
+            {/* 条件チェック */}
+            <div className="flex flex-wrap gap-3 text-[10px] font-mono mb-3">
               <span className={nttSignal.divYield >= 0.035 ? "text-[#34d399]" : "text-slate-500"}>
-                {nttSignal.divYield >= 0.035 ? "✓" : "○"} 利回り≥3.5%
+                {nttSignal.divYield >= 0.035 ? "✓" : "○"} 利回り ≥ 3.5%（BUY条件）
               </span>
-              <span className="text-slate-600">·</span>
+              <span className="text-slate-700">·</span>
               <span className={nttSignal.w52Pos <= 0.20 ? "text-[#34d399]" : "text-slate-500"}>
-                {nttSignal.w52Pos <= 0.20 ? "✓" : "○"} 52週下位20%
+                {nttSignal.w52Pos <= 0.20 ? "✓" : "○"} 52週下位 20%（BUY条件）
+              </span>
+              <span className="text-slate-700">·</span>
+              <span className={nttSignal.divYield <= 0.030 ? "text-[#f87171]" : "text-slate-600"}>
+                {nttSignal.divYield <= 0.030 ? "！" : "—"} 利回り ≤ 3.0%（SELL条件）
               </span>
             </div>
-            <p className="mt-2 text-[10px] leading-5 text-slate-500">
-              根拠: 26年統計 Z=1.88。利回り≥3.5%時の12ヶ月平均+24.6%（n=20）。
-              上昇しなくても配当利回りが損失をカバー。
-              <span className="text-slate-600"> · 年間配当 ¥{nttSignal.annualDiv}/株</span>
+
+            <p className="text-[10px] leading-5 text-slate-500">
+              根拠: 26年統計 Z=1.88。利回り ≥ 3.5% 時の12ヶ月平均 +24.6%（n=20）。
+              上昇しなくても年 {(nttSignal.divYield * 100).toFixed(1)}% の配当が損失を緩和する。
             </p>
-          </section>
+          </div>
         )}
+
+        {/* NTT IR カレンダー + ニュース */}
+        <div className="mt-3 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
+          <NttCalendar />
+          <div className="mt-5 border-t border-white/[0.08] pt-5">
+            <NttNews />
+          </div>
+        </div>
 
         {/* CRS スコア */}
         <section className="mt-5 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
