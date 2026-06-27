@@ -4,59 +4,34 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const BASE = "https://api.jquants.com/v2";
+const TEST_PATH = "/equities/master";
 
-// APIキーをリフレッシュトークンとしてIDトークンを取得する試み
-async function tryGetIdToken(apiKey: string): Promise<{ ok: boolean; idToken?: string; error?: unknown }> {
-  const res = await fetch(`${BASE}/token/auth_refresh?refreshtoken=${apiKey}`, {
-    method: "POST",
-  });
-  const body = await res.json().catch(() => null);
-  if (res.ok && body?.idToken) return { ok: true, idToken: body.idToken as string };
-  return { ok: false, error: body };
-}
-
-async function tryGet(path: string, token: string, params?: Record<string, string>) {
-  const url = new URL(`${BASE}${path}`);
-  if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-  const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
-    next: { revalidate: 0 },
-  });
-  const body = await res.json().catch(() => null);
-  return { status: res.status, ok: res.ok, body };
+async function tryAuth(label: string, headers: Record<string, string>, urlParams?: Record<string, string>) {
+  const url = new URL(`${BASE}${TEST_PATH}`);
+  if (urlParams) Object.entries(urlParams).forEach(([k, v]) => url.searchParams.set(k, v));
+  try {
+    const res = await fetch(url.toString(), { headers, next: { revalidate: 0 } });
+    const body = await res.json().catch(() => null);
+    const count = Array.isArray((body as { equities?: unknown[] })?.equities)
+      ? (body as { equities: unknown[] }).equities.length
+      : null;
+    return { label, status: res.status, ok: res.ok, count, error: res.ok ? null : body };
+  } catch (e) {
+    return { label, status: 0, ok: false, count: null, error: String(e) };
+  }
 }
 
 export async function GET() {
-  const apiKey = process.env.JQUANTS_API_KEY ?? "";
-  const keyPreview = apiKey ? `${apiKey.slice(0, 8)}...（${apiKey.length}文字）` : "未設定";
+  const key = process.env.JQUANTS_API_KEY ?? "";
+  if (!key) return NextResponse.json({ error: "JQUANTS_API_KEY 未設定" });
 
-  // Step1: APIキーをリフレッシュトークンとしてIDトークン取得を試みる
-  const tokenResult = await tryGetIdToken(apiKey);
+  const results = await Promise.all([
+    tryAuth("Authorization: Bearer {key}", { Authorization: `Bearer ${key}` }),
+    tryAuth("Authorization: {key} (Bearerなし)", { Authorization: key }),
+    tryAuth("X-Api-Key: {key}", { "X-Api-Key": key }),
+    tryAuth("クエリパラメータ ?apikey={key}", {}, { apikey: key }),
+    tryAuth("クエリパラメータ ?token={key}", {}, { token: key }),
+  ]);
 
-  if (!tokenResult.ok || !tokenResult.idToken) {
-    return NextResponse.json({
-      step: "IDトークン取得失敗",
-      keyPreview,
-      tokenError: tokenResult.error,
-      hint: "APIキーがリフレッシュトークンとして機能しなかった。J-Quantsダッシュボードで取得したキーの形式を確認してください。",
-    });
-  }
-
-  // Step2: IDトークンで /equities/master を叩いてみる
-  const masterResult = await tryGet("/equities/master", tokenResult.idToken);
-
-  return NextResponse.json({
-    step: "IDトークン取得成功",
-    keyPreview,
-    idTokenPreview: `${tokenResult.idToken.slice(0, 12)}...`,
-    masterEndpoint: {
-      status: masterResult.status,
-      ok: masterResult.ok,
-      // 件数だけ返す（大量データになるため）
-      count: Array.isArray((masterResult.body as { equities?: unknown[] })?.equities)
-        ? (masterResult.body as { equities: unknown[] }).equities.length
-        : null,
-      bodyPreview: masterResult.ok ? "OK（データあり）" : masterResult.body,
-    },
-  });
+  return NextResponse.json({ keyLength: key.length, results });
 }
