@@ -143,6 +143,9 @@ export interface ScreenerMetrics {
   operatingProfit: number | null;
   totalAssets: number | null;
   equity: number | null;
+  bps: number | null;
+  eps: number | null;
+  divAnn: number | null;
   growthFlag: "急成長（要注意）" | "安定成長" | "横ばい" | "縮小中" | null;
   valueFlag: "優良バリュー" | "急成長警戒" | "低収益放置" | "高収益割安" | null;
 }
@@ -169,6 +172,7 @@ export function calcMetrics(
     dividendYield: null, revenueGrowthYoy: null,
     netSales: null, operatingProfit: null,
     totalAssets: null, equity: null,
+    bps: null, eps: null, divAnn: null,
     growthFlag: null, valueFlag: null,
   };
 
@@ -202,6 +206,10 @@ export function calcMetrics(
   if (sales !== null && prevSales !== null && prevSales > 0) {
     base.revenueGrowthYoy = (sales - prevSales) / prevSales;
   }
+
+  base.bps = bps;
+  base.eps = eps;
+  base.divAnn = div;
 
   // ROE = EPS/BPS（株価不要）
   if (eps !== null && bps !== null && bps > 0) base.roe = eps / bps;
