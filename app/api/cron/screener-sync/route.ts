@@ -11,9 +11,18 @@ function authorized(req: NextRequest): boolean {
   return req.headers.get("authorization") === `Bearer ${secret}`;
 }
 
-const BATCH = 10;
-const DELAY = 200;
+// 5並列 × 5秒待機 = 実効1req/sec（ベースプランのレート制限内）
+const BATCH = 5;
+const DELAY = 5_000;
 const MAX_MS = 260_000;
+const DEFAULT_LIMIT = 200; // 1回の実行で約200件（40バッチ × 5秒 = 200秒）
+
+// 曜日ベースの自動オフセット（月〜金で約1000件/週カバー）
+function autoOffset(): number {
+  const dow = new Date().getDay(); // 0=日, 1=月 ... 5=金
+  const table: Record<number, number> = { 1: 0, 2: 200, 3: 400, 4: 600, 5: 800 };
+  return table[dow] ?? 0;
+}
 
 export async function GET(req: NextRequest) {
   if (!authorized(req)) {
@@ -21,8 +30,8 @@ export async function GET(req: NextRequest) {
   }
 
   const url = new URL(req.url);
-  const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
-  const limit = parseInt(url.searchParams.get("limit") ?? "9999", 10);
+  const offset = parseInt(url.searchParams.get("offset") ?? String(autoOffset()), 10);
+  const limit = parseInt(url.searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10);
 
   const db = getSupabaseServer();
   const start = Date.now();
@@ -54,7 +63,7 @@ export async function GET(req: NextRequest) {
     for (const r of settled) {
       if (r.status === "rejected") {
         errors++;
-        if (errorSamples.length < 5) errorSamples.push(String(r.reason).slice(0, 120));
+        if (errorSamples.length < 3) errorSamples.push(String(r.reason).slice(0, 120));
         continue;
       }
       const { eq, summaries } = r.value;
@@ -80,7 +89,7 @@ export async function GET(req: NextRequest) {
       const { error } = await (db as any).from("screener_stocks").upsert(rows);
       if (error) {
         errors += rows.length;
-        if (errorSamples.length < 5) errorSamples.push(`upsert: ${error.message}`);
+        if (errorSamples.length < 3) errorSamples.push(`upsert: ${error.message}`);
       } else {
         synced += rows.length;
       }
@@ -91,15 +100,18 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const nextOffset = offset + limit;
+
   return NextResponse.json({
     ok: true,
     total: all.length,
     offset,
-    processed: equities.length,
+    limit,
     synced,
     skipped,
     errors,
     elapsedMs: Date.now() - start,
+    nextOffset: nextOffset < all.length ? nextOffset : null,
     errorSamples,
   });
 }
