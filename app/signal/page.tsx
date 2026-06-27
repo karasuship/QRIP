@@ -64,14 +64,15 @@ export default async function SignalHubPage() {
   let athDd = 0;
   let date = "";
   let jpSignals: JpStockSignal[] = [];
+  let signal: SignalData | null = null;
 
   try {
-    const data = await fetchSignal();
-    signalTier = data.signalTier;
-    crs = data.crs;
-    athDd = data.athDd;
-    date = data.date;
-    jpSignals = data.jpSignals;
+    signal = await fetchSignal();
+    signalTier = signal.signalTier;
+    crs = signal.crs;
+    athDd = signal.athDd;
+    date = signal.date;
+    jpSignals = signal.jpSignals;
   } catch {
     // データ取得失敗時はカードをグレーアウト表示
   }
@@ -185,6 +186,72 @@ export default async function SignalHubPage() {
                     <p className="font-mono text-[9px] text-slate-600">データ取得中...</p>
                   )}
 
+                  <p className="mt-3 font-mono text-[9px] text-slate-600 group-hover:text-slate-400 transition-colors text-right">
+                    詳細 →
+                  </p>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* ━━━ グローバル ETF ━━━ */}
+        <div className="mt-8 mb-3 flex items-center gap-3">
+          <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">グローバル ETF</span>
+          <span className="flex-1 border-t border-white/[0.08]" />
+          <span className="font-mono text-[9px] text-slate-700">phi2条件 · CRS共用 · Round 42</span>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {[
+            {
+              ticker: "EFA", name: "先進国 ETF", href: "/signal/efa",
+              athDd: signal?.efaAthDd ?? null, active: signal?.efaActive ?? false,
+              note: "日本・欧州・豪州など · TEST Z=+8.08",
+            },
+            {
+              ticker: "EEM", name: "新興国 ETF", href: "/signal/eem",
+              athDd: signal?.eemAthDd ?? null, active: signal?.eemActive ?? false,
+              note: "中国・韓国・台湾・インドなど",
+            },
+          ].map(({ ticker, name, href, athDd, active, note }) => {
+            const border = active
+              ? "border-[#34d399]/40 bg-[#34d399]/[0.07] text-[#34d399]"
+              : "border-white/[0.12] bg-white/[0.04] text-slate-400";
+            const badge = active
+              ? "bg-[#34d399]/15 text-[#34d399]"
+              : "bg-white/[0.06] text-slate-400";
+            return (
+              <Link key={ticker} href={href} className="block group">
+                <div className={`rounded-2xl border p-4 backdrop-blur-sm transition-all group-hover:brightness-110 ${border}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-mono text-xs font-bold text-[#e8f4ff]">{name}</p>
+                      <p className="font-mono text-[9px] text-slate-500">{ticker}</p>
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
+                      {active ? "発動中" : "待機"}
+                    </span>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] text-slate-500">ATH 乖離</span>
+                      <span className={`font-mono text-xs font-bold ${
+                        athDd !== null && athDd <= -0.15 ? "text-[#34d399]"
+                        : athDd !== null && athDd <= -0.1 ? "text-amber-400"
+                        : "text-[#e8f4ff]"
+                      }`}>
+                        {athDd !== null ? (athDd >= 0 ? "+" : "") + (athDd * 100).toFixed(2) + "%" : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
+                      <span className={`font-mono text-xs font-bold ${
+                        crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
+                      }`}>{crs}/6</span>
+                    </div>
+                    <p className="font-mono text-[9px] text-slate-600 mt-1">{note}</p>
+                  </div>
                   <p className="mt-3 font-mono text-[9px] text-slate-600 group-hover:text-slate-400 transition-colors text-right">
                     詳細 →
                   </p>
