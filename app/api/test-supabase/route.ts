@@ -6,46 +6,40 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const db = getSupabaseServer();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const db = getSupabaseServer() as any;
 
-    // 1. SELECT（テーブル存在確認）
-    const selectResult = await db
-      .from("screener_stocks")
-      .select("code", { count: "exact", head: true });
+    // 総件数
+    const { count: total } = await db.from("screener_stocks").select("code", { count: "exact", head: true });
 
-    // 2. 1行 upsert テスト
-    const upsertResult = await db.from("screener_stocks").upsert({
-      code: "TEST00",
-      name: "テスト銘柄",
-      market: "テスト",
-      sector: "テスト",
-      price: null, pbr: null, per: null, roe: null, roa: null,
-      equity_ratio: null, operating_margin: null, dividend_yield: null,
-      revenue_growth_yoy: null, net_sales: null, operating_profit: null,
-      total_assets: null, equity: null, growth_flag: null, value_flag: null,
-      updated_at: new Date().toISOString(),
-    });
+    // dividend_yield が null でない件数
+    const { count: divYieldNotNull } = await db.from("screener_stocks")
+      .select("code", { count: "exact", head: true })
+      .not("dividend_yield", "is", null);
 
-    // 3. テスト行を削除
-    const deleteResult = await db.from("screener_stocks").delete().eq("code", "TEST00");
+    // dividend_yield >= 0.015 の件数
+    const { count: divYield15 } = await db.from("screener_stocks")
+      .select("code", { count: "exact", head: true })
+      .gte("dividend_yield", 0.015);
 
-    return NextResponse.json({
-      select: {
-        count: selectResult.count,
-        error: selectResult.error ? { message: selectResult.error.message, code: selectResult.error.code } : null,
-      },
-      upsert: {
-        error: upsertResult.error ? { message: upsertResult.error.message, code: upsertResult.error.code, details: upsertResult.error.details } : null,
-      },
-      delete: {
-        error: deleteResult.error ? { message: deleteResult.error.message } : null,
-      },
-      env: {
-        urlSet: !!process.env.SUPABASE_URL,
-        keySet: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-        urlPrefix: process.env.SUPABASE_URL?.slice(0, 30),
-      },
-    });
+    // div_ann が null でない件数
+    const { count: divAnnNotNull } = await db.from("screener_stocks")
+      .select("code", { count: "exact", head: true })
+      .not("div_ann", "is", null);
+
+    // bps が null でない件数
+    const { count: bpsNotNull } = await db.from("screener_stocks")
+      .select("code", { count: "exact", head: true })
+      .not("bps", "is", null);
+
+    // サンプル：dividend_yield が高い5件
+    const { data: samples } = await db.from("screener_stocks")
+      .select("code,name,price,div_ann,dividend_yield")
+      .not("dividend_yield", "is", null)
+      .order("dividend_yield", { ascending: false })
+      .limit(5);
+
+    return NextResponse.json({ total, divYieldNotNull, divYield15, divAnnNotNull, bpsNotNull, samples });
   } catch (e) {
     return NextResponse.json({ thrown: String(e) }, { status: 500 });
   }
