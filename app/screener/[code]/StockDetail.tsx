@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import type { TrendItem, QuarterlyItem, StockCalendar, ChartData } from "./page";
+import type { TrendItem, QuarterlyItem, StockCalendar, ChartData, PeerStats } from "./page";
 
 interface Stock {
   code: string; name: string; market: string; sector: string;
@@ -46,13 +46,14 @@ function chg(v: number | null) {
 }
 
 export default function StockDetail({
-  stock, trend, quarterly, calendar, chartData,
+  stock, trend, quarterly, calendar, chartData, peerStats,
 }: {
   stock: Stock;
   trend: TrendItem[];
   quarterly: QuarterlyItem[];
   calendar: StockCalendar;
   chartData: ChartData;
+  peerStats?: PeerStats | null;
 }) {
   const code4 = stock.code.slice(0, 4);
   const tvSrc = `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(`TSE:${code4}`)}&interval=W&theme=Dark&style=1&locale=ja&timezone=Asia%2FTokyo&hide_side_toolbar=0`;
@@ -205,6 +206,34 @@ export default function StockDetail({
             ))}
           </div>
         </div>
+
+        {/* 業種内ランク */}
+        {peerStats && peerStats.ranks.length > 0 && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">業種内ランク</p>
+              <p className="font-mono text-[9px] text-slate-600">{peerStats.sector} / {peerStats.sectorCount}銘柄中</p>
+            </div>
+            <div className="space-y-3">
+              {peerStats.ranks.map(({ label, value, rank }) => {
+                const topPct = Math.round(100 - rank);
+                const rankCls = rank >= 75 ? "text-[#34d399]" : rank >= 50 ? "text-[#38bdf8]" : rank >= 25 ? "text-slate-400" : "text-[#f87171]";
+                const barCls  = rank >= 75 ? "bg-[#34d399]/50" : rank >= 50 ? "bg-[#38bdf8]/50" : rank >= 25 ? "bg-slate-500/40" : "bg-[#f87171]/50";
+                return (
+                  <div key={label} className="flex items-center gap-3">
+                    <p className="font-mono text-[9px] text-slate-500 w-20 shrink-0">{label}</p>
+                    <div className="flex-1 h-1.5 rounded-full bg-white/[0.07]">
+                      <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${rank}%` }} />
+                    </div>
+                    <span className={`font-mono text-[10px] font-semibold ${rankCls} w-14 text-right shrink-0`}>上位{topPct}%</span>
+                    <span className="font-mono text-[9px] text-slate-600 w-12 text-right shrink-0">{value}</span>
+                  </div>
+                );
+              })}
+            </div>
+            <p className="mt-3 font-mono text-[8px] text-slate-700">PBR割安度は低いほど割安（上位=割安）</p>
+          </div>
+        )}
 
         {/* 四半期業績推移 */}
         {quarterly.length > 1 && (
