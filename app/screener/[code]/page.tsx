@@ -7,7 +7,7 @@ import type { StockCalendar, ChartData, AnalystData } from "@/lib/yahoo-finance"
 import StockDetail from "./StockDetail";
 
 export { type StockCalendar, type ChartData, type AnalystData };
-export type { AnalystRecommendation, HolderBreakdown } from "@/lib/yahoo-finance";
+export type { AnalystRecommendation, HolderBreakdown, ShortData } from "@/lib/yahoo-finance";
 export type { DividendEvent } from "@/lib/yahoo-finance";
 
 export const revalidate = 86400;

@@ -142,20 +142,30 @@ export interface HolderBreakdown {
   institutionsCount: number | null;
 }
 
+export interface ShortData {
+  sharesShort: number | null;
+  shortPercentOfFloat: number | null;
+  shortRatio: number | null;
+  sharesShortPriorMonth: number | null;
+}
+
 export interface AnalystData {
   recommendation: AnalystRecommendation | null;
   holders: HolderBreakdown | null;
+  short: ShortData | null;
 }
 
 export async function fetchAnalystData(
   code4T: string,
   creds?: YahooCreds | null
 ): Promise<AnalystData> {
-  const empty: AnalystData = { recommendation: null, holders: null };
+  const empty: AnalystData = { recommendation: null, holders: null, short: null };
   try {
     const headers: Record<string, string> = { "User-Agent": UA };
     if (creds?.cookie) headers["Cookie"] = creds.cookie;
-    const params = new URLSearchParams({ modules: "recommendationTrend,majorHoldersBreakdown" });
+    const params = new URLSearchParams({
+      modules: "recommendationTrend,majorHoldersBreakdown,defaultKeyStatistics",
+    });
     if (creds?.crumb) params.set("crumb", creds.crumb);
 
     const res = await fetch(
@@ -192,7 +202,20 @@ export async function fetchAnalystData(
       }
     }
 
-    return { recommendation, holders };
+    // defaultKeyStatistics — short interest
+    let short: ShortData | null = null;
+    const ks = result.defaultKeyStatistics;
+    if (ks) {
+      const ss   = ks.sharesShort?.raw          ?? null;
+      const spof = ks.shortPercentOfFloat?.raw   ?? null;
+      const sr   = ks.shortRatio?.raw            ?? null;
+      const sspm = ks.sharesShortPriorMonth?.raw ?? null;
+      if (ss != null || spof != null) {
+        short = { sharesShort: ss, shortPercentOfFloat: spof, shortRatio: sr, sharesShortPriorMonth: sspm };
+      }
+    }
+
+    return { recommendation, holders, short };
   } catch {
     return empty;
   }

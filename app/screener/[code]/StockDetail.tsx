@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import type { TrendItem, QuarterlyItem, StockCalendar, ChartData, PeerStats, AnalystData } from "./page";
+import type { TrendItem, QuarterlyItem, StockCalendar, ChartData, PeerStats, AnalystData, ShortData } from "./page";
 
 interface Stock {
   code: string; name: string; market: string; sector: string;
@@ -18,6 +18,8 @@ interface Stock {
   net_sales: number | null; operating_profit: number | null;
   total_assets: number | null; equity: number | null;
   week52_high?: number | null; week52_low?: number | null;
+  margin_buy?: number | null; margin_sell?: number | null;
+  margin_ratio?: number | null; margin_date?: string | null;
   growth_flag: string | null; value_flag: string | null;
 }
 
@@ -321,6 +323,66 @@ export default function StockDetail({
                 </div>
               );
             })()}
+          </div>
+        )}
+
+        {/* 空売り残高 */}
+        {analystData?.short && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">空売り残高（Yahoo Finance）</p>
+            {(() => {
+              const s = analystData.short!;
+              const items = [
+                { label: "空売り残高（株数）", value: s.sharesShort != null ? s.sharesShort.toLocaleString() + "株" : "—" },
+                { label: "先月比",            value: s.sharesShortPriorMonth != null && s.sharesShort != null
+                  ? ((s.sharesShort - s.sharesShortPriorMonth) / s.sharesShortPriorMonth >= 0 ? "+" : "") +
+                    ((s.sharesShort - s.sharesShortPriorMonth) / s.sharesShortPriorMonth * 100).toFixed(1) + "%" : "—" },
+                { label: "空売り比率（float）", value: s.shortPercentOfFloat != null ? (s.shortPercentOfFloat * 100).toFixed(1) + "%" : "—" },
+                { label: "返済日数（日）",      value: s.shortRatio != null ? s.shortRatio.toFixed(1) + "日" : "—" },
+              ];
+              return (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                  {items.map(({ label, value }) => (
+                    <div key={label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+                      <p className="font-mono text-[9px] text-slate-500">{label}</p>
+                      <p className="mt-1 font-mono text-sm font-semibold text-[#e8f4ff]">{value}</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* 信用取引残高 */}
+        {stock.margin_buy != null && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <div className="flex items-baseline justify-between mb-4">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">信用取引残高</p>
+              {stock.margin_date && (
+                <p className="font-mono text-[9px] text-slate-600">{stock.margin_date} 時点</p>
+              )}
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+                <p className="font-mono text-[9px] text-slate-500">信用買い残</p>
+                <p className="mt-1 font-mono text-sm font-semibold text-[#38bdf8]">
+                  {stock.margin_buy!.toLocaleString()}株
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+                <p className="font-mono text-[9px] text-slate-500">信用売り残</p>
+                <p className="mt-1 font-mono text-sm font-semibold text-[#f87171]">
+                  {stock.margin_sell != null ? stock.margin_sell.toLocaleString() + "株" : "—"}
+                </p>
+              </div>
+              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+                <p className="font-mono text-[9px] text-slate-500">信用倍率（買/売）</p>
+                <p className="mt-1 font-mono text-sm font-semibold text-[#e8f4ff]">
+                  {stock.margin_ratio != null ? stock.margin_ratio.toFixed(2) + "倍" : "—"}
+                </p>
+              </div>
+            </div>
           </div>
         )}
 

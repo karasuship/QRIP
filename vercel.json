@@ -11,6 +11,10 @@
     {
       "path": "/api/cron/screener-prices",
       "schedule": "30 14 * * 1-5"
+    },
+    {
+      "path": "/api/cron/margin-sync",
+      "schedule": "0 12 * * 2"
     }
   ]
 }
