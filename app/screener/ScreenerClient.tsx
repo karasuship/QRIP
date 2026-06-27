@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
-import { getSupabaseBrowser } from "@/lib/supabase";
 
 interface Stock {
   code: string;
@@ -80,31 +79,25 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
   const [count, setCount] = useState(0);
 
   const search = useCallback(async () => {
-    const db = getSupabaseBrowser();
-    if (!db) return;
     setLoading(true);
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let q = (db as any)
-      .from("screener_stocks")
-      .select("code,name,market,sector,price,pbr,per,roe,roa,equity_ratio,operating_margin,dividend_yield,revenue_growth_yoy,growth_flag,value_flag");
+    const params = new URLSearchParams();
+    if (filters.pbr_max < INACTIVE.pbr_max)                        params.set("pbr_max",             String(filters.pbr_max));
+    if (filters.per_max < INACTIVE.per_max)                        params.set("per_max",             String(filters.per_max));
+    if (filters.equity_ratio_min > 0)                              params.set("equity_ratio_min",    String(filters.equity_ratio_min));
+    if (filters.dividend_yield_min > 0)                            params.set("dividend_yield_min",  String(filters.dividend_yield_min));
+    if (filters.roe_min > 0)                                       params.set("roe_min",             String(filters.roe_min));
+    if (filters.roa_min > 0)                                       params.set("roa_min",             String(filters.roa_min));
+    if (filters.operating_margin_min > 0)                          params.set("operating_margin_min",String(filters.operating_margin_min));
+    if (filters.revenue_growth_max < INACTIVE.revenue_growth_max)  params.set("revenue_growth_max",  String(filters.revenue_growth_max));
+    if (filters.market !== "全て")                                  params.set("market",              filters.market);
+    if (filters.value_flag !== "全て")                              params.set("value_flag",          filters.value_flag);
 
-    // 最大緩い値（= INACTIVE）でないときだけフィルターを適用
-    if (filters.pbr_max < INACTIVE.pbr_max)           q = q.lte("pbr", filters.pbr_max);
-    if (filters.per_max < INACTIVE.per_max)           q = q.lte("per", filters.per_max);
-    if (filters.equity_ratio_min > 0)                 q = q.gte("equity_ratio", filters.equity_ratio_min / 100);
-    if (filters.dividend_yield_min > 0)               q = q.gte("dividend_yield", filters.dividend_yield_min / 100);
-    if (filters.roe_min > 0)                          q = q.gte("roe", filters.roe_min / 100);
-    if (filters.roa_min > 0)                          q = q.gte("roa", filters.roa_min / 100);
-    if (filters.operating_margin_min > 0)             q = q.gte("operating_margin", filters.operating_margin_min / 100);
-    if (filters.revenue_growth_max < INACTIVE.revenue_growth_max) q = q.lte("revenue_growth_yoy", filters.revenue_growth_max / 100);
-    if (filters.market !== "全て")                    q = q.eq("market", filters.market);
-    if (filters.value_flag !== "全て")                q = q.eq("value_flag", filters.value_flag);
-
-    const { data, error } = await q.order("roe", { ascending: false, nullsFirst: false }).limit(100);
-    if (!error && data) {
-      setResults(data as Stock[]);
-      setCount(data.length);
+    const res = await fetch(`/api/screener/search?${params}`);
+    if (res.ok) {
+      const json = await res.json();
+      setResults(json.data as Stock[]);
+      setCount(json.data.length);
     }
     setLoading(false);
   }, [filters]);
