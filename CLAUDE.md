@@ -141,18 +141,39 @@ Round 01〜36 主要発見まとめ：
 | TELEGRAM_BOT_TOKEN | Telegram通知 | 任意 |
 | TELEGRAM_CHAT_ID | Telegram通知 | 任意 |
 
-## 次にやること
+## 次にやること（2026-06-27 確定・この順で実行）
 
-### 優先（Web 機能追加）
-1. iPhone 向け通知（React Native アプリ — 別リポジトリで並行開発）
-3. ポートフォリオトラッカー（実績 vs DCA ベースライン比較）
-4. CRS連動サイジングUI（CRS=5→2x 推奨表示）
-5. LINE公式アカウント（多ユーザー通知拡張）
+### フェーズ1 — スクリーナー強化（即着���）
+1. **52週高値・安値 ＋ 騰落率（1M・3M・1Y）** — Yahoo Finance v8/chart + v7/quote fields追加。screener_stocks に week52_high/low カラム追加
+2. **��半期業績推移** — J-Quants fins/summary の quarterly データ（今は FY のみ使用・捨てている）を個別ページに表示
+3. **配当権利落日・支払日・配当履歴** — Yahoo Finance calendarEvents + v8/chart dividends
+4. **IR・irbank・TDnet リンク** — URL生成のみ（30分）
 
-### 後回しリスト
-- Google AdSense 申請（プライバシーポリシー・コンテンツ充実が先）
-- EFA/EEM 専用ページ
-- FOMC声明スコアリング
+### フェーズ2 — スクリーナー深化
+5. **業種内ピア比較** — screener_stocks を sector でグループ化して中央値・上位25%を計算
+6. **決算発表予定日** — Yahoo Finance calendarEvents（個別ページ警告バナー）
+7. **アナリスト推奨��buy/hold/sell 人数）** — Yahoo Finance recommendationTrend
+8. **外国人・機関投資家保有比率** — Yahoo Finance majorHoldersBreakdown
+
+### フェーズ3 — 信用・空売りデータ
+9. **空売り残高・比率（週次）** — JPX 公式 CSV → Supabase cron
+10. **信用取引残高（週次）** — JPX 公式 CSV → Supabase cron
+
+### フェーズ4 — シグナルページ強化
+11. **CRS連動サイジングUI** — CRS=5→2x 推奨、0〜6段階で投入額の目安を /signal に表示
+12. **EFA/EEM 専用ページ** — グローバルシグナル（Round 42 の結果反映）
+
+### フェーズ5 — ポートフォリオ・日誌
+13. **ポートフォリオトラッカー** — 実績 vs DCA ベースライン比較（まず localStorage 版から）
+
+### フェーズ6 — 後で
+- インサイダー取引履歴（Yahoo insiderTransactions、JP株は薄い）
+- FOMC声明スコアリング（要研究）
+- LINE公式アカウント
+- Google AdSense（コンテンツ充実が��）
+- 株主優待（irbank リンクのみか手動100銘柄か）
+- 会員登録・マイページ（先に「ログイン後に何を見せるか」確定）
+- スクリーナー → シミュレーション連携
 
 ### アプリ（並行・別リポジトリ）
 - React Native（iOS/Android）
