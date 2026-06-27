@@ -45,10 +45,22 @@ function num(v: number | null, digits = 2): string {
   return v.toFixed(digits);
 }
 
+// スライダーが「最大緩い値」のときはフィルター未適用（制限なし）
+const INACTIVE = {
+  pbr_max: 3,        // 3倍 = 制限なし
+  per_max: 50,       // 50倍 = 制限なし
+  equity_ratio_min: 0,
+  dividend_yield_min: 0,
+  roe_min: 0,
+  roa_min: 0,
+  operating_margin_min: 0,
+  revenue_growth_max: 50, // 50% = 制限なし
+};
+
 const DEFAULT_FILTERS = {
-  pbr_max: 1.0,
-  per_max: 20,
-  equity_ratio_min: 40,
+  pbr_max: 3,          // 初期 = 制限なし
+  per_max: 50,         // 初期 = 制限なし
+  equity_ratio_min: 0,
   dividend_yield_min: 0,
   roe_min: 0,
   roa_min: 0,
@@ -75,23 +87,21 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let q = (db as any)
       .from("screener_stocks")
-      .select("code,name,market,sector,price,pbr,per,roe,roa,equity_ratio,operating_margin,dividend_yield,revenue_growth_yoy,growth_flag,value_flag")
-      .not("price", "is", null)
-      .lte("pbr", filters.pbr_max)
-      .lte("per", filters.per_max)
-      .gte("equity_ratio", filters.equity_ratio_min / 100)
-      .gte("dividend_yield", filters.dividend_yield_min / 100)
-      .gte("roe", filters.roe_min / 100)
-      .gte("roa", filters.roa_min / 100)
-      .gte("operating_margin", filters.operating_margin_min / 100);
+      .select("code,name,market,sector,price,pbr,per,roe,roa,equity_ratio,operating_margin,dividend_yield,revenue_growth_yoy,growth_flag,value_flag");
 
-    if (filters.revenue_growth_max < 50) {
-      q = q.lte("revenue_growth_yoy", filters.revenue_growth_max / 100);
-    }
-    if (filters.market !== "全て") q = q.eq("market", filters.market);
-    if (filters.value_flag !== "全て") q = q.eq("value_flag", filters.value_flag);
+    // 最大緩い値（= INACTIVE）でないときだけフィルターを適用
+    if (filters.pbr_max < INACTIVE.pbr_max)           q = q.lte("pbr", filters.pbr_max);
+    if (filters.per_max < INACTIVE.per_max)           q = q.lte("per", filters.per_max);
+    if (filters.equity_ratio_min > 0)                 q = q.gte("equity_ratio", filters.equity_ratio_min / 100);
+    if (filters.dividend_yield_min > 0)               q = q.gte("dividend_yield", filters.dividend_yield_min / 100);
+    if (filters.roe_min > 0)                          q = q.gte("roe", filters.roe_min / 100);
+    if (filters.roa_min > 0)                          q = q.gte("roa", filters.roa_min / 100);
+    if (filters.operating_margin_min > 0)             q = q.gte("operating_margin", filters.operating_margin_min / 100);
+    if (filters.revenue_growth_max < INACTIVE.revenue_growth_max) q = q.lte("revenue_growth_yoy", filters.revenue_growth_max / 100);
+    if (filters.market !== "全て")                    q = q.eq("market", filters.market);
+    if (filters.value_flag !== "全て")                q = q.eq("value_flag", filters.value_flag);
 
-    const { data, error } = await q.order("pbr", { ascending: true }).limit(100);
+    const { data, error } = await q.order("roe", { ascending: false, nullsFirst: false }).limit(100);
     if (!error && data) {
       setResults(data as Stock[]);
       setCount(data.length);
@@ -110,29 +120,29 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
       {/* ── フィルター ── */}
       <div className="rounded-2xl border border-white/[0.12] bg-white/[0.03] p-5 mb-6">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {/* PBR */}
           <FilterSlider label="PBR 以下" unit="倍" value={filters.pbr_max} min={0.1} max={3} step={0.1}
+            inactive={filters.pbr_max >= INACTIVE.pbr_max}
             onChange={(v) => setF("pbr_max", v)} />
-          {/* PER */}
           <FilterSlider label="PER 以下" unit="倍" value={filters.per_max} min={1} max={50} step={1}
+            inactive={filters.per_max >= INACTIVE.per_max}
             onChange={(v) => setF("per_max", v)} />
-          {/* 自己資本比率 */}
           <FilterSlider label="自己資本比率 以上" unit="%" value={filters.equity_ratio_min} min={0} max={90} step={5}
+            inactive={filters.equity_ratio_min <= 0}
             onChange={(v) => setF("equity_ratio_min", v)} />
-          {/* 配当利回り */}
           <FilterSlider label="配当利回り 以上" unit="%" value={filters.dividend_yield_min} min={0} max={8} step={0.5}
+            inactive={filters.dividend_yield_min <= 0}
             onChange={(v) => setF("dividend_yield_min", v)} />
-          {/* ROE */}
           <FilterSlider label="ROE 以上" unit="%" value={filters.roe_min} min={0} max={30} step={1}
+            inactive={filters.roe_min <= 0}
             onChange={(v) => setF("roe_min", v)} />
-          {/* ROA */}
           <FilterSlider label="ROA 以上" unit="%" value={filters.roa_min} min={0} max={20} step={1}
+            inactive={filters.roa_min <= 0}
             onChange={(v) => setF("roa_min", v)} />
-          {/* 営業利益率 */}
           <FilterSlider label="営業利益率 以上" unit="%" value={filters.operating_margin_min} min={0} max={40} step={1}
+            inactive={filters.operating_margin_min <= 0}
             onChange={(v) => setF("operating_margin_min", v)} />
-          {/* 売上成長率 上限 */}
           <FilterSlider label="売上成長率 上限" unit="%" value={filters.revenue_growth_max} min={5} max={50} step={5}
+            inactive={filters.revenue_growth_max >= INACTIVE.revenue_growth_max}
             onChange={(v) => setF("revenue_growth_max", v)} />
         </div>
 
@@ -234,21 +244,24 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
 }
 
 function FilterSlider({
-  label, unit, value, min, max, step, onChange,
+  label, unit, value, min, max, step, inactive, onChange,
 }: {
   label: string; unit: string; value: number; min: number; max: number; step: number;
+  inactive?: boolean;
   onChange: (v: number) => void;
 }) {
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <p className="font-mono text-[9px] text-slate-500">{label}</p>
-        <p className="font-mono text-[9px] text-slate-300">{value}{unit}</p>
+        <p className={`font-mono text-[9px] ${inactive ? "text-slate-600" : "text-slate-400"}`}>{label}</p>
+        <p className={`font-mono text-[9px] ${inactive ? "text-slate-600" : "text-[#38bdf8]"}`}>
+          {inactive ? "制限なし" : `${value}${unit}`}
+        </p>
       </div>
       <input
         type="range" min={min} max={max} step={step} value={value}
         onChange={(e) => onChange(parseFloat(e.target.value))}
-        className="w-full h-1 rounded-full accent-[#38bdf8] cursor-pointer"
+        className={`w-full h-1 rounded-full cursor-pointer ${inactive ? "accent-slate-600" : "accent-[#38bdf8]"}`}
       />
     </div>
   );

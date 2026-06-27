@@ -203,10 +203,12 @@ export function calcMetrics(
     base.revenueGrowthYoy = (sales - prevSales) / prevSales;
   }
 
+  // ROE = EPS/BPS（株価不要）
+  if (eps !== null && bps !== null && bps > 0) base.roe = eps / bps;
+
   if (price !== null && price > 0) {
     if (bps !== null && bps > 0) base.pbr = price / bps;
     if (eps !== null && eps > 0) base.per = price / eps;
-    if (eps !== null && bps !== null && bps > 0) base.roe = eps / bps;
     if (div !== null && div > 0) base.dividendYield = div / price;
   }
 
