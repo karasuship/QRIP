@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase";
 
@@ -196,8 +197,12 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
                   key={s.code}
                   className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}
                 >
-                  <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500">{s.code}</td>
-                  <td className="px-3 py-2.5 text-xs text-slate-300 max-w-[140px] truncate">{s.name}</td>
+                  <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500">
+                    <Link href={`/screener/${s.code}`} className="hover:text-[#38bdf8] transition-colors">{s.code}</Link>
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-slate-300 max-w-[140px] truncate">
+                    <Link href={`/screener/${s.code}`} className="hover:text-[#e8f4ff] transition-colors">{s.name}</Link>
+                  </td>
                   <td className="px-3 py-2.5 font-mono text-[9px] text-slate-600">{s.market}</td>
                   <td className="px-3 py-2.5">
                     {s.value_flag ? (
