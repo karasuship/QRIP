@@ -125,6 +125,79 @@ export interface ChartData {
   change1y: number | null;
 }
 
+// ── アナリスト推奨 + 機関投資家保有比率 ─────────────────────────────────────
+
+export interface AnalystRecommendation {
+  strongBuy: number;
+  buy: number;
+  hold: number;
+  sell: number;
+  strongSell: number;
+  total: number;
+}
+
+export interface HolderBreakdown {
+  institutionsPct: number | null;
+  insidersPct: number | null;
+  institutionsCount: number | null;
+}
+
+export interface AnalystData {
+  recommendation: AnalystRecommendation | null;
+  holders: HolderBreakdown | null;
+}
+
+export async function fetchAnalystData(
+  code4T: string,
+  creds?: YahooCreds | null
+): Promise<AnalystData> {
+  const empty: AnalystData = { recommendation: null, holders: null };
+  try {
+    const headers: Record<string, string> = { "User-Agent": UA };
+    if (creds?.cookie) headers["Cookie"] = creds.cookie;
+    const params = new URLSearchParams({ modules: "recommendationTrend,majorHoldersBreakdown" });
+    if (creds?.crumb) params.set("crumb", creds.crumb);
+
+    const res = await fetch(
+      `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${code4T}?${params}`,
+      { headers, next: { revalidate: 86400 } }
+    );
+    if (!res.ok) return empty;
+
+    const data = await res.json();
+    const result = data?.quoteSummary?.result?.[0];
+    if (!result) return empty;
+
+    // recommendationTrend — 0m=当月, -1m=先月 ...
+    let recommendation: AnalystRecommendation | null = null;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const trends: any[] = result.recommendationTrend?.trend ?? [];
+    const cur = trends.find((t) => t.period === "0m") ?? trends[0] ?? null;
+    if (cur) {
+      const sb = cur.strongBuy ?? 0, b = cur.buy ?? 0, h = cur.hold ?? 0,
+            s  = cur.sell    ?? 0, ss = cur.strongSell ?? 0;
+      const total = sb + b + h + s + ss;
+      if (total > 0) recommendation = { strongBuy: sb, buy: b, hold: h, sell: s, strongSell: ss, total };
+    }
+
+    // majorHoldersBreakdown
+    let holders: HolderBreakdown | null = null;
+    const mh = result.majorHoldersBreakdown;
+    if (mh) {
+      const instPct  = mh.institutionsPercentHeld?.raw  ?? null;
+      const insPct   = mh.insidersPercentHeld?.raw      ?? null;
+      const count    = mh.institutionsCount?.raw        ?? null;
+      if (instPct != null || insPct != null) {
+        holders = { institutionsPct: instPct, insidersPct: insPct, institutionsCount: count };
+      }
+    }
+
+    return { recommendation, holders };
+  } catch {
+    return empty;
+  }
+}
+
 export async function fetchChartData(
   code4T: string,
   creds?: YahooCreds | null

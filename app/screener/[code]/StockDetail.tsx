@@ -6,7 +6,7 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import type { TrendItem, QuarterlyItem, StockCalendar, ChartData, PeerStats } from "./page";
+import type { TrendItem, QuarterlyItem, StockCalendar, ChartData, PeerStats, AnalystData } from "./page";
 
 interface Stock {
   code: string; name: string; market: string; sector: string;
@@ -45,8 +45,13 @@ function chg(v: number | null) {
   return { text: (v >= 0 ? "+" : "") + s + "%", pos: v >= 0 };
 }
 
+function daysUntil(dateStr: string | null): number | null {
+  if (!dateStr) return null;
+  return Math.ceil((new Date(dateStr).getTime() - Date.now()) / 86400000);
+}
+
 export default function StockDetail({
-  stock, trend, quarterly, calendar, chartData, peerStats,
+  stock, trend, quarterly, calendar, chartData, peerStats, analystData,
 }: {
   stock: Stock;
   trend: TrendItem[];
@@ -54,9 +59,13 @@ export default function StockDetail({
   calendar: StockCalendar;
   chartData: ChartData;
   peerStats?: PeerStats | null;
+  analystData?: AnalystData | null;
 }) {
   const code4 = stock.code.slice(0, 4);
   const tvSrc = `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(`TSE:${code4}`)}&interval=W&theme=Dark&style=1&locale=ja&timezone=Asia%2FTokyo&hide_side_toolbar=0`;
+
+  const earningsDays = daysUntil(calendar.nextEarningsDate);
+  const earningsAlert = earningsDays != null && earningsDays >= 0 && earningsDays <= 21;
 
   const hasRange = stock.price != null && stock.week52_high != null && stock.week52_low != null
     && stock.week52_high > stock.week52_low;
@@ -160,6 +169,17 @@ export default function StockDetail({
           </div>
         )}
 
+        {/* 決算警告バナー */}
+        {earningsAlert && (
+          <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 flex items-center gap-3">
+            <span className="font-mono text-[10px] font-semibold text-amber-400">
+              ⚠ 決算発表まで {earningsDays}日
+            </span>
+            <span className="font-mono text-[9px] text-amber-600">{calendar.nextEarningsDate}</span>
+            <span className="font-mono text-[9px] text-amber-700 ml-auto">決算前後は急変動リスクあり</span>
+          </div>
+        )}
+
         {/* TradingView チャート */}
         <div className="rounded-2xl border border-white/[0.10] overflow-hidden bg-white/[0.02]">
           <p className="px-4 pt-3 font-mono text-[9px] uppercase tracking-widest text-slate-600">株価チャート（週足）</p>
@@ -232,6 +252,75 @@ export default function StockDetail({
               })}
             </div>
             <p className="mt-3 font-mono text-[8px] text-slate-700">PBR割安度は低いほど割安（上位=割安）</p>
+          </div>
+        )}
+
+        {/* アナリスト推奨 */}
+        {analystData?.recommendation && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">
+              アナリスト推奨（最新 / {analystData.recommendation.total}人）
+            </p>
+            {(() => {
+              const r = analystData.recommendation!;
+              const segs = [
+                { key: "strongBuy",   val: r.strongBuy,   label: "強買", cls: "bg-[#34d399]" },
+                { key: "buy",         val: r.buy,         label: "買い", cls: "bg-[#86efac]" },
+                { key: "hold",        val: r.hold,        label: "中立", cls: "bg-slate-500" },
+                { key: "sell",        val: r.sell,        label: "売り", cls: "bg-[#fca5a5]" },
+                { key: "strongSell",  val: r.strongSell,  label: "強売", cls: "bg-[#f87171]" },
+              ];
+              return (
+                <>
+                  <div className="flex h-3 w-full rounded-full overflow-hidden gap-px mb-3">
+                    {segs.map(({ key, val, cls }) =>
+                      val > 0 ? (
+                        <div key={key} className={`${cls}`} style={{ width: `${(val / r.total) * 100}%` }} />
+                      ) : null
+                    )}
+                  </div>
+                  <div className="flex gap-4">
+                    {segs.filter((s) => s.val > 0).map(({ key, val, label, cls }) => (
+                      <div key={key} className="flex items-center gap-1.5">
+                        <div className={`w-2 h-2 rounded-full ${cls}`} />
+                        <span className="font-mono text-[9px] text-slate-500">{label}</span>
+                        <span className="font-mono text-[10px] font-semibold text-slate-300">{val}</span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* 機関投資家・インサイダー保有比率 */}
+        {analystData?.holders && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">保有者構成</p>
+            {(() => {
+              const h = analystData.holders!;
+              const rows = [
+                { label: "機関投資家", pct: h.institutionsPct, sub: h.institutionsCount ? `${h.institutionsCount}機関` : null, cls: "bg-[#38bdf8]/50" },
+                { label: "インサイダー", pct: h.insidersPct, sub: null, cls: "bg-amber-400/50" },
+              ].filter((r) => r.pct != null);
+              return (
+                <div className="space-y-3">
+                  {rows.map(({ label, pct, sub, cls }) => (
+                    <div key={label} className="flex items-center gap-3">
+                      <p className="font-mono text-[9px] text-slate-500 w-24 shrink-0">{label}</p>
+                      <div className="flex-1 h-1.5 rounded-full bg-white/[0.07]">
+                        <div className={`h-full rounded-full ${cls}`} style={{ width: `${Math.min(100, pct! * 100)}%` }} />
+                      </div>
+                      <span className="font-mono text-[10px] font-semibold text-slate-300 w-12 text-right shrink-0">
+                        {(pct! * 100).toFixed(1)}%
+                      </span>
+                      {sub && <span className="font-mono text-[9px] text-slate-600 shrink-0">{sub}</span>}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 

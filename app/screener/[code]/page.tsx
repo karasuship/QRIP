@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase";
 import { fetchFinSummary, type JqFinSummary } from "@/lib/jquants";
-import { getYahooCreds, fetchCalendarEvents, fetchChartData } from "@/lib/yahoo-finance";
-import type { StockCalendar, ChartData } from "@/lib/yahoo-finance";
+import { getYahooCreds, fetchCalendarEvents, fetchChartData, fetchAnalystData } from "@/lib/yahoo-finance";
+import type { StockCalendar, ChartData, AnalystData } from "@/lib/yahoo-finance";
 import StockDetail from "./StockDetail";
 
-export { type StockCalendar, type ChartData };
+export { type StockCalendar, type ChartData, type AnalystData };
+export type { AnalystRecommendation, HolderBreakdown } from "@/lib/yahoo-finance";
 export type { DividendEvent } from "@/lib/yahoo-finance";
 
 export const revalidate = 86400;
@@ -155,9 +156,10 @@ export default async function StockPage(
       : Promise.resolve({ data: [] }),
   ]);
 
-  const [calendar, chartData] = await Promise.all([
+  const [calendar, chartData, analystData] = await Promise.all([
     fetchCalendarEvents(code4T, creds),
     fetchChartData(code4T, creds),
+    fetchAnalystData(code4T, creds),
   ]);
 
   const trend = buildAnnualTrend(allSummaries);
@@ -172,6 +174,7 @@ export default async function StockPage(
       calendar={calendar}
       chartData={chartData}
       peerStats={peerStats}
+      analystData={analystData}
     />
   );
 }
