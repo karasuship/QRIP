@@ -28,6 +28,7 @@ const securityHeaders = [
       "img-src 'self' data: blob:",
       "font-src 'self'",
       "connect-src 'self'",
+      "frame-src https://www.tradingview.com",
       "frame-ancestors 'self'",
     ].join("; "),
   },

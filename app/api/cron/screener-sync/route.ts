@@ -69,18 +69,17 @@ export async function GET(req: NextRequest) {
       const { eq, summaries } = r.value;
       if (summaries.length === 0) { skipped++; continue; }
       const m = calcMetrics(eq, summaries, null);
+      // price / pbr / per / dividend_yield / value_flag は screener-prices が管理するため除外
       rows.push({
         code: m.code, name: m.name, market: m.market, sector: m.sector,
-        price: null, pbr: null, per: null,
         roe: m.roe, roa: m.roa,
         equity_ratio: m.equityRatio,
         operating_margin: m.operatingMargin,
-        dividend_yield: m.dividendYield,
         revenue_growth_yoy: m.revenueGrowthYoy,
         net_sales: m.netSales, operating_profit: m.operatingProfit,
         total_assets: m.totalAssets, equity: m.equity,
         bps: m.bps, eps: m.eps, div_ann: m.divAnn,
-        growth_flag: m.growthFlag, value_flag: m.valueFlag,
+        growth_flag: m.growthFlag,
         updated_at: new Date().toISOString(),
       });
     }
