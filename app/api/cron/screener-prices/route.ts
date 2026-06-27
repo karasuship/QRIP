@@ -38,12 +38,17 @@ export async function GET(req: NextRequest) {
   const db = getSupabaseServer();
   const start = Date.now();
 
-  // bps が null でない銘柄（fins sync 済み）を全件取得
+  const url = new URL(req.url);
+  const offset = parseInt(url.searchParams.get("offset") ?? "0", 10);
+  const limit = parseInt(url.searchParams.get("limit") ?? "1000", 10);
+
+  // bps が null でない銘柄（fins sync 済み）をページング取得
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: stocks, error: fetchErr } = await (db as any)
     .from("screener_stocks")
     .select("code,bps,eps,div_ann,equity_ratio,roe,revenue_growth_yoy,operating_margin")
-    .not("bps", "is", null);
+    .not("bps", "is", null)
+    .range(offset, offset + limit - 1);
 
   if (fetchErr) {
     return NextResponse.json({ error: fetchErr.message }, { status: 500 });
@@ -112,11 +117,13 @@ export async function GET(req: NextRequest) {
 
   return NextResponse.json({
     ok: true,
+    offset,
     total: allStocks.length,
     updated,
     noPrice,
     errors,
     elapsedMs: Date.now() - start,
+    nextOffset: allStocks.length === limit ? offset + limit : null,
     errorSamples,
   });
 }
