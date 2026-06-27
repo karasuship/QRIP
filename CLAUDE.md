@@ -133,7 +133,9 @@ Round 01〜36 主要発見まとめ：
 - ✅ /screener/[code] 個別ページ：TradingViewチャート・指標グリッド・財務推移グラフ
 - ✅ フェーズ1：52週高安バー + 騰落率・四半期業績チャート・配当カレンダー・配当履歴・IRリンク
 - ✅ フェーズ2：業種内ピア比較（百分位ランク）・決算警告バナー・アナリスト推奨・機関投資家保有比率
-- ✅ screener_stocks テーブル：約3721銘柄同期済み、株価/PBR/PER/配当利回り/52週高安は screener-prices cron が毎夜更新
+- ✅ フェーズ3：空売り残高（Yahoo Finance defaultKeyStatistics）・信用取引残高（softhompo 週次ZIP → fflate → CSV → Supabase、毎週火曜 cron）
+- ✅ フェーズ4：CRS連動サイジングUI（CrsSizingCalc コンポーネント）・EFA/EEM 専用ページ（/signal/efa・/signal/eem）+ シグナルハブにグローバル ETF カード追加
+- ✅ screener_stocks テーブル：約3721銘柄同期済み、株価/PBR/PER/配当利回り/52週高安は screener-prices cron が毎夜更新、margin_buy/sell/ratio/date カラム追加済み
 
 ### 必要な環境変数（Vercel + .env.local）
 | 変数 | 用途 | 状態 |
@@ -153,15 +155,10 @@ Round 01〜36 主要発見まとめ：
 ### フェーズ1・2 — 完了
 1〜8 すべて実装済み（上記「実装済み」セクション参照）
 
-### フェーズ3 — 信用・空売りデータ（現在着手中）
-9. **空売り残高・比率（週次）** — JPX/TSE 公式 CSV → Supabase cron → 個別ページ表示
-10. **信用取引残高（週次）** — JPX 公式 CSV → Supabase cron → 個別ページ表示
+### フェーズ3・4 — 完了
+9〜12 すべて実装済み（2026-06-27）
 
-### フェーズ4 — シグナルページ強化
-11. **CRS連動サイジングUI** — CRS=5→2x 推奨、0〜6段階で投入額の目安を /signal に表示
-12. **EFA/EEM 専用ページ** — グローバルシグナル（Round 42 の結果反映）
-
-### フェーズ5 — ポートフォリオ・日誌
+### フェーズ5 — ポートフォリオ・日誌（次）
 13. **ポートフォリオトラッカー** — 実績 vs DCA ベースライン比較（まず localStorage 版から）
 
 ### フェーズ6 — 後で
