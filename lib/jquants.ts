@@ -10,7 +10,7 @@ async function jquantsGet<T>(path: string, params?: Record<string, string>): Pro
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
   const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${apiKey}` },
+    headers: { "X-Api-Key": apiKey },
     next: { revalidate: 0 },
   });
   if (!res.ok) {
