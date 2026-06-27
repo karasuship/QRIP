@@ -20,19 +20,28 @@ async function jquantsGet<T>(path: string, params?: Record<string, string>): Pro
   return res.json() as Promise<T>;
 }
 
-// ── 型定義 ───────────────────────────────────────────────────────────────────
+// 4桁コード → 5桁（末尾0）に正規化
+function toCode5(code: string): string {
+  return code.length === 4 ? code + "0" : code;
+}
+
+// ── 型定義（実際のV2レスポンスに合わせる） ───────────────────────────────────
 
 export interface JqEquity {
-  Code: string;
-  CompanyName: string;
-  CompanyNameEnglish: string;
-  Sector17Code: string;
-  Sector17CodeName: string;
-  Sector33Code: string;
-  Sector33CodeName: string;
-  ScaleCategory: string;
-  MarketCode: string;
-  MarketCodeName: string;
+  Date: string;
+  Code: string;       // 5桁 例: "94320"
+  CoName: string;
+  CoNameEn: string;
+  S17: string;
+  S17Nm: string;
+  S33: string;
+  S33Nm: string;
+  ScaleCat: string;
+  Mkt: string;
+  MktNm: string;
+  Mrgn: string;
+  MrgnNm: string;
+  ProdCat: string;
 }
 
 export interface JqFinSummary {
@@ -72,24 +81,21 @@ export interface JqBar {
 
 // ── API呼び出し ───────────────────────────────────────────────────────────────
 
-/** 全上場銘柄マスタ */
+/** 全上場銘柄マスタ（レスポンスキー: data） */
 export async function fetchEquitiesMaster(): Promise<JqEquity[]> {
-  const data = await jquantsGet<{ equities: JqEquity[] }>("/equities/master");
-  return data.equities ?? [];
+  const data = await jquantsGet<{ data: JqEquity[] }>("/equities/master");
+  return data.data ?? [];
 }
 
 /** 単一銘柄の財務情報サマリー（通期のみ） */
 export async function fetchFinSummary(code: string): Promise<JqFinSummary[]> {
-  const data = await jquantsGet<{ fins_summary: JqFinSummary[] }>(
+  const data = await jquantsGet<{ data: JqFinSummary[] }>(
     "/fins/summary",
-    { code }
+    { code: toCode5(code) }
   );
-  const all = data.fins_summary ?? [];
-  // 通期決算のみ（FY / Annual）
+  const all = data.data ?? [];
   return all.filter(
-    (s) =>
-      s.TypeOfCurrentPeriod === "FY" ||
-      (s.TypeOfDocument?.includes("Annual") ?? false)
+    (s) => s.TypeOfCurrentPeriod === "FY" || (s.TypeOfDocument?.includes("Annual") ?? false)
   );
 }
 
@@ -97,15 +103,15 @@ export async function fetchFinSummary(code: string): Promise<JqFinSummary[]> {
 export async function fetchLatestBar(code: string): Promise<JqBar | null> {
   const today = new Date();
   const from = new Date(today);
-  from.setDate(from.getDate() - 10); // 直近10日で直近営業日をカバー
+  from.setDate(from.getDate() - 10);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
-  const data = await jquantsGet<{ bars: JqBar[] }>("/equities/bars/daily", {
-    code,
+  const data = await jquantsGet<{ data: JqBar[] }>("/equities/bars/daily", {
+    code: toCode5(code),
     date_from: fmt(from),
     date_to: fmt(today),
   });
-  const bars = data.bars ?? [];
+  const bars = data.data ?? [];
   return bars.length > 0 ? bars[bars.length - 1] : null;
 }
 
@@ -140,15 +146,15 @@ function n(s: string | null | undefined): number | null {
 }
 
 export function calcMetrics(
-  equity: JqEquity,
+  eq: JqEquity,
   summaries: JqFinSummary[],
   bar: JqBar | null
 ): ScreenerMetrics {
   const base: ScreenerMetrics = {
-    code: equity.Code,
-    name: equity.CompanyName,
-    market: equity.MarketCodeName,
-    sector: equity.Sector33CodeName,
+    code: eq.Code,
+    name: eq.CoName,
+    market: eq.MktNm,
+    sector: eq.S33Nm,
     price: bar?.AdjustmentClose ?? bar?.Close ?? null,
     pbr: null, per: null, roe: null, roa: null,
     equityRatio: null, operatingMargin: null,
@@ -167,7 +173,7 @@ export function calcMetrics(
   const prev = sorted[1] ?? null;
 
   const price = base.price;
-  const eq = n(latest.Equity);
+  const equity = n(latest.Equity);
   const ta = n(latest.TotalAssets);
   const sales = n(latest.NetSales);
   const op = n(latest.OperatingProfit);
@@ -180,26 +186,16 @@ export function calcMetrics(
   base.netSales = sales;
   base.operatingProfit = op;
   base.totalAssets = ta;
-  base.equity = eq;
+  base.equity = equity;
 
-  // 自己資本比率（0〜1に正規化）
   if (eqRatio !== null) {
     base.equityRatio = eqRatio > 1 ? eqRatio / 100 : eqRatio;
-  } else if (eq !== null && ta !== null && ta > 0) {
-    base.equityRatio = eq / ta;
+  } else if (equity !== null && ta !== null && ta > 0) {
+    base.equityRatio = equity / ta;
   }
 
-  // 営業利益率
-  if (op !== null && sales !== null && sales > 0) {
-    base.operatingMargin = op / sales;
-  }
-
-  // ROA（営業利益 / 総資産）
-  if (op !== null && ta !== null && ta > 0) {
-    base.roa = op / ta;
-  }
-
-  // 売上成長率
+  if (op !== null && sales !== null && sales > 0) base.operatingMargin = op / sales;
+  if (op !== null && ta !== null && ta > 0) base.roa = op / ta;
   if (sales !== null && prevSales !== null && prevSales > 0) {
     base.revenueGrowthYoy = (sales - prevSales) / prevSales;
   }
@@ -211,7 +207,6 @@ export function calcMetrics(
     if (div !== null && div > 0) base.dividendYield = div / price;
   }
 
-  // 成長フラグ
   const g = base.revenueGrowthYoy;
   if (g !== null) {
     if (g > 0.20) base.growthFlag = "急成長（要注意）";
@@ -220,7 +215,6 @@ export function calcMetrics(
     else base.growthFlag = "縮小中";
   }
 
-  // 複合バリューフラグ
   const { pbr, equityRatio: eqR, roe: r, per, operatingMargin: om } = base;
   const growth = base.revenueGrowthYoy ?? 0;
   const eqRVal = eqR ?? 0;
