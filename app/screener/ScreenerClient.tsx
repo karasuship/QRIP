@@ -1,0 +1,250 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { getSupabaseBrowser } from "@/lib/supabase";
+
+interface Stock {
+  code: string;
+  name: string;
+  market: string;
+  sector: string;
+  price: number | null;
+  pbr: number | null;
+  per: number | null;
+  roe: number | null;
+  roa: number | null;
+  equity_ratio: number | null;
+  operating_margin: number | null;
+  dividend_yield: number | null;
+  revenue_growth_yoy: number | null;
+  growth_flag: string | null;
+  value_flag: string | null;
+}
+
+const VALUE_FLAG_CLS: Record<string, string> = {
+  "優良バリュー":   "bg-[#34d399]/15 text-[#34d399] border-[#34d399]/30",
+  "急成長警戒":     "bg-amber-400/15 text-amber-400 border-amber-400/30",
+  "低収益放置":     "bg-[#f87171]/15 text-[#f87171] border-[#f87171]/30",
+  "高収益割安":     "bg-[#38bdf8]/15 text-[#38bdf8] border-[#38bdf8]/30",
+};
+
+const GROWTH_FLAG_CLS: Record<string, string> = {
+  "急成長（要注意）": "text-amber-400",
+  "安定成長":         "text-[#34d399]",
+  "横ばい":           "text-slate-400",
+  "縮小中":           "text-[#f87171]",
+};
+
+function pct(v: number | null, digits = 1): string {
+  if (v == null) return "—";
+  return (v * 100).toFixed(digits) + "%";
+}
+function num(v: number | null, digits = 2): string {
+  if (v == null) return "—";
+  return v.toFixed(digits);
+}
+
+const DEFAULT_FILTERS = {
+  pbr_max: 1.0,
+  per_max: 20,
+  equity_ratio_min: 40,
+  dividend_yield_min: 0,
+  roe_min: 0,
+  roa_min: 0,
+  operating_margin_min: 0,
+  revenue_growth_max: 50,
+  market: "全て",
+  value_flag: "全て",
+};
+
+const MARKETS = ["全て", "プライム", "スタンダード", "グロース"];
+const VALUE_FLAGS = ["全て", "優良バリュー", "急成長警戒", "低収益放置", "高収益割安"];
+
+export default function ScreenerClient({ totalCount }: { totalCount: number }) {
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [results, setResults] = useState<Stock[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [count, setCount] = useState(0);
+
+  const search = useCallback(async () => {
+    const db = getSupabaseBrowser();
+    if (!db) return;
+    setLoading(true);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let q = (db as any)
+      .from("screener_stocks")
+      .select("code,name,market,sector,price,pbr,per,roe,roa,equity_ratio,operating_margin,dividend_yield,revenue_growth_yoy,growth_flag,value_flag")
+      .not("price", "is", null)
+      .lte("pbr", filters.pbr_max)
+      .lte("per", filters.per_max)
+      .gte("equity_ratio", filters.equity_ratio_min / 100)
+      .gte("dividend_yield", filters.dividend_yield_min / 100)
+      .gte("roe", filters.roe_min / 100)
+      .gte("roa", filters.roa_min / 100)
+      .gte("operating_margin", filters.operating_margin_min / 100);
+
+    if (filters.revenue_growth_max < 50) {
+      q = q.lte("revenue_growth_yoy", filters.revenue_growth_max / 100);
+    }
+    if (filters.market !== "全て") q = q.eq("market", filters.market);
+    if (filters.value_flag !== "全て") q = q.eq("value_flag", filters.value_flag);
+
+    const { data, error } = await q.order("pbr", { ascending: true }).limit(100);
+    if (!error && data) {
+      setResults(data as Stock[]);
+      setCount(data.length);
+    }
+    setLoading(false);
+  }, [filters]);
+
+  useEffect(() => { search(); }, [search]);
+
+  function setF<K extends keyof typeof DEFAULT_FILTERS>(key: K, val: (typeof DEFAULT_FILTERS)[K]) {
+    setFilters((f) => ({ ...f, [key]: val }));
+  }
+
+  return (
+    <div>
+      {/* ── フィルター ── */}
+      <div className="rounded-2xl border border-white/[0.12] bg-white/[0.03] p-5 mb-6">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+          {/* PBR */}
+          <FilterSlider label="PBR 以下" unit="倍" value={filters.pbr_max} min={0.1} max={3} step={0.1}
+            onChange={(v) => setF("pbr_max", v)} />
+          {/* PER */}
+          <FilterSlider label="PER 以下" unit="倍" value={filters.per_max} min={1} max={50} step={1}
+            onChange={(v) => setF("per_max", v)} />
+          {/* 自己資本比率 */}
+          <FilterSlider label="自己資本比率 以上" unit="%" value={filters.equity_ratio_min} min={0} max={90} step={5}
+            onChange={(v) => setF("equity_ratio_min", v)} />
+          {/* 配当利回り */}
+          <FilterSlider label="配当利回り 以上" unit="%" value={filters.dividend_yield_min} min={0} max={8} step={0.5}
+            onChange={(v) => setF("dividend_yield_min", v)} />
+          {/* ROE */}
+          <FilterSlider label="ROE 以上" unit="%" value={filters.roe_min} min={0} max={30} step={1}
+            onChange={(v) => setF("roe_min", v)} />
+          {/* ROA */}
+          <FilterSlider label="ROA 以上" unit="%" value={filters.roa_min} min={0} max={20} step={1}
+            onChange={(v) => setF("roa_min", v)} />
+          {/* 営業利益率 */}
+          <FilterSlider label="営業利益率 以上" unit="%" value={filters.operating_margin_min} min={0} max={40} step={1}
+            onChange={(v) => setF("operating_margin_min", v)} />
+          {/* 売上成長率 上限 */}
+          <FilterSlider label="売上成長率 上限" unit="%" value={filters.revenue_growth_max} min={5} max={50} step={5}
+            onChange={(v) => setF("revenue_growth_max", v)} />
+        </div>
+
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {/* 市場 */}
+          <div>
+            <p className="font-mono text-[9px] text-slate-500 mb-1">市場</p>
+            <select
+              value={filters.market}
+              onChange={(e) => setF("market", e.target.value)}
+              className="w-full rounded-lg border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-300 focus:outline-none"
+            >
+              {MARKETS.map((m) => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+          {/* バリューフラグ */}
+          <div>
+            <p className="font-mono text-[9px] text-slate-500 mb-1">判定フラグ</p>
+            <select
+              value={filters.value_flag}
+              onChange={(e) => setF("value_flag", e.target.value)}
+              className="w-full rounded-lg border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-300 focus:outline-none"
+            >
+              {VALUE_FLAGS.map((f) => <option key={f} value={f}>{f}</option>)}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 件数 ── */}
+      <div className="flex items-center gap-3 mb-4">
+        <p className="font-mono text-xs text-slate-500">
+          {loading ? "検索中..." : `${count} 件ヒット`}
+          <span className="text-slate-700 ml-2">/ DB {totalCount} 銘柄</span>
+        </p>
+        <button
+          onClick={search}
+          className="ml-auto rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-1 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] transition-all"
+        >
+          再検索
+        </button>
+      </div>
+
+      {/* ── 結果テーブル ── */}
+      {results.length === 0 && !loading ? (
+        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
+          <p className="text-sm text-slate-500">条件に合う銘柄が見つかりませんでした。フィルターを緩めてみてください。</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.12]">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="border-b border-white/[0.08] bg-white/[0.03]">
+                {["コード", "銘柄名", "市場", "判定", "株価", "PBR", "PER", "ROE", "ROA", "自己資本比", "利回り", "売上成長"].map((h) => (
+                  <th key={h} className="px-3 py-2.5 font-mono text-[9px] text-slate-600 whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {results.map((s, i) => (
+                <tr
+                  key={s.code}
+                  className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}
+                >
+                  <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500">{s.code}</td>
+                  <td className="px-3 py-2.5 text-xs text-slate-300 max-w-[140px] truncate">{s.name}</td>
+                  <td className="px-3 py-2.5 font-mono text-[9px] text-slate-600">{s.market}</td>
+                  <td className="px-3 py-2.5">
+                    {s.value_flag ? (
+                      <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] ${VALUE_FLAG_CLS[s.value_flag] ?? "text-slate-500"}`}>
+                        {s.value_flag}
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[9px] text-slate-700">—</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{s.price != null ? `¥${s.price.toFixed(1)}` : "—"}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-[#34d399]">{num(s.pbr)}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{num(s.per)}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{pct(s.roe)}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{pct(s.roa)}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{pct(s.equity_ratio, 0)}</td>
+                  <td className="px-3 py-2.5 font-mono text-xs text-amber-400">{pct(s.dividend_yield)}</td>
+                  <td className={`px-3 py-2.5 font-mono text-xs ${GROWTH_FLAG_CLS[s.growth_flag ?? ""] ?? "text-slate-500"}`}>
+                    {s.growth_flag ?? "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function FilterSlider({
+  label, unit, value, min, max, step, onChange,
+}: {
+  label: string; unit: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div>
+      <div className="flex justify-between mb-1">
+        <p className="font-mono text-[9px] text-slate-500">{label}</p>
+        <p className="font-mono text-[9px] text-slate-300">{value}{unit}</p>
+      </div>
+      <input
+        type="range" min={min} max={max} step={step} value={value}
+        onChange={(e) => onChange(parseFloat(e.target.value))}
+        className="w-full h-1 rounded-full accent-[#38bdf8] cursor-pointer"
+      />
+    </div>
+  );
+}
