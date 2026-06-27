@@ -109,6 +109,20 @@ export async function fetchLatestBar(code: string): Promise<JqBar | null> {
   return bars.length > 0 ? bars[bars.length - 1] : null;
 }
 
+/** 全銘柄の直近株価を1リクエストで取得（コード指定なし → 当日全件返す） */
+export async function fetchAllBarsForDate(date: string): Promise<Map<string, JqBar>> {
+  const map = new Map<string, JqBar>();
+  try {
+    const data = await jquantsGet<{ data: JqBar[] }>("/equities/bars/daily", { date });
+    for (const bar of data.data ?? []) {
+      map.set(bar.Code, bar);
+    }
+  } catch {
+    // 非対応プランの場合は空Mapを返す（fallbackは個別取得に任せる）
+  }
+  return map;
+}
+
 // ── 派生指標計算 ─────────────────────────────────────────────────────────────
 
 export interface ScreenerMetrics {
