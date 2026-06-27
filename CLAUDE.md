@@ -111,7 +111,7 @@ Round 01〜36 主要発見まとめ：
 - CRSは「今の恐怖の深さ」。未来予測ではない
 - 大暴落が30年で1回も来ない確率は約5%（ポアソン推定）
 
-## 実装済み（2026-06-23 時点）
+## 実装済み（2026-06-27 時点）
 
 ### 完了済み
 - ✅ phi2 v3 + RSI<25 + HYG-8% + B4 + EFA/EEM シグナル（`/signal`）
@@ -128,6 +128,13 @@ Round 01〜36 主要発見まとめ：
 - ✅ OGP / Twitter Card / robots.txt
 - ✅ 「今日の結論」一行サマリー（`/signal` 冒頭、7状態を色分け表示）
 
+### スクリーナー（2026-06-27 完了）
+- ✅ /screener 一覧：8スライダー（PBR/PER/自己資本比率/配当利回り/ROE/ROA/営業利益率/売上成長率）+ 市場・判定フラグ絞り込み
+- ✅ /screener/[code] 個別ページ：TradingViewチャート・指標グリッド・財務推移グラフ
+- ✅ フェーズ1：52週高安バー + 騰落率・四半期業績チャート・配当カレンダー・配当履歴・IRリンク
+- ✅ フェーズ2：業種内ピア比較（百分位ランク）・決算警告バナー・アナリスト推奨・機関投資家保有比率
+- ✅ screener_stocks テーブル：約3721銘柄同期済み、株価/PBR/PER/配当利回り/52週高安は screener-prices cron が毎夜更新
+
 ### 必要な環境変数（Vercel + .env.local）
 | 変数 | 用途 | 状態 |
 |------|------|------|
@@ -141,23 +148,14 @@ Round 01〜36 主要発見まとめ：
 | TELEGRAM_BOT_TOKEN | Telegram通知 | 任意 |
 | TELEGRAM_CHAT_ID | Telegram通知 | 任意 |
 
-## 次にやること（2026-06-27 確定・この順で実行）
+## 次にやること（2026-06-27 更新）
 
-### フェーズ1 — スクリーナー強化（即着���）
-1. **52週高値・安値 ＋ 騰落率（1M・3M・1Y）** — Yahoo Finance v8/chart + v7/quote fields追加。screener_stocks に week52_high/low カラム追加
-2. **��半期業績推移** — J-Quants fins/summary の quarterly データ（今は FY のみ使用・捨てている）を個別ページに表示
-3. **配当権利落日・支払日・配当履歴** — Yahoo Finance calendarEvents + v8/chart dividends
-4. **IR・irbank・TDnet リンク** — URL生成のみ（30分）
+### フェーズ1・2 — 完了
+1〜8 すべて実装済み（上記「実装済み」セクション参照）
 
-### フェーズ2 — スクリーナー深化
-5. **業種内ピア比較** — screener_stocks を sector でグループ化して中央値・上位25%を計算
-6. **決算発表予定日** — Yahoo Finance calendarEvents（個別ページ警告バナー）
-7. **アナリスト推奨��buy/hold/sell 人数）** — Yahoo Finance recommendationTrend
-8. **外国人・機関投資家保有比率** — Yahoo Finance majorHoldersBreakdown
-
-### フェーズ3 — 信用・空売りデータ
-9. **空売り残高・比率（週次）** — JPX 公式 CSV → Supabase cron
-10. **信用取引残高（週次）** — JPX 公式 CSV → Supabase cron
+### フェーズ3 — 信用・空売りデータ（現在着手中）
+9. **空売り残高・比率（週次）** — JPX/TSE 公式 CSV → Supabase cron → 個別ページ表示
+10. **信用取引残高（週次）** — JPX 公式 CSV → Supabase cron → 個別ページ表示
 
 ### フェーズ4 — シグナルページ強化
 11. **CRS連動サイジングUI** — CRS=5→2x 推奨、0〜6段階で投入額の目安を /signal に表示
