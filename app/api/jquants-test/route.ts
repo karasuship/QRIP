@@ -1,29 +1,29 @@
 import { NextResponse } from "next/server";
-import { fetchListedInfo, fetchStatements, fetchLatestQuote, calcMetrics } from "@/lib/jquants";
+import { fetchEquitiesMaster, fetchFinSummary, fetchLatestBar, calcMetrics } from "@/lib/jquants";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// テスト用: NTT(9432) の財務データを取得して返す
+// NTT(9432) でV2 APIの疎通確認
 export async function GET() {
   try {
-    const [info, statements, quote] = await Promise.all([
-      fetchListedInfo().then((list) => list.find((i) => i.Code === "9432") ?? null),
-      fetchStatements("9432"),
-      fetchLatestQuote("9432"),
+    const [master, summaries, bar] = await Promise.all([
+      fetchEquitiesMaster().then((list) => list.find((e) => e.Code === "9432") ?? null),
+      fetchFinSummary("9432"),
+      fetchLatestBar("9432"),
     ]);
 
-    if (!info) return NextResponse.json({ error: "9432 が見つからなかった" }, { status: 404 });
+    if (!master) return NextResponse.json({ error: "9432 が見つからなかった" }, { status: 404 });
 
-    const metrics = calcMetrics(info, statements, quote);
+    const metrics = calcMetrics(master, summaries, bar);
 
     return NextResponse.json({
       ok: true,
       metrics,
       raw: {
-        statementsCount: statements.length,
-        latestStatement: statements[0] ?? null,
-        quote,
+        summariesCount: summaries.length,
+        latestSummary: summaries[0] ?? null,
+        bar,
       },
     });
   } catch (e) {

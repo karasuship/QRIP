@@ -1,47 +1,16 @@
 const BASE = "https://api.jquants.com/v1";
 
-// ── 認証 ────────────────────────────────────────────────────────────────────
-
-async function getRefreshToken(): Promise<string> {
-  const email = process.env.JQUANTS_EMAIL;
-  const password = process.env.JQUANTS_PASSWORD;
-  if (!email || !password) throw new Error("JQUANTS_EMAIL / JQUANTS_PASSWORD が未設定");
-
-  const res = await fetch(`${BASE}/token/auth_user`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ mailaddress: email, password }),
-  });
-  if (!res.ok) throw new Error(`J-Quants auth_user failed: ${res.status}`);
-  const { refreshToken } = await res.json();
-  if (!refreshToken) throw new Error("refreshToken が返ってこなかった");
-  return refreshToken as string;
-}
-
-async function getIdToken(refreshToken: string): Promise<string> {
-  const res = await fetch(`${BASE}/token/auth_refresh?refreshtoken=${refreshToken}`, {
-    method: "POST",
-  });
-  if (!res.ok) throw new Error(`J-Quants auth_refresh failed: ${res.status}`);
-  const { idToken } = await res.json();
-  if (!idToken) throw new Error("idToken が返ってこなかった");
-  return idToken as string;
-}
-
-async function getToken(): Promise<string> {
-  const refresh = await getRefreshToken();
-  return getIdToken(refresh);
-}
-
 // ── 汎用フェッチ ─────────────────────────────────────────────────────────────
 
 async function jquantsGet<T>(path: string, params?: Record<string, string>): Promise<T> {
-  const token = await getToken();
+  const apiKey = process.env.JQUANTS_API_KEY;
+  if (!apiKey) throw new Error("JQUANTS_API_KEY が未設定");
+
   const url = new URL(`${BASE}${path}`);
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
 
   const res = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: { Authorization: `Bearer ${apiKey}` },
     next: { revalidate: 0 },
   });
   if (!res.ok) {
@@ -53,7 +22,7 @@ async function jquantsGet<T>(path: string, params?: Record<string, string>): Pro
 
 // ── 型定義 ───────────────────────────────────────────────────────────────────
 
-export interface JqListedInfo {
+export interface JqEquity {
   Code: string;
   CompanyName: string;
   CompanyNameEnglish: string;
@@ -66,89 +35,78 @@ export interface JqListedInfo {
   MarketCodeName: string;
 }
 
-export interface JqStatement {
+export interface JqFinSummary {
   DisclosedDate: string;
-  DisclosedTime: string;
   LocalCode: string;
-  DisclosureNumber: string;
   TypeOfDocument: string;
   TypeOfCurrentPeriod: string;
-  CurrentPeriodStartDate: string;
-  CurrentPeriodEndDate: string;
   CurrentFiscalYearStartDate: string;
   CurrentFiscalYearEndDate: string;
-  NextFiscalYearStartDate: string;
-  NextFiscalYearEndDate: string;
-  NetSales: string;
-  OperatingProfit: string;
-  OrdinaryProfit: string;
-  Profit: string;
-  EarningsPerShare: string;
-  DilutedEarningsPerShare: string;
-  TotalAssets: string;
-  Equity: string;
-  EquityToAssetRatio: string;
-  BookValuePerShare: string;
-  CashFlowsFromOperatingActivities: string;
-  CashFlowsFromInvestingActivities: string;
-  CashFlowsFromFinancingActivities: string;
-  CashAndEquivalents: string;
-  ResultDividendPerShareAnnual: string;
-  ResultPayoutRatioAnnual: string;
-  ForecastDividendPerShareAnnual: string;
-  ForecastEarningsPerShare: string;
-  NextYearForecastDividendPerShareAnnual: string;
-  NextYearForecastEarningsPerShare: string;
-  ForecastNetSales: string;
-  ForecastOperatingProfit: string;
-  ForecastOrdinaryProfit: string;
-  ForecastProfit: string;
-  NumberOfIssuedAndOutstandingSharesAtTheEndOfFiscalYearIncludingTreasuryStock: string;
+  NetSales: string | null;
+  OperatingProfit: string | null;
+  OrdinaryProfit: string | null;
+  Profit: string | null;
+  EarningsPerShare: string | null;
+  BookValuePerShare: string | null;
+  TotalAssets: string | null;
+  Equity: string | null;
+  EquityToAssetRatio: string | null;
+  ResultDividendPerShareAnnual: string | null;
+  ForecastDividendPerShareAnnual: string | null;
+  ForecastNetSales: string | null;
+  ForecastOperatingProfit: string | null;
+  ForecastProfit: string | null;
+  ForecastEarningsPerShare: string | null;
 }
 
-export interface JqDailyQuote {
+export interface JqBar {
   Date: string;
   Code: string;
-  Open: number;
-  High: number;
-  Low: number;
-  Close: number;
-  Volume: number;
-  TurnoverValue: number;
-  AdjustmentFactor: number;
-  AdjustmentOpen: number;
-  AdjustmentHigh: number;
-  AdjustmentLow: number;
-  AdjustmentClose: number;
-  AdjustmentVolume: number;
+  Open: number | null;
+  High: number | null;
+  Low: number | null;
+  Close: number | null;
+  Volume: number | null;
+  AdjustmentClose: number | null;
 }
 
 // ── API呼び出し ───────────────────────────────────────────────────────────────
 
-/** 全上場銘柄マスタを取得 */
-export async function fetchListedInfo(): Promise<JqListedInfo[]> {
-  const data = await jquantsGet<{ info: JqListedInfo[] }>("/listed/info");
-  return data.info ?? [];
+/** 全上場銘柄マスタ */
+export async function fetchEquitiesMaster(): Promise<JqEquity[]> {
+  const data = await jquantsGet<{ equities: JqEquity[] }>("/equities/master");
+  return data.equities ?? [];
 }
 
-/** 単一銘柄の最新財務諸表を取得（通期決算のみ） */
-export async function fetchStatements(code: string): Promise<JqStatement[]> {
-  const data = await jquantsGet<{ statements: JqStatement[] }>("/fins/statements", { code });
-  return (data.statements ?? []).filter(
-    (s) => s.TypeOfDocument?.includes("Annual") || s.TypeOfCurrentPeriod === "FY"
+/** 単一銘柄の財務情報サマリー（通期のみ） */
+export async function fetchFinSummary(code: string): Promise<JqFinSummary[]> {
+  const data = await jquantsGet<{ fins_summary: JqFinSummary[] }>(
+    "/fins/summary",
+    { code }
+  );
+  const all = data.fins_summary ?? [];
+  // 通期決算のみ（FY / Annual）
+  return all.filter(
+    (s) =>
+      s.TypeOfCurrentPeriod === "FY" ||
+      (s.TypeOfDocument?.includes("Annual") ?? false)
   );
 }
 
-/** 単一銘柄の最新株価を取得（直近営業日） */
-export async function fetchLatestQuote(code: string): Promise<JqDailyQuote | null> {
-  // コードは4桁 + "0"の5桁形式が必要
-  const paddedCode = code.length === 4 ? code + "0" : code;
-  const data = await jquantsGet<{ daily_quotes: JqDailyQuote[] }>(
-    "/prices/daily_quotes",
-    { code: paddedCode }
-  );
-  const quotes = data.daily_quotes ?? [];
-  return quotes.length > 0 ? quotes[quotes.length - 1] : null;
+/** 単一銘柄の最新株価 */
+export async function fetchLatestBar(code: string): Promise<JqBar | null> {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(from.getDate() - 10); // 直近10日で直近営業日をカバー
+  const fmt = (d: Date) => d.toISOString().slice(0, 10);
+
+  const data = await jquantsGet<{ bars: JqBar[] }>("/equities/bars/daily", {
+    code,
+    date_from: fmt(from),
+    date_to: fmt(today),
+  });
+  const bars = data.bars ?? [];
+  return bars.length > 0 ? bars[bars.length - 1] : null;
 }
 
 // ── 派生指標計算 ─────────────────────────────────────────────────────────────
@@ -163,30 +121,35 @@ export interface ScreenerMetrics {
   per: number | null;
   roe: number | null;
   roa: number | null;
-  equityRatio: number | null;        // 自己資本比率 (0〜1)
-  operatingMargin: number | null;    // 営業利益率 (0〜1)
-  dividendYield: number | null;      // 配当利回り (0〜1)
-  revenueGrowthYoy: number | null;   // 売上成長率 前年比 (0〜1)
+  equityRatio: number | null;
+  operatingMargin: number | null;
+  dividendYield: number | null;
+  revenueGrowthYoy: number | null;
   netSales: number | null;
   operatingProfit: number | null;
   totalAssets: number | null;
   equity: number | null;
-  // ラベル
   growthFlag: "急成長（要注意）" | "安定成長" | "横ばい" | "縮小中" | null;
   valueFlag: "優良バリュー" | "急成長警戒" | "低収益放置" | "高収益割安" | null;
 }
 
+function n(s: string | null | undefined): number | null {
+  if (s == null || s === "") return null;
+  const v = parseFloat(s);
+  return isNaN(v) ? null : v;
+}
+
 export function calcMetrics(
-  info: JqListedInfo,
-  statements: JqStatement[],
-  quote: JqDailyQuote | null
+  equity: JqEquity,
+  summaries: JqFinSummary[],
+  bar: JqBar | null
 ): ScreenerMetrics {
   const base: ScreenerMetrics = {
-    code: info.Code,
-    name: info.CompanyName,
-    market: info.MarketCodeName,
-    sector: info.Sector33CodeName,
-    price: quote?.AdjustmentClose ?? null,
+    code: equity.Code,
+    name: equity.CompanyName,
+    market: equity.MarketCodeName,
+    sector: equity.Sector33CodeName,
+    price: bar?.AdjustmentClose ?? bar?.Close ?? null,
     pbr: null, per: null, roe: null, roa: null,
     equityRatio: null, operatingMargin: null,
     dividendYield: null, revenueGrowthYoy: null,
@@ -195,64 +158,57 @@ export function calcMetrics(
     growthFlag: null, valueFlag: null,
   };
 
-  if (statements.length === 0) return base;
+  if (summaries.length === 0) return base;
 
-  // 最新・前期の通期決算を取る
-  const sorted = [...statements].sort(
-    (a, b) => b.CurrentFiscalYearEndDate.localeCompare(a.CurrentFiscalYearEndDate)
+  const sorted = [...summaries].sort((a, b) =>
+    b.CurrentFiscalYearEndDate.localeCompare(a.CurrentFiscalYearEndDate)
   );
   const latest = sorted[0];
   const prev = sorted[1] ?? null;
 
-  const n = (s: string) => (s && s !== "" ? parseFloat(s) : null);
-
   const price = base.price;
-  const equity = n(latest.Equity);
-  const totalAssets = n(latest.TotalAssets);
-  const netSales = n(latest.NetSales);
-  const opProfit = n(latest.OperatingProfit);
+  const eq = n(latest.Equity);
+  const ta = n(latest.TotalAssets);
+  const sales = n(latest.NetSales);
+  const op = n(latest.OperatingProfit);
   const eps = n(latest.EarningsPerShare);
   const bvps = n(latest.BookValuePerShare);
-  const divAnnual = n(latest.ResultDividendPerShareAnnual) ?? n(latest.ForecastDividendPerShareAnnual);
   const eqRatio = n(latest.EquityToAssetRatio);
+  const div = n(latest.ResultDividendPerShareAnnual) ?? n(latest.ForecastDividendPerShareAnnual);
   const prevSales = prev ? n(prev.NetSales) : null;
 
-  base.netSales = netSales;
-  base.operatingProfit = opProfit;
-  base.totalAssets = totalAssets;
-  base.equity = equity;
+  base.netSales = sales;
+  base.operatingProfit = op;
+  base.totalAssets = ta;
+  base.equity = eq;
 
-  // 自己資本比率（APIが返す値は 0〜1 か 0〜100 か不定のため正規化）
+  // 自己資本比率（0〜1に正規化）
   if (eqRatio !== null) {
     base.equityRatio = eqRatio > 1 ? eqRatio / 100 : eqRatio;
-  } else if (equity !== null && totalAssets !== null && totalAssets > 0) {
-    base.equityRatio = equity / totalAssets;
+  } else if (eq !== null && ta !== null && ta > 0) {
+    base.equityRatio = eq / ta;
   }
 
   // 営業利益率
-  if (opProfit !== null && netSales !== null && netSales > 0) {
-    base.operatingMargin = opProfit / netSales;
+  if (op !== null && sales !== null && sales > 0) {
+    base.operatingMargin = op / sales;
+  }
+
+  // ROA（営業利益 / 総資産）
+  if (op !== null && ta !== null && ta > 0) {
+    base.roa = op / ta;
   }
 
   // 売上成長率
-  if (netSales !== null && prevSales !== null && prevSales > 0) {
-    base.revenueGrowthYoy = (netSales - prevSales) / prevSales;
-  }
-
-  // ROA
-  if (opProfit !== null && totalAssets !== null && totalAssets > 0) {
-    base.roa = opProfit / totalAssets;
+  if (sales !== null && prevSales !== null && prevSales > 0) {
+    base.revenueGrowthYoy = (sales - prevSales) / prevSales;
   }
 
   if (price !== null && price > 0) {
-    // PBR = 株価 / 1株純資産
     if (bvps !== null && bvps > 0) base.pbr = price / bvps;
-    // PER = 株価 / EPS
     if (eps !== null && eps > 0) base.per = price / eps;
-    // ROE = EPS / BVPS
     if (eps !== null && bvps !== null && bvps > 0) base.roe = eps / bvps;
-    // 配当利回り
-    if (divAnnual !== null && divAnnual > 0) base.dividendYield = divAnnual / price;
+    if (div !== null && div > 0) base.dividendYield = div / price;
   }
 
   // 成長フラグ
@@ -265,17 +221,17 @@ export function calcMetrics(
   }
 
   // 複合バリューフラグ
-  const { pbr, equityRatio, roe, per, operatingMargin } = base;
-  const eq = equityRatio ?? 0;
+  const { pbr, equityRatio: eqR, roe: r, per, operatingMargin: om } = base;
   const growth = base.revenueGrowthYoy ?? 0;
+  const eqRVal = eqR ?? 0;
 
-  if (pbr !== null && pbr <= 0.5 && eq >= 0.6 && roe !== null && roe >= 0.05) {
+  if (pbr !== null && pbr <= 0.5 && eqRVal >= 0.6 && r !== null && r >= 0.05) {
     base.valueFlag = "優良バリュー";
-  } else if (growth > 0.20 && eq < 0.5) {
+  } else if (growth > 0.20 && eqRVal < 0.5) {
     base.valueFlag = "急成長警戒";
-  } else if (pbr !== null && pbr <= 0.5 && roe !== null && roe < 0.03) {
+  } else if (pbr !== null && pbr <= 0.5 && r !== null && r < 0.03) {
     base.valueFlag = "低収益放置";
-  } else if (per !== null && per <= 12 && operatingMargin !== null && operatingMargin >= 0.15) {
+  } else if (per !== null && per <= 12 && om !== null && om >= 0.15) {
     base.valueFlag = "高収益割安";
   }
 
