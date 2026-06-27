@@ -468,6 +468,33 @@ export default function StockDetail({
           </div>
         </div>
 
+        {/* シミュレーション連携 */}
+        {stock.dividend_yield != null && stock.dividend_yield > 0 && (
+          <div className="rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.04] p-4">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-2">30年試算</p>
+            <div className="flex items-center justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-sm font-medium text-slate-300">
+                  {stock.name} の配当利回り{" "}
+                  <span className="font-mono font-bold text-[#34d399]">
+                    {(stock.dividend_yield * 100).toFixed(2)}%
+                  </span>{" "}
+                  で長期積立を試算
+                </p>
+                <p className="mt-0.5 font-mono text-[10px] text-slate-500">
+                  月積立・NISA・取り崩し設定は試算ページで自由に変更できます
+                </p>
+              </div>
+              <Link
+                href={`/simulate?stock=${encodeURIComponent(stock.name)}&yield=${(stock.dividend_yield * 100).toFixed(1)}`}
+                className="shrink-0 rounded-xl border border-[#38bdf8]/30 bg-[#38bdf8]/[0.08] px-4 py-2 font-mono text-xs text-[#38bdf8] transition-colors hover:bg-[#38bdf8]/[0.14]"
+              >
+                30年試算を開く →
+              </Link>
+            </div>
+          </div>
+        )}
+
         <p className="font-mono text-[9px] text-slate-700">
           データ: J-Quants（財務）/ Yahoo Finance（株価・配当）/ TradingView（チャート）。これは投資助言ではありません。
         </p>
