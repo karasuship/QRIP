@@ -62,7 +62,7 @@ export async function GET(req: NextRequest) {
       const m = calcMetrics(eq, summaries, null);
       rows.push({
         code: m.code, name: m.name, market: m.market, sector: m.sector,
-        price: null, pbr: null, per: null, dividendYield: null,
+        price: null, pbr: null, per: null,
         roe: m.roe, roa: m.roa,
         equity_ratio: m.equityRatio,
         operating_margin: m.operatingMargin,
