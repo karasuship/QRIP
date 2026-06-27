@@ -6,35 +6,31 @@ import {
   XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
 } from "recharts";
-import type { TrendItem } from "./page";
+import type { TrendItem, QuarterlyItem, StockCalendar, ChartData } from "./page";
 
 interface Stock {
-  code: string;
-  name: string;
-  market: string;
-  sector: string;
+  code: string; name: string; market: string; sector: string;
   price: number | null;
-  pbr: number | null;
-  per: number | null;
-  roe: number | null;
-  roa: number | null;
-  equity_ratio: number | null;
-  operating_margin: number | null;
-  dividend_yield: number | null;
-  revenue_growth_yoy: number | null;
-  net_sales: number | null;
-  operating_profit: number | null;
-  total_assets: number | null;
-  equity: number | null;
-  growth_flag: string | null;
-  value_flag: string | null;
+  pbr: number | null; per: number | null;
+  roe: number | null; roa: number | null;
+  equity_ratio: number | null; operating_margin: number | null;
+  dividend_yield: number | null; revenue_growth_yoy: number | null;
+  net_sales: number | null; operating_profit: number | null;
+  total_assets: number | null; equity: number | null;
+  week52_high?: number | null; week52_low?: number | null;
+  growth_flag: string | null; value_flag: string | null;
 }
 
 const VALUE_CLS: Record<string, string> = {
-  "優良バリュー":   "bg-[#34d399]/15 text-[#34d399] border-[#34d399]/30",
-  "急成長警戒":     "bg-amber-400/15 text-amber-400 border-amber-400/30",
-  "低収益放置":     "bg-[#f87171]/15 text-[#f87171] border-[#f87171]/30",
-  "高収益割安":     "bg-[#38bdf8]/15 text-[#38bdf8] border-[#38bdf8]/30",
+  "優良バリュー": "bg-[#34d399]/15 text-[#34d399] border-[#34d399]/30",
+  "急成長警戒":   "bg-amber-400/15 text-amber-400 border-amber-400/30",
+  "低収益放置":   "bg-[#f87171]/15 text-[#f87171] border-[#f87171]/30",
+  "高収益割安":   "bg-[#38bdf8]/15 text-[#38bdf8] border-[#38bdf8]/30",
+};
+
+const TT = {
+  contentStyle: { background: "#0a1628", border: "1px solid rgba(255,255,255,0.1)", color: "#e8f4ff", fontSize: 11 },
+  labelStyle: { color: "#94a3b8" },
 };
 
 function pct(v: number | null, d = 1) { return v == null ? "—" : (v * 100).toFixed(d) + "%"; }
@@ -43,26 +39,54 @@ function oku(v: number | null) {
   if (Math.abs(v) >= 10000) return (v / 10000).toFixed(1) + "兆円";
   return v.toLocaleString() + "億円";
 }
+function chg(v: number | null) {
+  if (v == null) return null;
+  const s = (v * 100).toFixed(1);
+  return { text: (v >= 0 ? "+" : "") + s + "%", pos: v >= 0 };
+}
 
-const TOOLTIP_STYLE = {
-  contentStyle: { background: "#0a1628", border: "1px solid rgba(255,255,255,0.1)", color: "#e8f4ff", fontSize: 11 },
-  labelStyle: { color: "#94a3b8" },
-};
-
-export default function StockDetail({ stock, trend }: { stock: Stock; trend: TrendItem[] }) {
+export default function StockDetail({
+  stock, trend, quarterly, calendar, chartData,
+}: {
+  stock: Stock;
+  trend: TrendItem[];
+  quarterly: QuarterlyItem[];
+  calendar: StockCalendar;
+  chartData: ChartData;
+}) {
   const code4 = stock.code.slice(0, 4);
-  const tvSymbol = `TSE:${code4}`;
-  const tvSrc = `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(tvSymbol)}&interval=W&theme=Dark&style=1&locale=ja&timezone=Asia%2FTokyo&hide_side_toolbar=0`;
+  const tvSrc = `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(`TSE:${code4}`)}&interval=W&theme=Dark&style=1&locale=ja&timezone=Asia%2FTokyo&hide_side_toolbar=0`;
+
+  const hasRange = stock.price != null && stock.week52_high != null && stock.week52_low != null
+    && stock.week52_high > stock.week52_low;
+  const rangePct = hasRange
+    ? Math.min(100, Math.max(0, (stock.price! - stock.week52_low!) / (stock.week52_high! - stock.week52_low!) * 100))
+    : null;
+
+  const c1m = chg(chartData.change1m);
+  const c3m = chg(chartData.change3m);
+  const c1y = chg(chartData.change1y);
+  const hasChange = c1m || c3m || c1y;
+
+  const hasEvents = calendar.nextEarningsDate || calendar.exDivDate || calendar.divDate;
 
   const METRICS = [
-    { label: "ROE",       value: pct(stock.roe),              note: "自己資本利益率" },
-    { label: "ROA",       value: pct(stock.roa),              note: "総資産利益率" },
-    { label: "自己資本比率", value: pct(stock.equity_ratio, 0), note: "財務健全性" },
-    { label: "営業利益率", value: pct(stock.operating_margin), note: "稼ぐ力" },
+    { label: "ROE",       value: pct(stock.roe),                note: "自己資本利益率" },
+    { label: "ROA",       value: pct(stock.roa),                note: "総資産利益率" },
+    { label: "自己資本比率", value: pct(stock.equity_ratio, 0),  note: "財務健全性" },
+    { label: "営業利益率", value: pct(stock.operating_margin),   note: "稼ぐ力" },
     { label: "売上成長率", value: pct(stock.revenue_growth_yoy), note: "前期比" },
-    { label: "売上高",    value: oku(stock.net_sales != null ? Math.round(stock.net_sales / 1e8) : null), note: "直近通期" },
+    { label: "売上高",    value: oku(stock.net_sales      != null ? Math.round(stock.net_sales      / 1e8) : null), note: "直近通期" },
     { label: "営業利益",  value: oku(stock.operating_profit != null ? Math.round(stock.operating_profit / 1e8) : null), note: "直近通期" },
-    { label: "総資産",    value: oku(stock.total_assets != null ? Math.round(stock.total_assets / 1e8) : null), note: "直近通期" },
+    { label: "総資産",    value: oku(stock.total_assets    != null ? Math.round(stock.total_assets    / 1e8) : null), note: "直近通期" },
+  ];
+
+  const IR_LINKS = [
+    { label: "irbank",       url: `https://irbank.net/${code4}` },
+    { label: "TDnet",        url: `https://www.release.tdnet.info/inbs/I_main_00.html` },
+    { label: "kabutan",      url: `https://kabutan.jp/stock/?code=${code4}` },
+    { label: "Yahoo Finance",url: `https://finance.yahoo.co.jp/quote/${code4}.T` },
+    { label: "EDINET",       url: `https://disclosure.edinet-api.go.jp/` },
   ];
 
   return (
@@ -81,25 +105,94 @@ export default function StockDetail({ stock, trend }: { stock: Stock; trend: Tre
             <h1 className="mt-1 text-2xl font-semibold text-[#e8f4ff] truncate">{stock.name}</h1>
             <p className="mt-0.5 font-mono text-[10px] text-slate-500">{stock.sector}</p>
           </div>
-          {stock.value_flag && (
-            <span className={`rounded-full border px-3 py-1 font-mono text-xs ${VALUE_CLS[stock.value_flag] ?? "text-slate-500"}`}>
-              {stock.value_flag}
-            </span>
-          )}
+          <div className="flex items-center gap-3">
+            {stock.price != null && (
+              <span className="font-mono text-xl font-semibold text-[#e8f4ff]">¥{stock.price.toLocaleString()}</span>
+            )}
+            {stock.value_flag && (
+              <span className={`rounded-full border px-3 py-1 font-mono text-xs ${VALUE_CLS[stock.value_flag] ?? "text-slate-500"}`}>
+                {stock.value_flag}
+              </span>
+            )}
+          </div>
         </div>
+
+        {/* 相場位�� + 騰落率 */}
+        {(hasRange || hasChange) && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">相場位置</p>
+
+            {hasChange && (
+              <div className="flex gap-6 mb-5">
+                {[{ label: "1ヶ月", c: c1m }, { label: "3ヶ月", c: c3m }, { label: "1年", c: c1y }].map(({ label, c }) =>
+                  c ? (
+                    <div key={label} className="text-center">
+                      <p className="font-mono text-[9px] text-slate-600">{label}</p>
+                      <p className={`font-mono text-base font-semibold ${c.pos ? "text-[#34d399]" : "text-[#f87171]"}`}>
+                        {c.text}
+                      </p>
+                    </div>
+                  ) : null
+                )}
+              </div>
+            )}
+
+            {hasRange && (
+              <div>
+                <div className="flex justify-between font-mono text-[9px] text-slate-600 mb-2">
+                  <span>52週安値  ¥{stock.week52_low!.toLocaleString()}</span>
+                  <span className="text-slate-500">{rangePct!.toFixed(0)}% 位置</span>
+                  <span>52週高値  ¥{stock.week52_high!.toLocaleString()}</span>
+                </div>
+                <div className="relative h-2 w-full rounded-full bg-white/[0.08]">
+                  <div
+                    className="absolute left-0 top-0 h-full rounded-full bg-[#38bdf8]/40"
+                    style={{ width: `${rangePct}%` }}
+                  />
+                  <div
+                    className="absolute top-1/2 h-3 w-3 -translate-y-1/2 -translate-x-1/2 rounded-full border-2 border-[#020c1b] bg-[#38bdf8]"
+                    style={{ left: `${Math.min(97, Math.max(3, rangePct!))}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* TradingView チャート */}
         <div className="rounded-2xl border border-white/[0.10] overflow-hidden bg-white/[0.02]">
-          <p className="px-4 pt-3 font-mono text-[9px] uppercase tracking-widest text-slate-600">株価チャート（TradingView）</p>
-          <iframe
-            src={tvSrc}
-            className="w-full"
-            style={{ height: 400, display: "block" }}
-            allowFullScreen
-          />
+          <p className="px-4 pt-3 font-mono text-[9px] uppercase tracking-widest text-slate-600">株価チャート（週足）</p>
+          <iframe src={tvSrc} className="w-full" style={{ height: 400, display: "block" }} allowFullScreen />
         </div>
 
-        {/* 指標グリッド */}
+        {/* コーポレートイベント */}
+        {hasEvents && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">コーポレートイベント</p>
+            <div className="flex flex-wrap gap-6">
+              {calendar.nextEarningsDate && (
+                <div>
+                  <p className="font-mono text-[9px] text-slate-500">次回決算</p>
+                  <p className="font-mono text-sm text-[#38bdf8] mt-0.5">{calendar.nextEarningsDate}</p>
+                </div>
+              )}
+              {calendar.exDivDate && (
+                <div>
+                  <p className="font-mono text-[9px] text-slate-500">権利落日</p>
+                  <p className="font-mono text-sm text-amber-400 mt-0.5">{calendar.exDivDate}</p>
+                </div>
+              )}
+              {calendar.divDate && (
+                <div>
+                  <p className="font-mono text-[9px] text-slate-500">配当支払</p>
+                  <p className="font-mono text-sm text-slate-300 mt-0.5">{calendar.divDate}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 財務指標グリッド */}
         <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
           <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">財務指標（直近通期）</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -113,26 +206,42 @@ export default function StockDetail({ stock, trend }: { stock: Stock; trend: Tre
           </div>
         </div>
 
-        {/* 財務推移チャート */}
+        {/* 四半期業績推移 */}
+        {quarterly.length > 1 && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">四半期業績推移（億円・累計）</p>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={quarterly} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="label" tick={{ fill: "#64748b", fontSize: 9 }} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 10 }} width={50} />
+                <Tooltip {...TT} />
+                <Legend wrapperStyle={{ fontSize: 10, color: "#64748b" }} />
+                <Bar dataKey="salesOku" fill="#38bdf8" name="売上高" radius={[3, 3, 0, 0]} />
+                <Bar dataKey="opOku"    fill="#34d399" name="営業利益" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 通期業績推移 */}
         {trend.length > 1 && (
           <div className="space-y-4">
-            {/* 売上・営業利益 */}
             <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">売上高・営業利益推移（億円）</p>
+              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">売上高・営業利益推移（億円・通期）</p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={trend} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                   <XAxis dataKey="year" tick={{ fill: "#64748b", fontSize: 10 }} />
                   <YAxis tick={{ fill: "#64748b", fontSize: 10 }} width={50} />
-                  <Tooltip {...TOOLTIP_STYLE} />
+                  <Tooltip {...TT} />
                   <Legend wrapperStyle={{ fontSize: 10, color: "#64748b" }} />
                   <Bar dataKey="salesOku" fill="#38bdf8" name="売上高" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="opOku" fill="#34d399" name="営業利益" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="opOku"    fill="#34d399" name="営業利益" radius={[3, 3, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
-            {/* 自己資本比率 */}
             {trend.some((t) => t.equityRatioPct !== null) && (
               <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
                 <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">自己資本比率推移（%）</p>
@@ -141,14 +250,8 @@ export default function StockDetail({ stock, trend }: { stock: Stock; trend: Tre
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
                     <XAxis dataKey="year" tick={{ fill: "#64748b", fontSize: 10 }} />
                     <YAxis domain={[0, 100]} tick={{ fill: "#64748b", fontSize: 10 }} width={35} />
-                    <Tooltip {...TOOLTIP_STYLE} formatter={(v) => [`${v}%`, "自己資本比率"]} />
-                    <Line
-                      dataKey="equityRatioPct"
-                      stroke="#f59e0b"
-                      strokeWidth={2}
-                      dot={{ r: 3, fill: "#f59e0b" }}
-                      name="自己資本比率"
-                    />
+                    <Tooltip {...TT} formatter={(v) => [`${v}%`, "自己資本比率"]} />
+                    <Line dataKey="equityRatioPct" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: "#f59e0b" }} name="自己資本比率" />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -156,8 +259,37 @@ export default function StockDetail({ stock, trend }: { stock: Stock; trend: Tre
           </div>
         )}
 
+        {/* 配当履歴 */}
+        {chartData.dividends.length > 0 && (
+          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">配当履歴（円/株）</p>
+            <ResponsiveContainer width="100%" height={140}>
+              <BarChart data={chartData.dividends.slice(-10)} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="date" tick={{ fill: "#64748b", fontSize: 9 }} tickFormatter={(d: string) => d.slice(0, 7)} />
+                <YAxis tick={{ fill: "#64748b", fontSize: 10 }} width={35} />
+                <Tooltip {...TT} formatter={(v) => [`¥${v}`, "配当"]} />
+                <Bar dataKey="amount" fill="#f59e0b" name="配当" radius={[3, 3, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        {/* 外部リンク */}
+        <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-4">
+          <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-3">外部リンク</p>
+          <div className="flex flex-wrap gap-2">
+            {IR_LINKS.map(({ label, url }) => (
+              <a key={label} href={url} target="_blank" rel="noopener noreferrer"
+                className="rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-1.5 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] hover:text-slate-200 transition-all">
+                {label} ↗
+              </a>
+            ))}
+          </div>
+        </div>
+
         <p className="font-mono text-[9px] text-slate-700">
-          データ: J-Quants API（財務）/ TradingView（株価）。これは投資助言ではありません。
+          データ: J-Quants（財務）/ Yahoo Finance（株価・配当）/ TradingView（チャート）。これは投資助言ではありません。
         </p>
       </main>
     </div>

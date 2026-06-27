@@ -86,13 +86,13 @@ export async function fetchEquitiesMaster(): Promise<JqEquity[]> {
   return data.data ?? [];
 }
 
-export async function fetchFinSummary(code: string): Promise<JqFinSummary[]> {
+export async function fetchFinSummary(code: string, fyOnly = true): Promise<JqFinSummary[]> {
   const data = await jquantsGet<{ data: JqFinSummary[] }>(
     "/fins/summary",
     { code: toCode5(code) }
   );
-  // 通期決算のみ
-  return (data.data ?? []).filter((s) => s.CurPerType === "FY");
+  if (fyOnly) return (data.data ?? []).filter((s) => s.CurPerType === "FY");
+  return data.data ?? [];
 }
 
 export async function fetchLatestBar(code: string): Promise<JqBar | null> {

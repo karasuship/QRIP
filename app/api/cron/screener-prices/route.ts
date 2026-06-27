@@ -73,9 +73,9 @@ export async function GET(req: NextRequest) {
     const batch = allStocks.slice(i, i + BATCH);
     const codes5 = batch.map((s) => s.code);
 
-    let prices: Map<string, number>;
+    let quotes: Map<string, import("@/lib/yahoo-finance").YahooQuote>;
     try {
-      prices = await fetchPricesYahoo(codes5, creds);
+      quotes = await fetchPricesYahoo(codes5, creds);
     } catch (e) {
       errors += batch.length;
       if (errorSamples.length < 3) errorSamples.push(String(e).slice(0, 100));
@@ -84,8 +84,9 @@ export async function GET(req: NextRequest) {
 
     const rows: Record<string, unknown>[] = [];
     for (const s of batch) {
-      const price = prices.get(s.code);
-      if (!price) { noPrice++; continue; }
+      const quote = quotes.get(s.code);
+      if (!quote?.price) { noPrice++; continue; }
+      const price = quote.price;
 
       const bps = s.bps;
       const eps = s.eps;
@@ -96,7 +97,11 @@ export async function GET(req: NextRequest) {
       const dividendYield = divAnn && divAnn > 0 ? divAnn / price : null;
       const valueFlag = calcValueFlag(pbr, per, s.equity_ratio, s.roe, s.revenue_growth_yoy, s.operating_margin);
 
-      rows.push({ code: s.code, price, pbr, per, dividend_yield: dividendYield, value_flag: valueFlag });
+      rows.push({
+        code: s.code, price, pbr, per,
+        dividend_yield: dividendYield, value_flag: valueFlag,
+        week52_high: quote.high52, week52_low: quote.low52,
+      });
     }
 
     if (rows.length > 0) {
