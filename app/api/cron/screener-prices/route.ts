@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseServer } from "@/lib/supabase";
-import { fetchPricesYahoo } from "@/lib/yahoo-finance";
+import { fetchPricesYahoo, getYahooCreds } from "@/lib/yahoo-finance";
 
 export const runtime = "nodejs";
 export const maxDuration = 120;
@@ -56,6 +56,9 @@ export async function GET(req: NextRequest) {
     revenue_growth_yoy: number | null; operating_margin: number | null;
   }[];
 
+  // Yahoo Finance セッション認証（1回取得して全バッチで再利用）
+  const creds = await getYahooCreds();
+
   let updated = 0;
   let noPrice = 0;
   let errors = 0;
@@ -67,7 +70,7 @@ export async function GET(req: NextRequest) {
 
     let prices: Map<string, number>;
     try {
-      prices = await fetchPricesYahoo(codes5);
+      prices = await fetchPricesYahoo(codes5, creds);
     } catch (e) {
       errors += batch.length;
       if (errorSamples.length < 3) errorSamples.push(String(e).slice(0, 100));
