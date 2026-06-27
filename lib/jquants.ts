@@ -1,14 +1,10 @@
 const BASE = "https://api.jquants.com/v2";
 
-// ── 汎用フェッチ ─────────────────────────────────────────────────────────────
-
 async function jquantsGet<T>(path: string, params?: Record<string, string>): Promise<T> {
   const apiKey = process.env.JQUANTS_API_KEY;
   if (!apiKey) throw new Error("JQUANTS_API_KEY が未設定");
-
   const url = new URL(`${BASE}${path}`);
   if (params) Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
-
   const res = await fetch(url.toString(), {
     headers: { "X-Api-Key": apiKey },
     next: { revalidate: 0 },
@@ -20,16 +16,15 @@ async function jquantsGet<T>(path: string, params?: Record<string, string>): Pro
   return res.json() as Promise<T>;
 }
 
-// 4桁コード → 5桁（末尾0）に正規化
 function toCode5(code: string): string {
   return code.length === 4 ? code + "0" : code;
 }
 
-// ── 型定義（実際のV2レスポンスに合わせる） ───────────────────────────────────
+// ── 型定義（V2実レスポンスに基づく） ────────────────────────────────────────
 
 export interface JqEquity {
   Date: string;
-  Code: string;       // 5桁 例: "94320"
+  Code: string;     // 5桁 例: "94320"
   CoName: string;
   CoNameEn: string;
   S17: string;
@@ -39,73 +34,72 @@ export interface JqEquity {
   ScaleCat: string;
   Mkt: string;
   MktNm: string;
-  Mrgn: string;
-  MrgnNm: string;
-  ProdCat: string;
 }
 
 export interface JqFinSummary {
-  DisclosedDate: string;
-  LocalCode: string;
-  TypeOfDocument: string;
-  TypeOfCurrentPeriod: string;
-  CurrentFiscalYearStartDate: string;
-  CurrentFiscalYearEndDate: string;
-  NetSales: string | null;
-  OperatingProfit: string | null;
-  OrdinaryProfit: string | null;
-  Profit: string | null;
-  EarningsPerShare: string | null;
-  BookValuePerShare: string | null;
-  TotalAssets: string | null;
-  Equity: string | null;
-  EquityToAssetRatio: string | null;
-  ResultDividendPerShareAnnual: string | null;
-  ForecastDividendPerShareAnnual: string | null;
-  ForecastNetSales: string | null;
-  ForecastOperatingProfit: string | null;
-  ForecastProfit: string | null;
-  ForecastEarningsPerShare: string | null;
+  DiscDate: string;
+  Code: string;
+  DocType: string;
+  CurPerType: string;     // "FY" = 通期
+  CurFYSt: string;
+  CurFYEn: string;
+  Sales: string | null;   // 売上高
+  OP: string | null;      // 営業利益
+  OdP: string | null;     // 経常利益
+  NP: string | null;      // 純利益
+  EPS: string | null;
+  DEPS: string | null;
+  TA: string | null;      // 総資産
+  Eq: string | null;      // 純資産
+  EqAR: string | null;    // 自己資本比率（0〜1）
+  BPS: string | null;     // 1株純資産
+  CFO: string | null;
+  CFI: string | null;
+  CFF: string | null;
+  DivAnn: string | null;  // 年間配当（実績）
+  FDivAnn: string | null; // 年間配当（予想）
+  FSales: string | null;  // 予想売上高
+  FOP: string | null;     // 予想営業利益
 }
 
 export interface JqBar {
   Date: string;
   Code: string;
-  Open: number | null;
-  High: number | null;
-  Low: number | null;
-  Close: number | null;
-  Volume: number | null;
-  AdjustmentClose: number | null;
+  O: number | null;     // 始値
+  H: number | null;     // 高値
+  L: number | null;     // 安値
+  C: number | null;     // 終値
+  Vo: number | null;    // 出来高
+  Va: number | null;    // 売買代金
+  AdjFactor: number | null;
+  AdjO: number | null;
+  AdjH: number | null;
+  AdjL: number | null;
+  AdjC: number | null;  // 調整済み終値
+  AdjVo: number | null;
 }
 
 // ── API呼び出し ───────────────────────────────────────────────────────────────
 
-/** 全上場銘柄マスタ（レスポンスキー: data） */
 export async function fetchEquitiesMaster(): Promise<JqEquity[]> {
   const data = await jquantsGet<{ data: JqEquity[] }>("/equities/master");
   return data.data ?? [];
 }
 
-/** 単一銘柄の財務情報サマリー（通期のみ） */
 export async function fetchFinSummary(code: string): Promise<JqFinSummary[]> {
   const data = await jquantsGet<{ data: JqFinSummary[] }>(
     "/fins/summary",
     { code: toCode5(code) }
   );
-  const all = data.data ?? [];
-  return all.filter(
-    (s) => s.TypeOfCurrentPeriod === "FY" || (s.TypeOfDocument?.includes("Annual") ?? false)
-  );
+  // 通期決算のみ
+  return (data.data ?? []).filter((s) => s.CurPerType === "FY");
 }
 
-/** 単一銘柄の最新株価 */
 export async function fetchLatestBar(code: string): Promise<JqBar | null> {
   const today = new Date();
   const from = new Date(today);
   from.setDate(from.getDate() - 10);
   const fmt = (d: Date) => d.toISOString().slice(0, 10);
-
   const data = await jquantsGet<{ data: JqBar[] }>("/equities/bars/daily", {
     code: toCode5(code),
     date_from: fmt(from),
@@ -155,7 +149,7 @@ export function calcMetrics(
     name: eq.CoName,
     market: eq.MktNm,
     sector: eq.S33Nm,
-    price: bar?.AdjustmentClose ?? bar?.Close ?? null,
+    price: bar?.AdjC ?? bar?.C ?? null,
     pbr: null, per: null, roe: null, roa: null,
     equityRatio: null, operatingMargin: null,
     dividendYield: null, revenueGrowthYoy: null,
@@ -166,33 +160,28 @@ export function calcMetrics(
 
   if (summaries.length === 0) return base;
 
-  const sorted = [...summaries].sort((a, b) =>
-    b.CurrentFiscalYearEndDate.localeCompare(a.CurrentFiscalYearEndDate)
-  );
+  const sorted = [...summaries].sort((a, b) => b.CurFYEn.localeCompare(a.CurFYEn));
   const latest = sorted[0];
   const prev = sorted[1] ?? null;
 
   const price = base.price;
-  const equity = n(latest.Equity);
-  const ta = n(latest.TotalAssets);
-  const sales = n(latest.NetSales);
-  const op = n(latest.OperatingProfit);
-  const eps = n(latest.EarningsPerShare);
-  const bvps = n(latest.BookValuePerShare);
-  const eqRatio = n(latest.EquityToAssetRatio);
-  const div = n(latest.ResultDividendPerShareAnnual) ?? n(latest.ForecastDividendPerShareAnnual);
-  const prevSales = prev ? n(prev.NetSales) : null;
+  const equity = n(latest.Eq);
+  const ta = n(latest.TA);
+  const sales = n(latest.Sales);
+  const op = n(latest.OP);
+  const eps = n(latest.EPS);
+  const bps = n(latest.BPS);
+  const eqAR = n(latest.EqAR);
+  const div = n(latest.DivAnn) ?? n(latest.FDivAnn);
+  const prevSales = prev ? n(prev.Sales) : null;
 
   base.netSales = sales;
   base.operatingProfit = op;
   base.totalAssets = ta;
   base.equity = equity;
 
-  if (eqRatio !== null) {
-    base.equityRatio = eqRatio > 1 ? eqRatio / 100 : eqRatio;
-  } else if (equity !== null && ta !== null && ta > 0) {
-    base.equityRatio = equity / ta;
-  }
+  // 自己資本比率（EqARは0〜1で格納）
+  base.equityRatio = eqAR ?? (equity !== null && ta !== null && ta > 0 ? equity / ta : null);
 
   if (op !== null && sales !== null && sales > 0) base.operatingMargin = op / sales;
   if (op !== null && ta !== null && ta > 0) base.roa = op / ta;
@@ -201,9 +190,9 @@ export function calcMetrics(
   }
 
   if (price !== null && price > 0) {
-    if (bvps !== null && bvps > 0) base.pbr = price / bvps;
+    if (bps !== null && bps > 0) base.pbr = price / bps;
     if (eps !== null && eps > 0) base.per = price / eps;
-    if (eps !== null && bvps !== null && bvps > 0) base.roe = eps / bvps;
+    if (eps !== null && bps !== null && bps > 0) base.roe = eps / bps;
     if (div !== null && div > 0) base.dividendYield = div / price;
   }
 
