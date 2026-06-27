@@ -1,4 +1,4 @@
-const BASE = "https://api.jquants.com/v1";
+const BASE = "https://api.jquants.com/v2";
 
 // ── 汎用フェッチ ─────────────────────────────────────────────────────────────
 
