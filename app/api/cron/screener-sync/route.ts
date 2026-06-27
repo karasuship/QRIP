@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
   let synced = 0;
   let skipped = 0;
   let errors = 0;
+  const errorSamples: string[] = [];
 
   for (let i = 0; i < equities.length; i += BATCH) {
     // タイムアウト前に打ち切り
@@ -79,11 +80,19 @@ export async function GET(req: NextRequest) {
           });
 
           synced++;
-        } catch {
+        } catch (e) {
           errors++;
+          if (errorSamples.length < 5) {
+            errorSamples.push(`${eq.Code}: ${String(e)}`);
+          }
         }
       })
     );
+
+    // バッチ間に少し待機してレート制限を避ける
+    if (i + BATCH < equities.length && Date.now() - start < MAX_MS) {
+      await new Promise((r) => setTimeout(r, 300));
+    }
   }
 
   return NextResponse.json({
@@ -93,5 +102,6 @@ export async function GET(req: NextRequest) {
     skipped,
     errors,
     elapsedMs: Date.now() - start,
+    errorSamples,
   });
 }
