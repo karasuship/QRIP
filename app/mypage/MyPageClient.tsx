@@ -13,6 +13,14 @@ interface WatchItem {
   created_at: string;
 }
 
+interface StockPrice {
+  code: string;
+  price: number | null;
+  week52_high: number | null;
+  week52_low: number | null;
+  dividend_yield: number | null;
+}
+
 interface AlertItem {
   id: number;
   name: string;
@@ -43,6 +51,7 @@ export default function MyPageClient() {
 
   // watchlist state
   const [watchlist, setWatchlist] = useState<WatchItem[]>([]);
+  const [stockPrices, setStockPrices] = useState<Map<string, StockPrice>>(new Map());
   const [wForm, setWForm] = useState({ code: "", name: "" });
   const [wLoading, setWLoading] = useState(false);
   const [wError, setWError] = useState("");
@@ -76,10 +85,17 @@ export default function MyPageClient() {
   const loadWatchlist = useCallback(async () => {
     const token = await getToken();
     if (!token) return;
-    const res = await fetch("/api/watchlist", { headers: authHeader(token) });
-    if (res.ok) {
-      const json = await res.json();
+    const [wlRes, priceRes] = await Promise.all([
+      fetch("/api/watchlist", { headers: authHeader(token) }),
+      fetch("/api/watchlist/prices", { headers: authHeader(token) }),
+    ]);
+    if (wlRes.ok) {
+      const json = await wlRes.json();
       setWatchlist(json.watchlist ?? []);
+    }
+    if (priceRes.ok) {
+      const json = await priceRes.json();
+      setStockPrices(new Map((json.stocks ?? []).map((s: StockPrice) => [s.code, s])));
     }
   }, []);
 
@@ -340,36 +356,60 @@ export default function MyPageClient() {
             </div>
           ) : (
             <div className="overflow-hidden rounded-2xl border border-white/[0.22]">
-              {watchlist.map((w, i) => (
-                <div
-                  key={w.id}
-                  className={`flex items-center gap-3 px-4 py-3 ${i !== watchlist.length - 1 ? "border-b border-white/[0.15]" : ""}`}
-                >
-                  <div className="flex-1 flex items-center gap-3">
+              {watchlist.map((w, i) => {
+                const sp = stockPrices.get(w.stock_code);
+                const pos = (sp?.price != null && sp.week52_high != null && sp.week52_low != null && sp.week52_high > sp.week52_low)
+                  ? Math.max(0, Math.min(100, Math.round(((sp.price - sp.week52_low) / (sp.week52_high - sp.week52_low)) * 100)))
+                  : null;
+                return (
+                  <div
+                    key={w.id}
+                    className={`flex items-center gap-3 px-4 py-3 ${i !== watchlist.length - 1 ? "border-b border-white/[0.15]" : ""}`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/screener/${w.stock_code}`}
+                          className="font-mono text-sm font-bold text-[#e8f4ff] hover:text-[#38bdf8] transition-colors"
+                        >
+                          {w.stock_code}
+                        </Link>
+                        {w.stock_name && (
+                          <span className="truncate text-xs text-slate-400">{w.stock_name}</span>
+                        )}
+                      </div>
+                      {pos !== null && (
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <div className="w-20 h-1 rounded-full bg-white/[0.11] overflow-hidden">
+                            <div style={{ width: `${pos}%` }} className="h-full rounded-full bg-[#38bdf8]" />
+                          </div>
+                          <span className="font-mono text-[9px] text-slate-500">52週 {pos}%</span>
+                        </div>
+                      )}
+                    </div>
+                    {sp?.price != null && (
+                      <div className="text-right">
+                        <p className="font-mono text-xs text-slate-300">¥{sp.price.toLocaleString("ja-JP")}</p>
+                        {sp.dividend_yield != null && (
+                          <p className="font-mono text-[9px] text-slate-500">利回り {(sp.dividend_yield * 100).toFixed(1)}%</p>
+                        )}
+                      </div>
+                    )}
                     <Link
                       href={`/screener/${w.stock_code}`}
-                      className="font-mono text-sm font-bold text-[#e8f4ff] hover:text-[#38bdf8] transition-colors"
+                      className="font-mono text-[10px] text-slate-500 hover:text-[#38bdf8] transition-colors"
                     >
-                      {w.stock_code}
+                      詳細 →
                     </Link>
-                    {w.stock_name && (
-                      <span className="text-xs text-slate-400">{w.stock_name}</span>
-                    )}
+                    <button
+                      onClick={() => removeWatch(w.stock_code)}
+                      className="font-mono text-[10px] text-slate-500 hover:text-red-400 transition-colors"
+                    >
+                      削除
+                    </button>
                   </div>
-                  <Link
-                    href={`/screener/${w.stock_code}`}
-                    className="font-mono text-[10px] text-slate-500 hover:text-[#38bdf8] transition-colors"
-                  >
-                    詳細 →
-                  </Link>
-                  <button
-                    onClick={() => removeWatch(w.stock_code)}
-                    className="font-mono text-[10px] text-slate-500 hover:text-red-400 transition-colors"
-                  >
-                    削除
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

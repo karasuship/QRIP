@@ -16,7 +16,7 @@ const MORE_LINKS = [
   { href: "/simulate",   label: "試算",   desc: "30年資産シミュレーション" },
   { href: "/portfolio",  label: "実績",   desc: "ポートフォリオ記録" },
   { href: "/journal",    label: "日誌",   desc: "投資日誌・暴落時の記録" },
-  { href: "/learn",      label: "検証",   desc: "バックテスト結果" },
+  { href: "/learn",      label: "根拠",   desc: "バックテスト結果" },
   { href: "/research",   label: "書庫",   desc: "Round 01〜43 検証アーカイブ" },
   { href: "/hypotheses", label: "仮説",   desc: "次の検証仮説を提案・投票" },
   { href: "/board",      label: "掲示板", desc: "銘柄・考察・議論" },

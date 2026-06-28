@@ -294,6 +294,14 @@ export default async function NewsPage() {
           </p>
         </div>
 
+        {syn && (
+          <div className={`mt-4 rounded-2xl border px-5 py-4 backdrop-blur-sm ${syn.cls}`}>
+            <p className="font-mono text-[9px] uppercase tracking-[0.25em] mb-1.5 opacity-60">今日の雰囲気</p>
+            <p className="text-lg font-semibold leading-snug">{syn.label}</p>
+            <p className="mt-1 text-sm leading-6 opacity-80">{syn.text}</p>
+          </div>
+        )}
+
         {!analysis ? (
           <div className="mt-8 rounded-2xl border border-white/[0.22] bg-white/[0.11] p-8 backdrop-blur-md text-center space-y-2">
             <p className="text-slate-400">ニュースの取得に失敗しました</p>
@@ -304,18 +312,7 @@ export default async function NewsPage() {
         ) : (
           <div className="mt-6 space-y-4">
 
-            {/* ① 今日の雰囲気 */}
-            {syn && (
-              <div className={`rounded-2xl border px-5 py-4 backdrop-blur-sm ${syn.cls}`}>
-                <p className="font-mono text-[9px] uppercase tracking-[0.25em] mb-1.5 opacity-60">
-                  今日の雰囲気
-                </p>
-                <p className="text-lg font-semibold leading-snug">{syn.label}</p>
-                <p className="mt-1 text-sm leading-6 opacity-80">{syn.text}</p>
-              </div>
-            )}
-
-            {/* ② ニュースの論調 × 投資家の警戒度 */}
+            {/* ① ニュースの論調 × 投資家の警戒度 */}
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
               {/* ニュースの論調（センチメント） */}

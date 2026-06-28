@@ -380,6 +380,20 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">積立設定</p>
         <div className="rounded-2xl border border-white/[0.22] bg-white/[0.14] p-4 space-y-4">
 
+          {/* プリセット */}
+          <div className="flex gap-2">
+            {([["月3万", 30000], ["月5万", 50000], ["月10万", 100000]] as [string, number][]).map(([label, amount]) => (
+              <button key={label} onClick={() => { setMonthly(amount); setInitialLump(0); }}
+                className={`rounded-xl border px-3 py-1.5 font-mono text-[10px] transition-colors ${
+                  monthly === amount && initialLump === 0
+                    ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]"
+                    : "border-white/[0.18] text-slate-400 hover:text-slate-300"
+                }`}>
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <label className="space-y-1">
               <p className="font-mono text-[9px] uppercase text-slate-500">初期一括投入（円）</p>
