@@ -4,6 +4,8 @@ import { fetchSignal } from "@/lib/signal";
 import type { SignalData } from "@/lib/signal";
 import type { JpStockSignal } from "@/lib/jp-stock-signal";
 import { Term } from "@/app/components/Term";
+import { fetchValuePatterns } from "@/lib/value-patterns";
+import type { ValuePattern } from "@/lib/value-patterns";
 
 export const metadata: Metadata = {
   title: "買い場シグナル一覧 — S&P500・ETF・日本株 リアルタイム",
@@ -100,6 +102,64 @@ function cardCls(border: string, glow: string) {
   return `rounded-2xl border p-5 backdrop-blur-sm transition-all duration-200 cursor-pointer group-hover:-translate-y-0.5 ${border} ${glow} group-hover:border-opacity-80`;
 }
 
+// ── バリュー株パターンカード ──────────────────────────────────────────────────
+
+function ValuePatternCard({ pattern }: { pattern: ValuePattern }) {
+  function fmtMetric(stock: ValuePattern["stocks"][number]): string {
+    const v = stock[pattern.keyMetric];
+    if (v == null) return "—";
+    if (pattern.keyMetric === "pbr") return `${v.toFixed(2)}倍`;
+    return `${(v * 100).toFixed(1)}%`;
+  }
+
+  return (
+    <div className="rounded-2xl border border-amber-400/20 bg-amber-400/[0.03] p-5">
+      <div className="flex items-start justify-between mb-1">
+        <p className="text-sm font-bold text-[#e8f4ff]">{pattern.name}</p>
+        <span className="rounded-full border border-amber-400/25 bg-amber-400/[0.08] px-2.5 py-0.5 font-mono text-[9px] text-amber-400">
+          {pattern.stocks.length}銘柄該当
+        </span>
+      </div>
+      <p className="text-[11px] text-slate-400 mb-2">{pattern.desc}</p>
+      <p className="font-mono text-[9px] text-slate-600 mb-4">{pattern.basis}</p>
+
+      {pattern.stocks.length > 0 ? (
+        <div className="space-y-2 mb-4">
+          {pattern.stocks.slice(0, 3).map((s, i) => (
+            <Link
+              key={s.code}
+              href={`/screener/${s.code}`}
+              className="flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-2 hover:border-amber-400/30 hover:bg-amber-400/[0.04] transition-colors group"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="font-mono text-[9px] text-slate-600 w-3">{i + 1}</span>
+                <div>
+                  <p className="text-[12px] font-medium text-slate-300 group-hover:text-[#e8f4ff] transition-colors leading-tight">{s.name}</p>
+                  <p className="font-mono text-[9px] text-slate-600">{s.code} · {s.market}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="font-mono text-[10px] text-slate-500">{pattern.keyLabel}</p>
+                <p className="font-mono text-sm font-bold text-amber-400">{fmtMetric(s)}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <p className="text-[11px] text-slate-600 mb-4">現在、条件を満たす銘柄がありません</p>
+      )}
+
+      <Link
+        href={pattern.screenerUrl}
+        className="flex items-center justify-end gap-1 font-mono text-[10px] text-slate-500 hover:text-amber-400 transition-colors"
+      >
+        スクリーナーで全件表示
+        <span className="inline-block translate-x-0 hover:translate-x-0.5 transition-transform">→</span>
+      </Link>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default async function SignalHubPage() {
@@ -109,6 +169,7 @@ export default async function SignalHubPage() {
   let date = "";
   let jpSignals: JpStockSignal[] = [];
   let signal: SignalData | null = null;
+  let valuePatterns: ValuePattern[] = [];
 
   try {
     signal = await fetchSignal();
@@ -118,6 +179,10 @@ export default async function SignalHubPage() {
     date = signal.date;
     jpSignals = signal.jpSignals;
   } catch { /* データ取得失敗時はカードをグレーアウト表示 */ }
+
+  try {
+    valuePatterns = await fetchValuePatterns();
+  } catch { /* スクリーナーDB未接続時はセクションを非表示 */ }
 
   const sp500 = TIER_CONFIG[signalTier];
 
@@ -485,6 +550,26 @@ export default async function SignalHubPage() {
             ))}
           </div>
         </div>
+
+        {/* ━━━ バリュー株レーダー ━━━ */}
+        {valuePatterns.length > 0 && (
+          <>
+            <SectionHeader
+              title="バリュー株レーダー（パターン別）"
+              desc="財務指標が複数の割安条件を同時に満たす銘柄を、定義別に自動抽出。毎営業日夜に更新。"
+              accent="#f59e0b"
+            />
+            <p className="mb-4 rounded-xl border border-amber-400/15 bg-amber-400/[0.04] px-4 py-2.5 text-[11px] leading-5 text-slate-400">
+              ⚠ これはスクリーニング結果です。SP500シグナルのような30年バックテストによる検証はなく、
+              「この指標が良い株を並べた」にすぎません。個別株は市場全体より大きく下落するリスクがあります。
+            </p>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {valuePatterns.map((pattern) => (
+                <ValuePatternCard key={pattern.id} pattern={pattern} />
+              ))}
+            </div>
+          </>
+        )}
 
         <p className="mt-6 font-mono text-[10px] leading-6 text-slate-600">
           データ: Yahoo Finance (^GSPC · EFA · EEM · QQQ · VT · 9432.T · 2914.T · 9433.T)。15分キャッシュ。
