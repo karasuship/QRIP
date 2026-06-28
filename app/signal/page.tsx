@@ -199,25 +199,28 @@ export default async function SignalHubPage() {
         <div className="mt-8 mb-3 flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">グローバル ETF</span>
           <span className="flex-1 border-t border-white/[0.15]" />
-          <span className="font-mono text-[9px] text-slate-500">phi2条件 · CRS共用 · Round 42</span>
+          <span className="font-mono text-[9px] text-slate-500">phi2条件 · CRS共用 · Round 42/48/49</span>
         </div>
 
+        {/* EFA / EEM — 既存 (Round 42) */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {[
             {
               ticker: "EFA", name: "先進国 ETF", href: "/signal/efa",
-              athDd: signal?.efaAthDd ?? null, active: signal?.efaActive ?? false,
+              athDdVal: signal?.efaAthDd ?? null, active: signal?.efaActive ?? false,
               note: "日本・欧州・豪州など · TEST Z=+8.08",
+              athThrLabel: "-10%",
             },
             {
               ticker: "EEM", name: "新興国 ETF", href: "/signal/eem",
-              athDd: signal?.eemAthDd ?? null, active: signal?.eemActive ?? false,
+              athDdVal: signal?.eemAthDd ?? null, active: signal?.eemActive ?? false,
               note: "中国・韓国・台湾・インドなど",
+              athThrLabel: "-10%",
             },
-          ].map(({ ticker, name, href, athDd, active, note }) => {
+          ].map(({ ticker, name, href, athDdVal, active, note, athThrLabel }) => {
             const border = active
-              ? "border-[#34d399]/40 bg-[#34d399]/[0.07] text-[#34d399]"
-              : "border-white/[0.22] bg-white/[0.14] text-slate-400";
+              ? "border-[#34d399]/40 bg-[#34d399]/[0.07]"
+              : "border-white/[0.22] bg-white/[0.14]";
             const badge = active
               ? "bg-[#34d399]/15 text-[#34d399]"
               : "bg-white/[0.11] text-slate-400";
@@ -227,7 +230,7 @@ export default async function SignalHubPage() {
                   <div className="flex items-center justify-between mb-3">
                     <div>
                       <p className="font-mono text-xs font-bold text-[#e8f4ff]">{name}</p>
-                      <p className="font-mono text-[9px] text-slate-500">{ticker}</p>
+                      <p className="font-mono text-[9px] text-slate-500">{ticker} · 閾値 {athThrLabel}</p>
                     </div>
                     <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
                       {active ? "発動中" : "待機"}
@@ -237,11 +240,11 @@ export default async function SignalHubPage() {
                     <div className="flex justify-between">
                       <span className="font-mono text-[9px] text-slate-500">ATH 乖離</span>
                       <span className={`font-mono text-xs font-bold ${
-                        athDd !== null && athDd <= -0.15 ? "text-[#34d399]"
-                        : athDd !== null && athDd <= -0.1 ? "text-amber-400"
+                        athDdVal !== null && athDdVal <= -0.15 ? "text-[#34d399]"
+                        : athDdVal !== null && athDdVal <= -0.1 ? "text-amber-400"
                         : "text-[#e8f4ff]"
                       }`}>
-                        {athDd !== null ? (athDd >= 0 ? "+" : "") + (athDd * 100).toFixed(2) + "%" : "—"}
+                        {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -261,6 +264,107 @@ export default async function SignalHubPage() {
           })}
         </div>
 
+        {/* QQQ / VT — Round 48/49 */}
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+
+          {/* ナスダック100 (QQQ) — Round 48 */}
+          {(() => {
+            const active = signal?.qqqActive ?? false;
+            const athDdVal = signal?.qqqAthDd ?? null;
+            const border = active
+              ? "border-[#34d399]/40 bg-[#34d399]/[0.07]"
+              : "border-white/[0.22] bg-white/[0.14]";
+            const badge = active
+              ? "bg-[#34d399]/15 text-[#34d399]"
+              : "bg-white/[0.11] text-slate-400";
+            return (
+              <div className={`rounded-2xl border p-4 backdrop-blur-sm ${border}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="font-mono text-xs font-bold text-[#e8f4ff]">ナスダック100</p>
+                    <p className="font-mono text-[9px] text-slate-500">QQQ · 閾値 -18%</p>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
+                      {active ? "発動中" : "待機"}
+                    </span>
+                    <span className="rounded border border-amber-400/25 bg-amber-400/[0.06] px-1.5 py-0.5 font-mono text-[8px] text-amber-400">
+                      弱シグナル
+                    </span>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[9px] text-slate-500">ATH 乖離</span>
+                    <span className={`font-mono text-xs font-bold ${
+                      athDdVal !== null && athDdVal <= -0.20 ? "text-[#34d399]"
+                      : athDdVal !== null && athDdVal <= -0.18 ? "text-amber-400"
+                      : "text-[#e8f4ff]"
+                    }`}>
+                      {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
+                    <span className={`font-mono text-xs font-bold ${
+                      crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
+                    }`}>{crs}/6</span>
+                  </div>
+                  <p className="font-mono text-[9px] text-slate-500 mt-1">
+                    TEST Z=+6.77, +17.8% · ATH-18%以上の深い調整のみ有効
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* 全世界株 / オルカン (VT) — Round 49 */}
+          {(() => {
+            const active = signal?.vtActive ?? false;
+            const athDdVal = signal?.vtAthDd ?? null;
+            const border = active
+              ? "border-[#34d399]/40 bg-[#34d399]/[0.07]"
+              : "border-white/[0.22] bg-white/[0.14]";
+            const badge = active
+              ? "bg-[#34d399]/15 text-[#34d399]"
+              : "bg-white/[0.11] text-slate-400";
+            return (
+              <div className={`rounded-2xl border p-4 backdrop-blur-sm ${border}`}>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="font-mono text-xs font-bold text-[#e8f4ff]">全世界株（オルカン）</p>
+                    <p className="font-mono text-[9px] text-slate-500">VT · SP500 phi2 連動</p>
+                  </div>
+                  <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
+                    {active ? "発動中" : "待機"}
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[9px] text-slate-500">ATH 乖離（参考）</span>
+                    <span className={`font-mono text-xs font-bold ${
+                      athDdVal !== null && athDdVal <= -0.15 ? "text-[#34d399]"
+                      : athDdVal !== null && athDdVal <= -0.1 ? "text-amber-400"
+                      : "text-[#e8f4ff]"
+                    }`}>
+                      {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
+                    <span className={`font-mono text-xs font-bold ${
+                      crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
+                    }`}>{crs}/6</span>
+                  </div>
+                  <p className="font-mono text-[9px] text-slate-500 mt-1">
+                    合成オルカン TEST Z=+7.21 · SP500 phi2 発動時に同時購入推奨
+                  </p>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+
         {/* 使い方ガイド */}
         <div className="mt-8 rounded-2xl border border-white/[0.15] bg-white/[0.02] px-5 py-4">
           <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-3">このページの見かた</p>
@@ -268,8 +372,8 @@ export default async function SignalHubPage() {
             {[
               { num: "01", text: "S&P 500 は phi2 v3 等のシグナル体制。30年バックテスト済み。発動時に通知が届く" },
               { num: "02", text: "日本株（高配当）は配当利回りによる割安・割高判定。Z=1.88、26年統計" },
-              { num: "03", text: "各カードをクリックすると銘柄ごとの詳細・根拠・IRカレンダー・ニュースが見られる" },
-              { num: "04", text: "どの銘柄も「今すぐ買え」ではなく「今の状態の統計的根拠」を提示するだけ。判断はあなたがする" },
+              { num: "03", text: "ナスダック100は「弱シグナル」表示あり。ATH-18%以上の深い調整でのみ統計的に有意（R48）" },
+              { num: "04", text: "全世界株（オルカン）は SP500 phi2 と連動。独立シグナルではなく「同時購入の根拠」として機能（R49）" },
             ].map((c) => (
               <div key={c.num} className="flex gap-3 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2.5">
                 <span className="font-mono text-sm font-bold text-white/[0.08] shrink-0">{c.num}</span>
@@ -280,7 +384,7 @@ export default async function SignalHubPage() {
         </div>
 
         <p className="mt-6 font-mono text-[10px] leading-6 text-slate-500">
-          データ: Yahoo Finance (^GSPC · 9432.T · 2914.T · 9433.T)。15分キャッシュ。これは投資助言ではありません。
+          データ: Yahoo Finance (^GSPC · EFA · EEM · QQQ · VT · 9432.T · 2914.T · 9433.T)。15分キャッシュ。これは投資助言ではありません。
         </p>
       </main>
     </div>

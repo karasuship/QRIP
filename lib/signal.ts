@@ -52,6 +52,12 @@ export interface SignalData {
   efaActive: boolean;
   eemAthDd: number | null;
   eemActive: boolean;
+  // ナスダック100 (decisions/0036, Round 48)
+  qqqAthDd: number | null;
+  qqqActive: boolean;
+  // 全世界株 オルカン / VT (decisions/0036, Round 49)
+  vtAthDd: number | null;
+  vtActive: boolean;
   signalTier: "NONE" | "NEAR" | "PHI2" | "RSI25" | "DOUBLE";
   history: TriggerDay[];
   pastEpisodes: PastEpisode[];
@@ -200,7 +206,8 @@ function computeCRS(params: {
 // EFA/EEM など グローバル ETF の phi2 v3 条件チェック（CRS は SP500 ベース）
 function computeGlobalPhi2(
   vals: number[],
-  crs: number
+  crs: number,
+  athThr = -0.1   // ATH 乖離閾値（QQQ は -0.18 を指定）
 ): { athDd: number; active: boolean } {
   if (vals.length < 30) return { athDd: 0, active: false };
   const n = vals.length;
@@ -214,7 +221,7 @@ function computeGlobalPhi2(
   const dayRet = n >= 2 ? vals[n - 1] / vals[n - 2] - 1 : null;
   const vol20 = annualVol20(vals, n - 1);
   const active =
-    athDd <= -0.1 &&
+    athDd <= athThr &&
     dayRet !== null && dayRet <= -0.02 &&
     vol20 !== null && vol20 > 0.25 &&
     ageAthOk &&
@@ -225,7 +232,7 @@ function computeGlobalPhi2(
 export async function fetchSignal(): Promise<SignalData> {
   const { fetchJpStockSignals } = await import("@/lib/jp-stock-signal");
 
-  const [spResult, vixResult, hygResult, dxyResult, rspResult, efaResult, eemResult, jpSignals] =
+  const [spResult, vixResult, hygResult, dxyResult, rspResult, efaResult, eemResult, qqqResult, vtResult, jpSignals] =
     await Promise.all([
       fetchTicker("%5EGSPC", "2y"),
       fetchTicker("%5EVIX", "6mo").catch(() => null),
@@ -234,6 +241,8 @@ export async function fetchSignal(): Promise<SignalData> {
       fetchTicker("RSP", "6mo").catch(() => null),
       fetchTicker("EFA", "2y").catch(() => null),
       fetchTicker("EEM", "2y").catch(() => null),
+      fetchTicker("QQQ", "2y").catch(() => null),
+      fetchTicker("VT", "2y").catch(() => null),
       fetchJpStockSignals().catch(() => []),
     ]);
 
@@ -344,6 +353,21 @@ export async function fetchSignal(): Promise<SignalData> {
   const { athDd: efaAthDd, active: efaActive } = computeGlobalPhi2(efaVals, crs);
   const { athDd: eemAthDd, active: eemActive } = computeGlobalPhi2(eemVals, crs);
 
+  // QQQ: ATH-18% 閾値（R48 パラメータ最適化結果）
+  const [, qqqVals] = qqqResult ?? [[], []];
+  const { athDd: qqqAthDd, active: qqqActive } = computeGlobalPhi2(qqqVals, crs, -0.18);
+
+  // VT (オルカン): SP500 phi2 連動（独立シグナル不使用 — Round 49 結果より）
+  const [, vtVals] = vtResult ?? [[], []];
+  const vtAthDdRaw = vtVals.length >= 30
+    ? (() => {
+        let ath = vtVals[0];
+        for (const v of vtVals) if (v > ath) ath = v;
+        return vtVals[vtVals.length - 1] / ath - 1;
+      })()
+    : null;
+  const vtActive = phi2Active; // SP500 phi2 発動時に連動
+
   let signalTier: SignalData["signalTier"];
   if (phi2Active && rsi25Crossunder) signalTier = "DOUBLE";
   else if (phi2Active) signalTier = "PHI2";
@@ -432,6 +456,10 @@ export async function fetchSignal(): Promise<SignalData> {
     efaActive,
     eemAthDd: eemVals.length >= 30 ? eemAthDd : null,
     eemActive,
+    qqqAthDd: qqqVals.length >= 30 ? qqqAthDd : null,
+    qqqActive,
+    vtAthDd: vtAthDdRaw,
+    vtActive,
     signalTier,
     history,
     pastEpisodes,
