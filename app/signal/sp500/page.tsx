@@ -16,6 +16,7 @@ import CrsHistoryChart  from "@/app/components/charts/CrsHistoryChartClient";
 import PriceChartClient from "@/app/signal/PriceChartClient";
 import TermTooltip from "@/app/components/TermTooltip";
 import QuickRef from "@/app/components/QuickRef";
+import CollapseBlock from "@/app/components/CollapseBlock";
 
 export const metadata: Metadata = {
   title: "QRIP — S&P 500 シグナル",
@@ -369,42 +370,37 @@ export default async function Sp500SignalPage() {
 
         {/* CRS スコア */}
         <section className="mt-5 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
-          <div className="flex items-center justify-between">
-            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">CRS（Crisis Recovery Score）</p>
-            <span className={`rounded-full px-3 py-1 font-mono text-sm font-bold ${
-              crs >= 5 ? "bg-violet-400/15 text-violet-300"
-              : crs >= 4 ? "bg-red-400/15 text-red-400"
-              : crs >= 2 ? "bg-amber-400/15 text-amber-400"
-              : "bg-white/[0.11] text-slate-400"
-            }`}>
-              {crs} / 6
-            </span>
-          </div>
-          <p className="mt-1 mb-3 font-mono text-[10px] text-slate-400">
-            ≥ 2 でシグナル有効 · ≥ 4 で高品質 ·{" "}
-            <span className={crs >= 5 ? "text-violet-300 font-semibold" : ""}>5-6 で 2x 投入検討</span>
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            <CRSDot active={crsComponents.c1} label={<TermTooltip term="vix">VIX&gt;30</TermTooltip>} />
-            <CRSDot active={crsComponents.c2} label={<TermTooltip term="hyg">HYG3日落</TermTooltip>} />
-            <CRSDot active={crsComponents.c3} label={<TermTooltip term="dxy">DXY5日高</TermTooltip>} />
-            <CRSDot active={crsComponents.c4} label={<TermTooltip term="ath">ATH90日内</TermTooltip>} />
-            <CRSDot active={crsComponents.c5} label={<TermTooltip term="hyg">HYG60日-8%</TermTooltip>} />
-            <CRSDot active={crsComponents.c6} label="RSP弱" />
-          </div>
-          <div className="mt-3 grid grid-cols-4 gap-1.5">
-            {[
-              { range: "0〜1", label: "シグナル無効",   color: "text-slate-500 border-white/[0.15] bg-white/[0.11]" },
-              { range: "2〜3", label: "有効",           color: "text-amber-400 border-amber-400/20 bg-amber-400/[0.05]" },
-              { range: "4",   label: "高品質",          color: "text-[#f87171] border-[#f87171]/20 bg-[#f87171]/[0.05]" },
-              { range: "5〜6", label: "2倍投入検討",    color: "text-violet-300 border-violet-400/30 bg-violet-400/[0.07]" },
-            ].map((r) => (
-              <div key={r.range} className={`rounded-xl border px-2 py-1.5 text-center ${r.color} ${crs >= parseInt(r.range) || (r.range === "2〜3" && crs >= 2) || (r.range === "5〜6" && crs >= 5) ? "opacity-100" : "opacity-40"}`}>
-                <p className="font-mono text-[10px] font-bold">{r.range}</p>
-                <p className="font-mono text-[9px] mt-0.5">{r.label}</p>
-              </div>
-            ))}
-          </div>
+          <CollapseBlock
+            title="CRS（Crisis Recovery Score）"
+            badge={`${crs} / 6`}
+            defaultOpen={crs >= 2}
+          >
+            <p className="mb-3 font-mono text-[10px] text-slate-400">
+              ≥ 2 でシグナル有効 · ≥ 4 で高品質 ·{" "}
+              <span className={crs >= 5 ? "text-violet-300 font-semibold" : ""}>5-6 で 2x 投入検討</span>
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              <CRSDot active={crsComponents.c1} label={<TermTooltip term="vix">VIX&gt;30</TermTooltip>} />
+              <CRSDot active={crsComponents.c2} label={<TermTooltip term="hyg">HYG3日落</TermTooltip>} />
+              <CRSDot active={crsComponents.c3} label={<TermTooltip term="dxy">DXY5日高</TermTooltip>} />
+              <CRSDot active={crsComponents.c4} label={<TermTooltip term="ath">ATH90日内</TermTooltip>} />
+              <CRSDot active={crsComponents.c5} label={<TermTooltip term="hyg">HYG60日-8%</TermTooltip>} />
+              <CRSDot active={crsComponents.c6} label="RSP弱" />
+            </div>
+            <div className="mt-3 grid grid-cols-4 gap-1.5">
+              {[
+                { range: "0〜1", label: "シグナル無効",   color: "text-slate-500 border-white/[0.15] bg-white/[0.11]" },
+                { range: "2〜3", label: "有効",           color: "text-amber-400 border-amber-400/20 bg-amber-400/[0.05]" },
+                { range: "4",   label: "高品質",          color: "text-[#f87171] border-[#f87171]/20 bg-[#f87171]/[0.05]" },
+                { range: "5〜6", label: "2倍投入検討",    color: "text-violet-300 border-violet-400/30 bg-violet-400/[0.07]" },
+              ].map((r) => (
+                <div key={r.range} className={`rounded-xl border px-2 py-1.5 text-center ${r.color} ${crs >= parseInt(r.range) || (r.range === "2〜3" && crs >= 2) || (r.range === "5〜6" && crs >= 5) ? "opacity-100" : "opacity-40"}`}>
+                  <p className="font-mono text-[10px] font-bold">{r.range}</p>
+                  <p className="font-mono text-[9px] mt-0.5">{r.label}</p>
+                </div>
+              ))}
+            </div>
+          </CollapseBlock>
         </section>
 
         {/* ライブメトリクス */}
@@ -417,7 +413,7 @@ export default async function Sp500SignalPage() {
 
         {/* phi2 条件チェック */}
         <section className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.09] p-4 backdrop-blur-md">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-slate-400">phi2 v3 発動条件</p>
+          <CollapseBlock title="phi2 v3 発動条件" defaultOpen={signalTier !== "NONE"}>
           {(
             [
               {
@@ -476,6 +472,7 @@ export default async function Sp500SignalPage() {
               </div>
             </div>
           )}
+          </CollapseBlock>
         </section>
 
         {/* 過去類似事例 */}
@@ -512,40 +509,45 @@ export default async function Sp500SignalPage() {
 
         {/* 過去30日候補日 */}
         <section className="mt-8 border-t border-white/[0.22] pt-6">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">過去 30 日の phi2 v3 候補日</p>
-          <p className="mt-1 mb-3 text-xs text-slate-400">ATH −10% · 当日 −2% · vol &gt; 25% を満たした日</p>
-          {history.length === 0 ? (
-            <p className="font-mono text-xs text-slate-400">過去 30 日以内に phi2 候補日なし</p>
-          ) : (
-            <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
-              <table className="w-full text-sm">
-                <thead className="border-b border-white/[0.13] bg-white/[0.11]">
-                  <tr>
-                    {["日付","当日","ATH 乖離","CRS","phi2 v3"].map(h => (
-                      <th key={h} className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {history.map((h) => (
-                    <tr key={h.date} className="border-t border-white/[0.09]">
-                      <td className="px-3 py-2 font-mono text-xs text-slate-400">{h.date}</td>
-                      <td className="px-3 py-2 text-right font-mono text-xs text-[#f87171]">{pct(h.dayRet)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-xs text-slate-400">{pct(h.athDd)}</td>
-                      <td className="px-3 py-2 text-right font-mono text-xs">
-                        {h.crs !== null
-                          ? <span className={h.crs >= 5 ? "text-violet-300" : h.crs >= 2 ? "text-amber-400" : "text-slate-400"}>{h.crs}/6</span>
-                          : <span className="text-slate-400">—</span>}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono text-xs">
-                        {h.phi2v3 ? <span className="text-[#34d399]">✓</span> : <span className="text-slate-400">○</span>}
-                      </td>
+          <CollapseBlock
+            title="過去 30 日の phi2 v3 候補日"
+            badge={history.length > 0 ? `${history.length}件` : "なし"}
+            defaultOpen={history.length > 0}
+          >
+            <p className="mb-3 text-xs text-slate-400">ATH −10% · 当日 −2% · vol &gt; 25% を満たした日</p>
+            {history.length === 0 ? (
+              <p className="font-mono text-xs text-slate-400">過去 30 日以内に phi2 候補日なし</p>
+            ) : (
+              <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
+                <table className="w-full text-sm">
+                  <thead className="border-b border-white/[0.13] bg-white/[0.11]">
+                    <tr>
+                      {["日付","当日","ATH 乖離","CRS","phi2 v3"].map(h => (
+                        <th key={h} className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+                  </thead>
+                  <tbody>
+                    {history.map((h) => (
+                      <tr key={h.date} className="border-t border-white/[0.09]">
+                        <td className="px-3 py-2 font-mono text-xs text-slate-400">{h.date}</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs text-[#f87171]">{pct(h.dayRet)}</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs text-slate-400">{pct(h.athDd)}</td>
+                        <td className="px-3 py-2 text-right font-mono text-xs">
+                          {h.crs !== null
+                            ? <span className={h.crs >= 5 ? "text-violet-300" : h.crs >= 2 ? "text-amber-400" : "text-slate-400"}>{h.crs}/6</span>
+                            : <span className="text-slate-400">—</span>}
+                        </td>
+                        <td className="px-3 py-2 text-right font-mono text-xs">
+                          {h.phi2v3 ? <span className="text-[#34d399]">✓</span> : <span className="text-slate-400">○</span>}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CollapseBlock>
         </section>
 
         {/* 今後のイベント */}

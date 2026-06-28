@@ -278,43 +278,46 @@ export default async function SignalHubPage() {
               ? "bg-[#34d399]/15 text-[#34d399]"
               : "bg-white/[0.11] text-slate-400";
             return (
-              <div className={`rounded-2xl border p-4 backdrop-blur-sm ${border}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-mono text-xs font-bold text-[#e8f4ff]">ナスダック100</p>
-                    <p className="font-mono text-[9px] text-slate-500">QQQ · 閾値 -18%</p>
+              <Link href="/signal/qqq" className="block group">
+                <div className={`rounded-2xl border p-4 backdrop-blur-sm transition-all group-hover:brightness-110 ${border}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-mono text-xs font-bold text-[#e8f4ff]">ナスダック100</p>
+                      <p className="font-mono text-[9px] text-slate-500">QQQ · 閾値 -18%</p>
+                    </div>
+                    <div className="flex flex-col items-end gap-1">
+                      <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
+                        {active ? "発動中" : "待機"}
+                      </span>
+                      <span className="rounded border border-amber-400/25 bg-amber-400/[0.06] px-1.5 py-0.5 font-mono text-[8px] text-amber-400">
+                        弱シグナル
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex flex-col items-end gap-1">
-                    <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
-                      {active ? "発動中" : "待機"}
-                    </span>
-                    <span className="rounded border border-amber-400/25 bg-amber-400/[0.06] px-1.5 py-0.5 font-mono text-[8px] text-amber-400">
-                      弱シグナル
-                    </span>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] text-slate-500">ATH 乖離</span>
+                      <span className={`font-mono text-xs font-bold ${
+                        athDdVal !== null && athDdVal <= -0.20 ? "text-[#34d399]"
+                        : athDdVal !== null && athDdVal <= -0.18 ? "text-amber-400"
+                        : "text-[#e8f4ff]"
+                      }`}>
+                        {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
+                      <span className={`font-mono text-xs font-bold ${
+                        crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
+                      }`}>{crs}/6</span>
+                    </div>
+                    <p className="font-mono text-[9px] text-slate-500 mt-1">
+                      TEST Z=+6.77, +17.8% · ATH-18%以上の深い調整のみ有効
+                    </p>
                   </div>
+                  <p className="mt-3 font-mono text-[9px] text-slate-500 group-hover:text-slate-400 transition-colors text-right">詳細 →</p>
                 </div>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[9px] text-slate-500">ATH 乖離</span>
-                    <span className={`font-mono text-xs font-bold ${
-                      athDdVal !== null && athDdVal <= -0.20 ? "text-[#34d399]"
-                      : athDdVal !== null && athDdVal <= -0.18 ? "text-amber-400"
-                      : "text-[#e8f4ff]"
-                    }`}>
-                      {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
-                    <span className={`font-mono text-xs font-bold ${
-                      crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
-                    }`}>{crs}/6</span>
-                  </div>
-                  <p className="font-mono text-[9px] text-slate-500 mt-1">
-                    TEST Z=+6.77, +17.8% · ATH-18%以上の深い調整のみ有効
-                  </p>
-                </div>
-              </div>
+              </Link>
             );
           })()}
 
@@ -329,38 +332,41 @@ export default async function SignalHubPage() {
               ? "bg-[#34d399]/15 text-[#34d399]"
               : "bg-white/[0.11] text-slate-400";
             return (
-              <div className={`rounded-2xl border p-4 backdrop-blur-sm ${border}`}>
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <p className="font-mono text-xs font-bold text-[#e8f4ff]">全世界株（オルカン）</p>
-                    <p className="font-mono text-[9px] text-slate-500">VT · SP500 phi2 連動</p>
-                  </div>
-                  <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
-                    {active ? "発動中" : "待機"}
-                  </span>
-                </div>
-                <div className="space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[9px] text-slate-500">ATH 乖離（参考）</span>
-                    <span className={`font-mono text-xs font-bold ${
-                      athDdVal !== null && athDdVal <= -0.15 ? "text-[#34d399]"
-                      : athDdVal !== null && athDdVal <= -0.1 ? "text-amber-400"
-                      : "text-[#e8f4ff]"
-                    }`}>
-                      {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
+              <Link href="/signal/vt" className="block group">
+                <div className={`rounded-2xl border p-4 backdrop-blur-sm transition-all group-hover:brightness-110 ${border}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-mono text-xs font-bold text-[#e8f4ff]">全世界株（オルカン）</p>
+                      <p className="font-mono text-[9px] text-slate-500">VT · SP500 phi2 連動</p>
+                    </div>
+                    <span className={`rounded-full px-2 py-0.5 font-mono text-[10px] font-bold ${badge}`}>
+                      {active ? "発動中" : "待機"}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
-                    <span className={`font-mono text-xs font-bold ${
-                      crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
-                    }`}>{crs}/6</span>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] text-slate-500">ATH 乖離（参考）</span>
+                      <span className={`font-mono text-xs font-bold ${
+                        athDdVal !== null && athDdVal <= -0.15 ? "text-[#34d399]"
+                        : athDdVal !== null && athDdVal <= -0.1 ? "text-amber-400"
+                        : "text-[#e8f4ff]"
+                      }`}>
+                        {athDdVal !== null ? (athDdVal >= 0 ? "+" : "") + (athDdVal * 100).toFixed(2) + "%" : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-mono text-[9px] text-slate-500">CRS（SP500共用）</span>
+                      <span className={`font-mono text-xs font-bold ${
+                        crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
+                      }`}>{crs}/6</span>
+                    </div>
+                    <p className="font-mono text-[9px] text-slate-500 mt-1">
+                      合成オルカン TEST Z=+7.21 · SP500 phi2 発動時に同時購入推奨
+                    </p>
                   </div>
-                  <p className="font-mono text-[9px] text-slate-500 mt-1">
-                    合成オルカン TEST Z=+7.21 · SP500 phi2 発動時に同時購入推奨
-                  </p>
+                  <p className="mt-3 font-mono text-[9px] text-slate-500 group-hover:text-slate-400 transition-colors text-right">詳細 →</p>
                 </div>
-              </div>
+              </Link>
             );
           })()}
         </div>

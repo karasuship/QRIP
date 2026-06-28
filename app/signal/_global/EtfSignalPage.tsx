@@ -7,15 +7,18 @@ function pct(n: number, sign = true): string {
 }
 
 interface EtfConfig {
-  ticker: string;        // "EFA" | "EEM"
-  displayName: string;   // "先進国 ETF (EFA)" etc.
-  tvSymbol: string;      // TradingView symbol: "NASDAQ:EFA"
+  ticker: string;
+  displayName: string;
+  tvSymbol: string;
   getAthDd: (s: SignalData) => number | null;
   getActive: (s: SignalData) => boolean;
   testZ: string | null;
   testNote: string;
   researchRound: string;
   description: string;
+  athThrLabel?: string;   // default "ATH-10%"
+  qualityNote?: string;   // extra note shown below main status (for 弱シグナル etc.)
+  linkedTo?: string;      // "SP500 phi2 と連動" label for VT-style pages
 }
 
 interface Props {
@@ -24,7 +27,7 @@ interface Props {
 }
 
 export default function EtfSignalPage({ config, signal }: Props) {
-  const { ticker, displayName, tvSymbol, getAthDd, getActive, testZ, testNote, researchRound, description } = config;
+  const { ticker, displayName, tvSymbol, getAthDd, getActive, testZ, testNote, researchRound, description, athThrLabel = "ATH-10%", qualityNote, linkedTo } = config;
   const athDd  = getAthDd(signal);
   const active = getActive(signal);
   const { crs, date } = signal;
@@ -93,10 +96,16 @@ export default function EtfSignalPage({ config, signal }: Props) {
             <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-3 py-2.5">
               <p className="font-mono text-[9px] text-slate-500">発動条件</p>
               <p className="mt-1 font-mono text-[10px] text-slate-400 leading-4">
-                ATH-10% + 当日-2%<br />+ vol&gt;25% + CRS≥2
+                {athThrLabel} + 当日-2%<br />+ vol&gt;25% + CRS≥2
               </p>
             </div>
           </div>
+          {linkedTo && (
+            <p className="mt-2 font-mono text-[10px] text-[#38bdf8]/70">{linkedTo}</p>
+          )}
+          {qualityNote && (
+            <p className="mt-2 font-mono text-[10px] text-amber-400/80">{qualityNote}</p>
+          )}
         </div>
 
         {/* TradingView チャート */}

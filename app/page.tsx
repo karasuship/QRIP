@@ -3,6 +3,7 @@ import { fetchSignal } from "@/lib/signal";
 import { getSupabaseServer } from "@/lib/supabase";
 import type { Metadata } from "next";
 import WatchlistPanel from "@/app/components/WatchlistPanel";
+import CollapseSection from "@/app/components/CollapseSection";
 
 export const metadata: Metadata = {
   title: "QRIP — 売る根拠も、買う根拠も、持ち続ける根拠も。",
@@ -210,152 +211,130 @@ export default async function HomePage() {
       </div>
 
       {/* ━━━ 過去の買い場 ━━━ */}
-      <div className="border-b border-white/[0.15]">
-        <div className="mx-auto max-w-4xl px-6 py-14">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">過去の実績</p>
-          <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
-            「買い場」と判定した日、その後どうなったか
-          </h2>
-          <p className="text-xs text-slate-500 mb-6">
-            判定から2ヶ月後（約63営業日）のS&amp;P 500リターン。
-          </p>
-          <div className="overflow-hidden rounded-2xl border border-white/[0.22]">
-            {PAST_SIGNALS.map((s, i) => (
-              <div
-                key={s.period}
-                className={`flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 ${
-                  i !== PAST_SIGNALS.length - 1 ? "border-b border-white/[0.15]" : ""
-                }`}
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-3 mb-0.5">
-                    <span className="font-mono text-xs text-slate-400">{s.period}</span>
-                    <span className="rounded-full border border-white/[0.18] bg-white/[0.14] px-2 py-0.5 font-mono text-[9px] text-slate-500">
-                      {s.context}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-slate-500">{s.note}</p>
+      <CollapseSection badge="過去の実績" title="「買い場」と判定した日、その後どうなったか">
+        <p className="text-xs text-slate-500 mb-6">
+          判定から2ヶ月後（約63営業日）のS&amp;P 500リターン。
+        </p>
+        <div className="overflow-hidden rounded-2xl border border-white/[0.22]">
+          {PAST_SIGNALS.map((s, i) => (
+            <div
+              key={s.period}
+              className={`flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 ${
+                i !== PAST_SIGNALS.length - 1 ? "border-b border-white/[0.15]" : ""
+              }`}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-3 mb-0.5">
+                  <span className="font-mono text-xs text-slate-400">{s.period}</span>
+                  <span className="rounded-full border border-white/[0.18] bg-white/[0.14] px-2 py-0.5 font-mono text-[9px] text-slate-500">
+                    {s.context}
+                  </span>
                 </div>
-                <div className="flex items-center gap-6 sm:shrink-0">
-                  <div className="text-center">
-                    <p className="font-mono text-[9px] text-slate-500 mb-0.5">高値からの下落</p>
-                    <p className="font-mono text-sm font-bold text-[#f87171]">{s.drop}</p>
-                  </div>
-                  <div className="font-mono text-slate-500 text-lg">→</div>
-                  <div className="text-center">
-                    <p className="font-mono text-[9px] text-slate-500 mb-0.5">2ヶ月後</p>
-                    <p className="font-mono text-sm font-bold text-[#34d399]">{s.ret}</p>
-                  </div>
+                <p className="text-[11px] text-slate-500">{s.note}</p>
+              </div>
+              <div className="flex items-center gap-6 sm:shrink-0">
+                <div className="text-center">
+                  <p className="font-mono text-[9px] text-slate-500 mb-0.5">高値からの下落</p>
+                  <p className="font-mono text-sm font-bold text-[#f87171]">{s.drop}</p>
+                </div>
+                <div className="font-mono text-slate-500 text-lg">→</div>
+                <div className="text-center">
+                  <p className="font-mono text-[9px] text-slate-500 mb-0.5">2ヶ月後</p>
+                  <p className="font-mono text-sm font-bold text-[#34d399]">{s.ret}</p>
                 </div>
               </div>
-            ))}
-          </div>
-          <p className="mt-3 font-mono text-[9px] text-slate-500">
-            過去30年（1994〜2024）の検証結果。将来のリターンを保証するものではありません。
-          </p>
+            </div>
+          ))}
         </div>
-      </div>
+        <p className="mt-3 font-mono text-[9px] text-slate-500">
+          過去30年（1994〜2024）の検証結果。将来のリターンを保証するものではありません。
+        </p>
+      </CollapseSection>
 
       {/* ━━━ シミュレーション ━━━ */}
-      <div className="border-b border-white/[0.15]">
-        <div className="mx-auto max-w-4xl px-6 py-14">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">試算</p>
-          <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
-            「なんとなく売らない」のではなく、数字で持ち続ける。
-          </h2>
-          <p className="text-xs text-slate-500 mb-6">
-            毎月一定額を30年積み立てた場合のシミュレーション（年利10%想定 / S&amp;P 500の長期平均値）。
-          </p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mb-5">
-            {SIM_TIERS.map((t) => (
-              <div
-                key={t.label}
-                className={`rounded-2xl border px-5 py-4 ${
-                  t.highlight
-                    ? "border-amber-400/30 bg-amber-400/[0.06]"
-                    : "border-white/[0.18] bg-white/[0.11]"
-                }`}
-              >
-                <p className="font-mono text-xs text-slate-500 mb-1">{t.label} × {t.years}年</p>
-                <p className={`font-mono text-2xl font-bold ${t.highlight ? "text-amber-300" : "text-[#e8f4ff]"}`}>
-                  {t.result}
-                </p>
-                <p className="font-mono text-[10px] text-slate-500 mt-1">{t.principal}</p>
-              </div>
-            ))}
-          </div>
-          <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-5 py-3 mb-5">
-            <p className="text-[11px] leading-6 text-slate-500">
-              コロナショック時（2020年3月）に1,000万円のポートフォリオを損切りし、1年後に戻した場合、
-              その間に市場は <span className="text-[#f87171] font-mono font-bold">+79%</span> 上昇した。
-              "暴落時に売る"コストは、感覚よりずっと大きい。
-            </p>
-          </div>
-          <Link
-            href="/simulate"
-            className="inline-flex items-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[0.05] px-4 py-2 font-mono text-xs text-amber-400 hover:bg-amber-400/[0.10] transition-all"
-          >
-            自分の数字で試算する →
-          </Link>
+      <CollapseSection badge="試算" title="「なんとなく売らない」のではなく、数字で持ち続ける。">
+        <p className="text-xs text-slate-500 mb-6">
+          毎月一定額を30年積み立てた場合のシミュレーション（年利10%想定 / S&amp;P 500の長期平均値）。
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mb-5">
+          {SIM_TIERS.map((t) => (
+            <div
+              key={t.label}
+              className={`rounded-2xl border px-5 py-4 ${
+                t.highlight
+                  ? "border-amber-400/30 bg-amber-400/[0.06]"
+                  : "border-white/[0.18] bg-white/[0.11]"
+              }`}
+            >
+              <p className="font-mono text-xs text-slate-500 mb-1">{t.label} × {t.years}年</p>
+              <p className={`font-mono text-2xl font-bold ${t.highlight ? "text-amber-300" : "text-[#e8f4ff]"}`}>
+                {t.result}
+              </p>
+              <p className="font-mono text-[10px] text-slate-500 mt-1">{t.principal}</p>
+            </div>
+          ))}
         </div>
-      </div>
+        <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-5 py-3 mb-5">
+          <p className="text-[11px] leading-6 text-slate-500">
+            コロナショック時（2020年3月）に1,000万円のポートフォリオを損切りし、1年後に戻した場合、
+            その間に市場は <span className="text-[#f87171] font-mono font-bold">+79%</span> 上昇した。
+            "暴落時に売る"コストは、感覚よりずっと大きい。
+          </p>
+        </div>
+        <Link
+          href="/simulate"
+          className="inline-flex items-center gap-2 rounded-xl border border-amber-400/25 bg-amber-400/[0.05] px-4 py-2 font-mono text-xs text-amber-400 hover:bg-amber-400/[0.10] transition-all"
+        >
+          自分の数字で試算する →
+        </Link>
+      </CollapseSection>
 
       {/* ━━━ 検証の透明性 ━━━ */}
-      <div className="border-b border-white/[0.15]">
-        <div className="mx-auto max-w-4xl px-6 py-14">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">検証書庫</p>
-          <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
-            なぜこの数字を信じていいのか。根拠ごと全部公開。
-          </h2>
-          <p className="text-xs text-slate-500 mb-6">
-            採用したシグナルだけでなく、棄却した仮説とその理由もすべてアーカイブしている。
-          </p>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
-            {[
-              { num: "30年", desc: "1994〜2024年のデータを使用" },
-              { num: "90+",  desc: "検証した仮説の数" },
-              { num: "5本",  desc: "最終的に採用したシグナル" },
-              { num: "全公開", desc: "採用・棄却の理由を全てアーカイブ" },
-            ].map((s) => (
-              <div key={s.num} className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3 text-center">
-                <p className="font-mono text-xl font-bold text-[#e8f4ff]">{s.num}</p>
-                <p className="font-mono text-[9px] text-slate-500 mt-1 leading-4">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-2 mb-6">
-            {[
-              { label: "採用", name: "phi2 v3",               stat: "30年・2ヶ月後リターンが通常の約2倍" },
-              { label: "採用", name: "RSI<25 シグナル",        stat: "TEST 勝率90%。phi2と重複率5%のほぼ独立したシグナル" },
-              { label: "棄却", name: "金利シグナル（TNX・IRX）", stat: "QE前後で意味が完全逆転。体制依存のため採用不可" },
-              { label: "棄却", name: "分割買い（2〜4回に分散投入）", stat: "全額即日投入が最良。分割するほどアルファが逃げる" },
-            ].map((r) => (
-              <div key={r.name} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
-                <span className={`font-mono text-[9px] shrink-0 pt-0.5 ${r.label === "採用" ? "text-[#34d399]" : "text-[#f87171]/60"}`}>
-                  {r.label}
-                </span>
-                <div>
-                  <p className="font-mono text-xs text-slate-400">{r.name}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{r.stat}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Link
-            href="/research"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/[0.22] bg-white/[0.14] px-4 py-2 font-mono text-xs text-slate-400 hover:text-slate-200 hover:bg-white/[0.13] transition-all"
-          >
-            全ての検証記録を読む（採用5本・棄却7本+）→
-          </Link>
+      <CollapseSection badge="検証書庫" title="なぜこの数字を信じていいのか。根拠ごと全部公開。">
+        <p className="text-xs text-slate-500 mb-6">
+          採用したシグナルだけでなく、棄却した仮説とその理由もすべてアーカイブしている。
+        </p>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
+          {[
+            { num: "30年", desc: "1994〜2024年のデータを使用" },
+            { num: "90+",  desc: "検証した仮説の数" },
+            { num: "5本",  desc: "最終的に採用したシグナル" },
+            { num: "全公開", desc: "採用・棄却の理由を全てアーカイブ" },
+          ].map((s) => (
+            <div key={s.num} className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3 text-center">
+              <p className="font-mono text-xl font-bold text-[#e8f4ff]">{s.num}</p>
+              <p className="font-mono text-[9px] text-slate-500 mt-1 leading-4">{s.desc}</p>
+            </div>
+          ))}
         </div>
-      </div>
+        <div className="space-y-2 mb-6">
+          {[
+            { label: "採用", name: "phi2 v3",               stat: "30年・2ヶ月後リターンが通常の約2倍" },
+            { label: "採用", name: "RSI<25 シグナル",        stat: "TEST 勝率90%。phi2と重複率5%のほぼ独立したシグナル" },
+            { label: "棄却", name: "金利シグナル（TNX・IRX）", stat: "QE前後で意味が完全逆転。体制依存のため採用不可" },
+            { label: "棄却", name: "分割買い（2〜4回に分散投入）", stat: "全額即日投入が最良。分割するほどアルファが逃げる" },
+          ].map((r) => (
+            <div key={r.name} className="flex items-start gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] px-4 py-2.5">
+              <span className={`font-mono text-[9px] shrink-0 pt-0.5 ${r.label === "採用" ? "text-[#34d399]" : "text-[#f87171]/60"}`}>
+                {r.label}
+              </span>
+              <div>
+                <p className="font-mono text-xs text-slate-400">{r.name}</p>
+                <p className="text-[11px] text-slate-500 mt-0.5">{r.stat}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <Link
+          href="/research"
+          className="inline-flex items-center gap-2 rounded-xl border border-white/[0.22] bg-white/[0.14] px-4 py-2 font-mono text-xs text-slate-400 hover:text-slate-200 hover:bg-white/[0.13] transition-all"
+        >
+          全ての検証記録を読む（採用5本・棄却7本+）→
+        </Link>
+      </CollapseSection>
 
       {/* ━━━ 仮説投票 ━━━ */}
-      <div className="mx-auto max-w-4xl px-6 py-14">
-        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">仮説投票</p>
-        <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
-          「これも調べてほしい」を投稿する。
-        </h2>
+      <CollapseSection badge="仮説投票" title="「これも調べてほしい」を投稿する。" border={false}>
         <p className="text-xs text-slate-500 mb-6">
           投票数の多い仮説を優先的に検証する。採用・棄却の結果は書庫に公開。
         </p>
@@ -386,7 +365,7 @@ export default async function HomePage() {
         >
           仮説の一覧と投稿フォームを見る →
         </Link>
-      </div>
+      </CollapseSection>
 
     </div>
   );
