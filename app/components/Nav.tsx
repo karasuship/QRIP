@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase";
+import { GlobalTicker } from "@/app/components/GlobalTicker";
 
 const MAIN_LINKS = [
   { href: "/signal",   label: "シグナル", desc: "今日の買い場判定" },
@@ -38,7 +39,9 @@ export default function Nav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.15] bg-[#020c1b]/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 bg-[#020c1b]/90 backdrop-blur-xl">
+      <GlobalTicker />
+      <div className="border-b border-white/[0.15]" />
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <span className="font-mono text-sm font-bold tracking-widest text-[#38bdf8] group-hover:text-sky-300 transition-colors">

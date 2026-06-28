@@ -4,6 +4,7 @@ import { fetchSignal } from "@/lib/signal";
 import type { SignalData } from "@/lib/signal";
 import type { JpStockSignal } from "@/lib/jp-stock-signal";
 import { Term } from "@/app/components/Term";
+import { FlickerNumber } from "@/app/components/FlickerNumber";
 import { fetchValuePatterns } from "@/lib/value-patterns";
 import type { ValuePattern } from "@/lib/value-patterns";
 
@@ -191,53 +192,58 @@ export default async function SignalHubPage() {
       <main className="mx-auto max-w-4xl px-6 py-12">
 
         {/* ページヘッダー */}
-        <div className="mb-2">
+        <div className="mb-6">
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">Signal Hub</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-[#e8f4ff]">買い場シグナル</h1>
           <p className="mt-1 text-sm text-slate-400">
-            30年分のデータに基づく統計的な「買い場」の目安を、リアルタイムで表示します。
-            シグナルは「必ず上がる」保証ではなく、<span className="text-[#e8f4ff]">過去の暴落後のリターン実績</span>に基づく参考情報です。
+            市場が暴落・恐怖状態になったとき、統計的に有利な買い場かどうかをリアルタイムで判定します。
           </p>
           {date && (
-            <p className="mt-2 font-mono text-[10px] text-slate-500">{date} 更新 · 15分キャッシュ</p>
+            <div className="mt-2 inline-flex items-center gap-2">
+              <span className="relative inline-flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34d399] opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#34d399]" />
+              </span>
+              <span className="font-mono text-[10px] text-slate-500">LIVE · {date} 取得 · 15分更新</span>
+            </div>
           )}
         </div>
 
-        {/* ━━━ シグナルとは ━━━ */}
-        <div className="mt-6 rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.04] px-5 py-5">
-          <p className="text-sm font-semibold text-[#e8f4ff] mb-1">シグナルとは？</p>
-          <p className="text-[12px] leading-6 text-slate-400 mb-4">
-            株価が大きく下落し、市場に恐怖が広がったとき——そのタイミングで買うと、
-            毎月コツコツ積み立てるよりも<span className="text-[#e8f4ff]">リターンが高くなりやすい</span>という統計的な法則があります。
-            このページは、その条件が今現在揃っているかをリアルタイムで監視します。
-          </p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            {[
-              {
-                step: "01",
-                title: "根拠は30年分のデータ",
-                body: "1993年〜2024年のS&P500を分析。特定の条件が重なった直後に買うと、毎月積立より平均+7%以上になった事例が多かった。",
-              },
-              {
-                step: "02",
-                title: "条件が揃うと「発動中」",
-                body: "最高値から大きく下落 + 恐怖指数が上昇 など複数の条件を同時に監視。すべて揃ったとき「発動中」に変わる。",
-              },
-              {
-                step: "03",
-                title: "あくまで参考情報",
-                body: "「発動=必ず上がる」ではない。「歴史的にここで買えた人は多くの場合うまくいった」という参考として使う。",
-              },
-            ].map((c) => (
-              <div key={c.step} className="flex gap-3">
-                <span className="font-mono text-[11px] font-bold text-[#38bdf8]/50 shrink-0 pt-0.5">{c.step}</span>
-                <div>
-                  <p className="text-[12px] font-semibold text-slate-300 mb-0.5">{c.title}</p>
-                  <p className="text-[11px] leading-5 text-slate-500">{c.body}</p>
-                </div>
-              </div>
-            ))}
+        {/* ━━━ シグナルとは（表形式） ━━━ */}
+        <div className="mb-2 rounded-2xl border border-white/[0.12] bg-white/[0.03] overflow-hidden">
+          <div className="flex items-center gap-2 border-b border-white/[0.08] px-4 py-2.5">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-slate-500">シグナルとは</span>
+            <span className="text-[10px] text-slate-500">— いつ、どんな条件で通知するか</span>
           </div>
+          <table className="w-full text-[11px]">
+            <thead>
+              <tr className="border-b border-white/[0.06]">
+                <th className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-600">状態</th>
+                <th className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-600">意味</th>
+                <th className="hidden sm:table-cell px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-600">参考リターン実績</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/[0.04]">
+              {[
+                { badge: "超高品質", cls: "text-violet-300 border-violet-400/30 bg-violet-400/10", mean: "DCA比 +10〜14%", note: "phi2 + RSI<25 同時発動。30年で数回しかない稀なタイミング" },
+                { badge: "発動中",   cls: "text-[#34d399] border-[#34d399]/30 bg-[#34d399]/10",   mean: "DCA比 +7.17%",   note: "phi2 v3シグナル。1993〜2024年 バックテスト中央値" },
+                { badge: "補助発動", cls: "text-amber-400 border-amber-400/30 bg-amber-400/10",   mean: "DCA比 +3.92%",   note: "RSI<25 単独。phi2より弱いが有意" },
+                { badge: "待機中",   cls: "text-slate-400 border-white/20 bg-white/5",            mean: "—",              note: "通常相場。毎月積立を継続" },
+              ].map((r) => (
+                <tr key={r.badge}>
+                  <td className="px-4 py-2.5">
+                    <span className={`rounded-full border px-2.5 py-0.5 font-mono text-[9px] font-bold ${r.cls}`}>{r.badge}</span>
+                  </td>
+                  <td className="px-4 py-2.5 text-slate-400 leading-5">{r.note}</td>
+                  <td className="hidden sm:table-cell px-4 py-2.5 font-mono text-[#34d399]">{r.mean}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="px-4 py-2 font-mono text-[9px] text-slate-600 border-t border-white/[0.04]">
+            ※ 「DCA比+X%」は30年バックテスト中央値。個別の結果は異なります。投資助言ではありません。
+            <Link href="/learn" className="ml-2 text-[#38bdf8]/60 hover:text-[#38bdf8] transition-colors">検証詳細 →</Link>
+          </p>
         </div>
 
         {/* ━━━ S&P 500 ━━━ */}
@@ -262,16 +268,17 @@ export default async function SignalHubPage() {
                       <p className="font-mono text-[9px] text-slate-500">
                         <Term tip="過去の最高値（All-Time High）からの現在の下落率。−10%なら最高値より10%安い状態。phi2シグナルはこれが−10%以下のときに注目する">ATH乖離</Term>
                       </p>
-                      <p className={`font-mono text-sm font-bold ${athDd <= -0.15 ? "text-[#34d399]" : athDd <= -0.05 ? "text-amber-400" : "text-[#e8f4ff]"}`}>
-                        {pct(athDd)}
-                      </p>
+                      <FlickerNumber
+                        value={pct(athDd)}
+                        className={`font-mono text-sm font-bold ${athDd <= -0.15 ? "text-[#34d399]" : athDd <= -0.05 ? "text-amber-400" : "text-[#e8f4ff]"}`}
+                      />
                     </div>
                     <div>
                       <p className="font-mono text-[9px] text-slate-500">
                         <Term tip="危機回復スコア（0〜6点）。VIX（恐怖指数）・HYG（社債）・ドル高など6指標で算出。高いほど市場が恐怖状態にある。phi2シグナルはスコア2以上で有効">CRS</Term>
                       </p>
                       <p className={`font-mono text-sm font-bold ${crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"}`}>
-                        {crs}<span className="text-slate-500 text-xs"> / 6</span>
+                        <FlickerNumber value={String(crs)} delay={150} /><span className="text-slate-500 text-xs"> / 6</span>
                       </p>
                     </div>
                   </div>
@@ -512,43 +519,6 @@ export default async function SignalHubPage() {
               </Link>
             );
           })()}
-        </div>
-
-        {/* ━━━ 使い方ガイド ━━━ */}
-        <div className="mt-10 rounded-2xl border border-white/[0.15] bg-white/[0.03] px-5 py-5">
-          <p className="text-sm font-semibold text-[#e8f4ff] mb-4">このページの読み方</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {[
-              {
-                icon: "🟢",
-                title: "「発動中」が出たら",
-                text: "過去30年のデータで、このタイミングに買った場合の平均リターンがDCA（毎月定額積立）を上回る実績があります。必ず上がる保証はありません。",
-              },
-              {
-                icon: "⏸",
-                title: "「待機中」のとき",
-                text: "特別な買い場ではありません。通常の積立（毎月定額）を続けるのが基本です。シグナルを待って積立を止める必要はありません。",
-              },
-              {
-                icon: "📊",
-                title: "CRS（恐怖スコア）が高いとき",
-                text: "市場が強い恐怖状態にある目安。0〜6で表示し、4以上は「歴史的な買い場に近い環境」です。過去の大暴落時にこの数字が高くなりました。",
-              },
-              {
-                icon: "⚠️",
-                title: "「弱シグナル」マークについて",
-                text: "統計的な信頼度が低い、またはサンプル数が少ないシグナルです。参考程度に留め、主要シグナル（SP500）と組み合わせて判断してください。",
-              },
-            ].map((c) => (
-              <div key={c.title} className="flex gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
-                <span className="text-lg shrink-0">{c.icon}</span>
-                <div>
-                  <p className="text-[12px] font-semibold text-slate-300 mb-0.5">{c.title}</p>
-                  <p className="text-[11px] leading-5 text-slate-500">{c.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* ━━━ バリュー株レーダー ━━━ */}
