@@ -7,6 +7,7 @@ import { Term } from "@/app/components/Term";
 import { FlickerNumber } from "@/app/components/FlickerNumber";
 import { fetchValuePatterns } from "@/lib/value-patterns";
 import type { ValuePattern } from "@/lib/value-patterns";
+import { SignalFeed } from "@/app/components/SignalFeed";
 
 export const metadata: Metadata = {
   title: "買い場シグナル一覧 — S&P500・ETF・日本株 リアルタイム",
@@ -519,6 +520,16 @@ export default async function SignalHubPage() {
               </Link>
             );
           })()}
+        </div>
+
+        {/* ━━━ シグナル履歴フィード ━━━ */}
+        <div className="mt-10">
+          <SectionHeader
+            title="最近のシグナル履歴"
+            desc="相場・日本株・バリュー株・ニュース——全種のシグナルイベントを時系列で表示。"
+            accent="#38bdf8"
+          />
+          <SignalFeed limit={8} showHeader={false} />
         </div>
 
         {/* ━━━ バリュー株レーダー ━━━ */}

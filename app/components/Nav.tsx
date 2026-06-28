@@ -14,6 +14,7 @@ const MAIN_LINKS = [
 ];
 
 const MORE_LINKS = [
+  { href: "/demo",       label: "デモ",     desc: "QRIPでできることをサンプルで体験" },
   { href: "/radar",      label: "レーダー", desc: "成長加速企業トップ10・入れ替え予測" },
   { href: "/simulate",   label: "試算",   desc: "30年資産シミュレーション" },
   { href: "/compare",    label: "比較",   desc: "期待値・リスク・総合スコアを時間軸別に比較" },

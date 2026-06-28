@@ -8,6 +8,8 @@ import { notifySignal } from "@/lib/email-notify";
 import { notifySignalTelegram } from "@/lib/telegram-notify";
 import { sendWebPushToAll, buildSignalPayload } from "@/lib/web-push-notify";
 import { fetchJpStockSignals } from "@/lib/jp-stock-signal";
+import { writeSignalEvents, SIGNAL_META, pctLabel } from "@/lib/signal-events";
+import type { NewSignalEvent, SignalEventType } from "@/lib/signal-events";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -246,6 +248,39 @@ export async function GET(req: NextRequest) {
     }
   } catch (e) {
     console.error("[cron] JP stocks signal failed:", e instanceof Error ? e.message : String(e));
+  }
+
+  // ──────────────────────────────────────────────
+  // 8. signal_events テーブルへ統一ログ書き込み
+  // ──────────────────────────────────────────────
+  const eventsToWrite: NewSignalEvent[] = [];
+
+  const addEvent = (type: SignalEventType, target: string, label: string, valueNum: number | null, valueLabel: string | null, detail: string) => {
+    const meta = SIGNAL_META[type];
+    eventsToWrite.push({ type, target, label, severity: meta.severity, color: meta.color, value_num: valueNum, value_label: valueLabel, detail, date: snapshot.date });
+  };
+
+  for (const signalType of fired) {
+    const type = signalType.toLowerCase() as SignalEventType;
+    const label = signalType === "DOUBLE" ? "S&P500 超高品質シグナル発動" : signalType === "PHI2" ? "S&P500 phi2シグナル発動" : "S&P500 RSI<25シグナル発動";
+    const detail = signalType === "DOUBLE" ? `phi2+RSI同時。ATH${pctLabel(snapshot.sp500_ath_dd)} CRS${snapshot.crs_score}/6` : `ATH${pctLabel(snapshot.sp500_ath_dd)} CRS${snapshot.crs_score}/6`;
+    addEvent(type, "^GSPC", label, snapshot.sp500_ath_dd, pctLabel(snapshot.sp500_ath_dd), detail);
+  }
+
+  if (snapshot.crs_c5_hyg60 && snapshot.sp500_ath_dd <= -0.05 && !fired.includes("PHI2") && !fired.includes("DOUBLE")) {
+    addEvent("hyg8", "^GSPC", "S&P500 HYG-8%シグナル発動", snapshot.sp500_ath_dd, pctLabel(snapshot.sp500_ath_dd), `HYG 60日高値-8%以下。ATH${pctLabel(snapshot.sp500_ath_dd)}`);
+  }
+
+  for (const s of jpResults) {
+    if (s.signal === "BUY") {
+      const code = s.name === "NTT" ? "9432.T" : s.name === "JT" ? "2914.T" : "9433.T";
+      addEvent("jp_buy", code, `${s.name} 配当買いシグナル発動`, s.divYield, `配当利回り ${(s.divYield * 100).toFixed(2)}%`, `株価 ¥${s.price.toFixed(0)}・配当${(s.divYield * 100).toFixed(2)}%`);
+    }
+  }
+
+  if (eventsToWrite.length > 0) {
+    await writeSignalEvents(eventsToWrite);
+    console.log(`[cron] signal_events: ${eventsToWrite.length}件書き込み`);
   }
 
   console.log(
