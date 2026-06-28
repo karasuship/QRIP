@@ -140,8 +140,10 @@ Round 01〜36 主要発見まとめ：
 ### 必要な環境変数（Vercel + .env.local）
 | 変数 | 用途 | 状態 |
 |------|------|------|
-| SUPABASE_URL | DB接続 | ✅ |
+| SUPABASE_URL | DB接続（サーバー） | ✅ |
 | SUPABASE_SERVICE_ROLE_KEY | DB管理者 | ✅ |
+| NEXT_PUBLIC_SUPABASE_URL | DB接続（ブラウザ） | ✅ 2026-06-28追加 |
+| NEXT_PUBLIC_SUPABASE_ANON_KEY | 認証（ブラウザ） | ✅ 2026-06-28追加 |
 | ANTHROPIC_API_KEY | ニュース分析 | ✅ |
 | CRON_SECRET | cron認証 | ✅ |
 | NEXT_PUBLIC_VAPID_PUBLIC_KEY | Web Push | ✅ |
@@ -149,6 +151,16 @@ Round 01〜36 主要発見まとめ：
 | RESEND_API_KEY | メール通知 | 任意 |
 | TELEGRAM_BOT_TOKEN | Telegram通知 | 任意 |
 | TELEGRAM_CHAT_ID | Telegram通知 | 任意 |
+
+### 外部サービス設定状態
+| サービス | 項目 | 状態 |
+|----------|------|------|
+| Supabase | Google OAuth プロバイダー | ✅ Enable済み（2026-06-28確認） |
+| Supabase | auth/callback コード | ✅ app/auth/callback/page.tsx |
+| Supabase | user_watchlist テーブル | ✅ 2026-06-28作成 |
+| Supabase | user_screener_alerts テーブル | ✅ 2026-06-28作成 |
+| Vercel | GitHub連携・自動デプロイ | ✅ |
+| Google Search Console | サイトマップ送信済み | ✅ |
 
 ## 次にやること（2026-06-27 更新）
 
