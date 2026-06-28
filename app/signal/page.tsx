@@ -138,6 +138,43 @@ export default async function SignalHubPage() {
           )}
         </div>
 
+        {/* ━━━ シグナルとは ━━━ */}
+        <div className="mt-6 rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.04] px-5 py-5">
+          <p className="text-sm font-semibold text-[#e8f4ff] mb-1">シグナルとは？</p>
+          <p className="text-[12px] leading-6 text-slate-400 mb-4">
+            株価が大きく下落し、市場に恐怖が広がったとき——そのタイミングで買うと、
+            毎月コツコツ積み立てるよりも<span className="text-[#e8f4ff]">リターンが高くなりやすい</span>という統計的な法則があります。
+            このページは、その条件が今現在揃っているかをリアルタイムで監視します。
+          </p>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            {[
+              {
+                step: "01",
+                title: "根拠は30年分のデータ",
+                body: "1993年〜2024年のS&P500を分析。特定の条件が重なった直後に買うと、毎月積立より平均+7%以上になった事例が多かった。",
+              },
+              {
+                step: "02",
+                title: "条件が揃うと「発動中」",
+                body: "最高値から大きく下落 + 恐怖指数が上昇 など複数の条件を同時に監視。すべて揃ったとき「発動中」に変わる。",
+              },
+              {
+                step: "03",
+                title: "あくまで参考情報",
+                body: "「発動=必ず上がる」ではない。「歴史的にここで買えた人は多くの場合うまくいった」という参考として使う。",
+              },
+            ].map((c) => (
+              <div key={c.step} className="flex gap-3">
+                <span className="font-mono text-[11px] font-bold text-[#38bdf8]/50 shrink-0 pt-0.5">{c.step}</span>
+                <div>
+                  <p className="text-[12px] font-semibold text-slate-300 mb-0.5">{c.title}</p>
+                  <p className="text-[11px] leading-5 text-slate-500">{c.body}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ━━━ S&P 500 ━━━ */}
         <SectionHeader
           title="S&P 500（米国株式市場の代表指数）"
