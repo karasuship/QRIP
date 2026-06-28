@@ -111,6 +111,14 @@ const CURRENT_RANKING = [
   { ticker: "INTU",  cagr: 14,  inMag7: false, note: "TurboTax + QuickBooks AI化で成長加速" },
 ];
 
+// Round 51: Mag7 個別株 ATH-30% ディップシグナル実績（2015-2026, 252日保有）
+// 検証済み3銘柄のみ掲載。MSFT/GOOGL/AMZN/META は Round 51 スクリプト未実行。
+const INDIVIDUAL_DIP = [
+  { ticker: "AAPL", signals: 5, meanReturn: 67.6, winRate: 100, recoveryDays: 188, verdict: "採用" as const },
+  { ticker: "NVDA", signals: 5, meanReturn: 85.9, winRate: 60,  recoveryDays: 276, verdict: "採用" as const },
+  { ticker: "TSLA", signals: 9, meanReturn: 89.7, winRate: 89,  recoveryDays: 341, verdict: "採用" as const },
+];
+
 // 注目銘柄のランクイン履歴
 const WATCH_HISTORY: Record<string, { year: number; rank: number | null; cagr: number | null }[]> = {
   NVDA:  [
@@ -237,6 +245,9 @@ export default function RadarPage() {
           </div>
           <p className="mb-4 text-[11px] text-slate-500">
             売上成長 3年 CAGR 上位10社。<span className="text-[#38bdf8]">★</span> = Mag7 銘柄。
+            <span className="ml-3 font-mono text-[9px] text-slate-600 border border-white/[0.15] rounded px-1.5 py-0.5">
+              手動更新 · 最終更新 2026-06-29
+            </span>
           </p>
           <div className="space-y-2">
             {CURRENT_RANKING.map((s, i) => (
@@ -400,6 +411,47 @@ export default function RadarPage() {
           </div>
         </section>
 
+        {/* Mag7 個別株 ATH-30% ディップシグナル — Round 51 */}
+        <section className="mt-10">
+          <div className="mb-3 flex items-center gap-3">
+            <div className="h-px flex-1 bg-white/[0.13]" />
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">個別株 -30% ディップシグナル実績</p>
+            <div className="h-px flex-1 bg-white/[0.13]" />
+          </div>
+          <p className="mb-4 text-[11px] text-slate-500">
+            SP500 phi2（-10%）を個別株に適用すると月次上限ヒット過多で機能しない（Round 36）。
+            個別高ボラ株には <span className="text-[#e8f4ff] font-semibold">ATH -30% 以深</span> の閾値が有効。
+            2015-2026 バックテスト、252日保有。
+          </p>
+
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.18]">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-white/[0.15] bg-white/[0.06]">
+                  {["銘柄", "閾値", "発動回数(11年)", "平均リターン", "勝率", "ATH回復日数"].map(h => (
+                    <th key={h} className="px-4 py-2.5 font-mono text-[9px] text-slate-500">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {INDIVIDUAL_DIP.map(d => (
+                  <tr key={d.ticker} className="border-b border-white/[0.06] hover:bg-white/[0.04] transition-colors">
+                    <td className="px-4 py-2.5 font-mono text-sm font-bold text-[#e8f4ff]">{d.ticker}</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-amber-400">ATH -30%</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{d.signals}回</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-[#34d399] font-semibold">+{d.meanReturn}%</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-[#38bdf8]">{d.winRate}%</td>
+                    <td className="px-4 py-2.5 font-mono text-xs text-slate-400">平均 {d.recoveryDays}日</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 font-mono text-[9px] text-slate-600">
+            Round 51 バックテスト（2026-06-29）。検証済みは3銘柄のみ。サバイバーシップバイアスあり。投資助言ではありません。
+          </p>
+        </section>
+
         {/* 入れ替えの予測可能性 */}
         <section className="mt-10 rounded-2xl border border-white/[0.18] bg-white/[0.04] p-5">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">入れ替えの予測可能性</p>
@@ -420,6 +472,53 @@ export default function RadarPage() {
               PLTR（+33%/年）、LLY（GLP-1薬 +32%）、AVGO（AIカスタムチップ +24%）。
               これらは現時点でMag7ではないが、売上成長率の観点では既にMag7の多くを上回っている。
             </p>
+          </div>
+        </section>
+
+        {/* この情報をどう使うか */}
+        <section className="mt-10 rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.03] p-5">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-[#38bdf8] mb-4">この情報をどう使うか</p>
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <span className="font-mono text-lg text-slate-600 shrink-0 w-6">1</span>
+              <div>
+                <p className="text-[11px] font-semibold text-[#e8f4ff]">ベースは VOO / QQQ を積み続ける</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-5">
+                  固定Mag7が動的Top10より年率+5%上回る（Round 52）。市場全体を買うインデックス投資が最も安定した土台。
+                  phi2・RSI&lt;25 シグナルに従って積み増す（<Link href="/signal" className="text-[#38bdf8] hover:underline">シグナルページ</Link>）。
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <span className="font-mono text-lg text-slate-600 shrink-0 w-6">2</span>
+              <div>
+                <p className="text-[11px] font-semibold text-[#e8f4ff]">成長上位10社をウォッチリストに追加してモニタリング</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-5">
+                  NVDA は株価爆発の5年前から売上成長ランキングに出ていた。今のランキング上位（NVDA・PLTR・LLY・AVGO）を
+                  定期的に見ることで「次の波」に気づける。
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <span className="font-mono text-lg text-slate-600 shrink-0 w-6">3</span>
+              <div>
+                <p className="text-[11px] font-semibold text-[#e8f4ff]">個別株は ATH -30% 急落時のみ追加（Round 51）</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-5">
+                  AAPL・NVDA・TSLA とも -30% 閾値で平均 +68〜+90%、勝率60〜100%。ただし発動は11年で3〜9回。
+                  <span className="text-amber-400">CRS ≥ 3 と重なる</span>ときは市場全体が恐怖状態なので確信度が上がる。
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <span className="font-mono text-lg text-slate-600 shrink-0 w-6">4</span>
+              <div>
+                <p className="text-[11px] font-semibold text-[#e8f4ff]">成長鈍化銘柄はランクアウトでわかる</p>
+                <p className="text-[11px] text-slate-500 mt-0.5 leading-5">
+                  TSLA は 2023年以降ランクアウト（売上成長 +5%/年）。「保有し続けるべき理由」が売上成長である場合、
+                  ランク推移が早期警告になる。
+                </p>
+              </div>
+            </div>
           </div>
         </section>
 
