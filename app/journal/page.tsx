@@ -46,17 +46,17 @@ export default async function JournalPage() {
 
           {/* 今日のスナップショット */}
           {todayCrs !== null && (
-            <div className="flex items-center gap-3 rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-2.5">
+            <div className="flex items-center gap-3 rounded-xl border border-white/[0.18] bg-white/[0.14] px-4 py-2.5">
               <div className="text-center">
-                <p className="font-mono text-[9px] text-slate-600 uppercase">今日の CRS</p>
+                <p className="font-mono text-[9px] text-slate-500 uppercase">今日の CRS</p>
                 <p className={`font-mono text-xl font-bold mt-0.5 ${todayCrs >= 5 ? "text-[#f87171]" : todayCrs >= 3 ? "text-amber-400" : todayCrs >= 2 ? "text-[#38bdf8]" : "text-slate-500"}`}>
                   {todayCrs}
                 </p>
               </div>
               <div className="w-px h-8 bg-white/[0.10]" />
               <div className="text-center">
-                <p className="font-mono text-[9px] text-slate-600 uppercase">phi2</p>
-                <p className={`font-mono text-xs font-bold mt-0.5 ${todayPhi2 ? "text-[#34d399]" : "text-slate-600"}`}>
+                <p className="font-mono text-[9px] text-slate-500 uppercase">phi2</p>
+                <p className={`font-mono text-xs font-bold mt-0.5 ${todayPhi2 ? "text-[#34d399]" : "text-slate-500"}`}>
                   {todayPhi2 ? "発動中" : "未発動"}
                 </p>
               </div>
@@ -76,7 +76,7 @@ export default async function JournalPage() {
 
         <JournalClient todayCrs={todayCrs} todayPhi2={todayPhi2} />
 
-        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-700">
+        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-500">
           データはログインアカウントに紐づきサーバーに保存されます。
           これは投資助言ではありません。
         </p>

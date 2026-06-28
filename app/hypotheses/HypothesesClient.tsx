@@ -24,7 +24,7 @@ const STATUS_COLOR: Record<string, string> = {
   open:     "border-[#38bdf8]/30 text-[#38bdf8]",
   testing:  "border-amber-400/30 text-amber-400",
   adopted:  "border-[#34d399]/30 text-[#34d399]",
-  rejected: "border-white/[0.12] text-slate-600",
+  rejected: "border-white/[0.22] text-slate-500",
 };
 
 function getHandle(): string {
@@ -119,8 +119,8 @@ export default function HypothesesClient({ initialHypotheses }: { initialHypothe
               onClick={() => setFilter(f)}
               className={`rounded-full border px-3 py-1 font-mono text-[10px] transition-colors ${
                 filter === f
-                  ? "border-white/[0.25] bg-white/[0.08] text-slate-200"
-                  : "border-white/[0.10] text-slate-500 hover:text-slate-300"
+                  ? "border-white/[0.25] bg-white/[0.14] text-slate-200"
+                  : "border-white/[0.18] text-slate-500 hover:text-slate-300"
               }`}
             >
               {f === "all" ? "全て" : STATUS_LABEL[f]}
@@ -137,25 +137,25 @@ export default function HypothesesClient({ initialHypotheses }: { initialHypothe
 
       {/* 提案フォーム */}
       {showForm && (
-        <div className="mb-5 rounded-2xl border border-white/[0.12] bg-white/[0.05] p-4 space-y-3">
+        <div className="mb-5 rounded-2xl border border-white/[0.22] bg-white/[0.05] p-4 space-y-3">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">新しい検証仮説</p>
           <input
             value={fTitle}
             onChange={(e) => setFTitle(e.target.value)}
             placeholder="例: FOMC声明のタカ派スコアはphi2発動確率を高めるか"
-            className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]"
+            className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]"
           />
           <textarea
             value={fBody}
             onChange={(e) => setFBody(e.target.value)}
             placeholder="仮説の根拠や背景（任意）"
             rows={3}
-            className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25] resize-none"
+            className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25] resize-none"
           />
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] text-slate-600">投稿者: @{handle}</span>
+            <span className="font-mono text-[10px] text-slate-500">投稿者: @{handle}</span>
             <div className="flex gap-2">
-              <button onClick={() => setShowForm(false)} className="font-mono text-[10px] text-slate-600 hover:text-slate-400">キャンセル</button>
+              <button onClick={() => setShowForm(false)} className="font-mono text-[10px] text-slate-500 hover:text-slate-400">キャンセル</button>
               <button
                 onClick={submit}
                 disabled={!fTitle.trim() || posting}
@@ -170,13 +170,13 @@ export default function HypothesesClient({ initialHypotheses }: { initialHypothe
 
       {/* 仮説一覧（投票数順） */}
       {sorted.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 text-center">
-          <p className="font-mono text-xs text-slate-600">仮説はまだありません。最初の仮説を提案しましょう。</p>
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.11] p-8 text-center">
+          <p className="font-mono text-xs text-slate-500">仮説はまだありません。最初の仮説を提案しましょう。</p>
         </div>
       ) : (
         <div className="space-y-2">
           {sorted.map((h, rank) => (
-            <div key={h.id} className="flex items-start gap-3 rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3">
+            <div key={h.id} className="flex items-start gap-3 rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3">
               {/* 投票ボタン */}
               <button
                 onClick={() => vote(h.id)}
@@ -184,7 +184,7 @@ export default function HypothesesClient({ initialHypotheses }: { initialHypothe
                 className={`flex shrink-0 flex-col items-center rounded-xl border px-2.5 py-1.5 transition-all ${
                   votedIds.has(h.id)
                     ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.08] text-[#38bdf8]"
-                    : "border-white/[0.10] text-slate-500 hover:border-[#38bdf8]/30 hover:text-[#38bdf8]"
+                    : "border-white/[0.18] text-slate-500 hover:border-[#38bdf8]/30 hover:text-[#38bdf8]"
                 }`}
               >
                 <span className="text-xs">▲</span>
@@ -194,8 +194,8 @@ export default function HypothesesClient({ initialHypotheses }: { initialHypothe
               {/* 内容 */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="font-mono text-[9px] text-slate-700">#{rank + 1}</span>
-                  <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[9px] ${STATUS_COLOR[h.status] ?? "text-slate-500 border-white/[0.12]"}`}>
+                  <span className="font-mono text-[9px] text-slate-500">#{rank + 1}</span>
+                  <span className={`rounded-full border px-1.5 py-0.5 font-mono text-[9px] ${STATUS_COLOR[h.status] ?? "text-slate-500 border-white/[0.22]"}`}>
                     {STATUS_LABEL[h.status] ?? h.status}
                   </span>
                 </div>
@@ -203,14 +203,14 @@ export default function HypothesesClient({ initialHypotheses }: { initialHypothe
                 {h.body && (
                   <p className="mt-1 text-xs leading-5 text-slate-500 line-clamp-2">{h.body}</p>
                 )}
-                <p className="mt-1 font-mono text-[10px] text-slate-700">@{h.handle} · {timeAgo(h.created_at)}</p>
+                <p className="mt-1 font-mono text-[10px] text-slate-500">@{h.handle} · {timeAgo(h.created_at)}</p>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <p className="mt-6 font-mono text-[10px] leading-6 text-slate-700">
+      <p className="mt-6 font-mono text-[10px] leading-6 text-slate-500">
         投票数の多い仮説から順に検証キューに入ります。検証結果は /research に公開されます。
       </p>
     </div>

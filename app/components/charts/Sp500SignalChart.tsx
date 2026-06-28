@@ -37,7 +37,7 @@ const CustomTooltip = ({
   if (!active || !payload?.length) return null;
   const p = payload[0].payload;
   return (
-    <div className="rounded-xl border border-white/[0.12] bg-[#0a1628]/95 px-3 py-2.5 backdrop-blur-md text-xs font-mono shadow-xl">
+    <div className="rounded-xl border border-white/[0.22] bg-[#0a1628]/95 px-3 py-2.5 backdrop-blur-md text-xs font-mono shadow-xl">
       <p className="text-slate-400 mb-1">{label}</p>
       <p className="text-[#e8f4ff]">SP500: {payload[0].value.toLocaleString()}</p>
       <p className={`${p.crs >= 4 ? "text-[#f87171]" : p.crs >= 2 ? "text-amber-400" : "text-slate-500"}`}>
@@ -73,7 +73,7 @@ export default function Sp500SignalChart({ data, currentCrs }: Props) {
   const yPad = (maxP - minP) * 0.05;
 
   return (
-    <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 backdrop-blur-sm">
+    <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5 backdrop-blur-sm">
       <div className="flex items-start justify-between gap-2 mb-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">
@@ -151,7 +151,7 @@ export default function Sp500SignalChart({ data, currentCrs }: Props) {
           phi2 買い場シグナル
         </span>
         {signalDates.length === 0 && (
-          <span className="text-slate-600">直近 180 日にシグナルはありませんでした</span>
+          <span className="text-slate-500">直近 180 日にシグナルはありませんでした</span>
         )}
       </div>
     </div>

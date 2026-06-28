@@ -49,7 +49,7 @@ const CustomTooltip = ({
 }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-white/[0.12] bg-[#0a1628]/95 px-3 py-2.5 backdrop-blur-md text-xs font-mono shadow-xl">
+    <div className="rounded-xl border border-white/[0.22] bg-[#0a1628]/95 px-3 py-2.5 backdrop-blur-md text-xs font-mono shadow-xl">
       <p className="text-slate-400 mb-1.5">{label}</p>
       {payload.map((p) => (
         <p key={p.dataKey} style={{ color: p.color }} className="leading-5">
@@ -78,7 +78,7 @@ export default function SimulationChart({ monthly, signals, dcaFinal, phi2Final,
   const alphaSign = alpha > 0 ? "+" : "";
 
   return (
-    <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 backdrop-blur-sm">
+    <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5 backdrop-blur-sm">
       {/* ヘッダ */}
       <div className="flex flex-wrap items-start justify-between gap-3 mb-4">
         <div>
@@ -197,7 +197,7 @@ export default function SimulationChart({ monthly, signals, dcaFinal, phi2Final,
         </span>
       </div>
 
-      <p className="mt-3 font-mono text-[10px] text-slate-700">
+      <p className="mt-3 font-mono text-[10px] text-slate-500">
         ※ CSV から計算した再現値（2008〜2026）。phi2 追加投入は発動時に月次の3倍を即日投入と仮定。
         税金・手数料・スリッページは未考慮。実際の運用結果は異なります。
       </p>

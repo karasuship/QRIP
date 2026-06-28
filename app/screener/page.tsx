@@ -34,12 +34,12 @@ export default async function ScreenerPage() {
         </div>
 
         {totalCount === 0 ? (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-12 text-center space-y-3">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-12 text-center space-y-3">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">データ準備中</p>
             <p className="text-sm text-slate-400">
               夜間バッチが初回同期中です。しばらくお待ちください。
             </p>
-            <p className="font-mono text-[10px] text-slate-600">
+            <p className="font-mono text-[10px] text-slate-500">
               手動で同期する場合: <code className="text-slate-500">/api/cron/screener-sync</code> を叩いてください。
             </p>
           </div>
@@ -47,7 +47,7 @@ export default async function ScreenerPage() {
           <ScreenerClient totalCount={totalCount} />
         )}
 
-        <p className="mt-6 font-mono text-[9px] text-slate-700">
+        <p className="mt-6 font-mono text-[9px] text-slate-500">
           データ: J-Quants API（東証全市場）。財務データは直近通期決算。株価は直近営業日。
           これは投資助言ではありません。
         </p>

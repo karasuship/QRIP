@@ -17,7 +17,7 @@ export default function QuickRef({ terms, relatedPages }: Props) {
   const defs = terms.map((k) => ({ key: k, ...TERMS[k] })).filter((d) => d.label);
 
   return (
-    <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03]">
+    <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11]">
       {/* トグルヘッダー */}
       <button
         onClick={() => setOpen((v) => !v)}
@@ -27,12 +27,12 @@ export default function QuickRef({ terms, relatedPages }: Props) {
           <span className="font-mono text-[9px] uppercase tracking-widest text-slate-500">
             このページの用語・根拠
           </span>
-          <span className="rounded-full border border-white/[0.10] px-1.5 py-0 font-mono text-[9px] text-slate-700">
+          <span className="rounded-full border border-white/[0.18] px-1.5 py-0 font-mono text-[9px] text-slate-500">
             {defs.length}語
           </span>
         </div>
         <span
-          className={`font-mono text-[10px] text-slate-600 transition-transform ${open ? "rotate-90" : ""}`}
+          className={`font-mono text-[10px] text-slate-500 transition-transform ${open ? "rotate-90" : ""}`}
         >
           ▶
         </span>
@@ -40,13 +40,13 @@ export default function QuickRef({ terms, relatedPages }: Props) {
 
       {/* 展開コンテンツ */}
       {open && (
-        <div className="border-t border-white/[0.08] px-4 pb-4 pt-3 space-y-3">
+        <div className="border-t border-white/[0.15] px-4 pb-4 pt-3 space-y-3">
           {/* 用語グリッド */}
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {defs.map((d) => (
               <div
                 key={d.key}
-                className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5"
+                className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2.5"
               >
                 <p className="font-mono text-[10px] font-bold text-slate-300">{d.label}</p>
                 <p className="mt-0.5 text-[10px] leading-4 text-slate-500">{d.def}</p>
@@ -67,8 +67,8 @@ export default function QuickRef({ terms, relatedPages }: Props) {
 
           {/* 関連ページリンク */}
           {relatedPages && relatedPages.length > 0 && (
-            <div className="border-t border-white/[0.08] pt-3">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600 mb-2">
+            <div className="border-t border-white/[0.15] pt-3">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-2">
                 関連ページ
               </p>
               <div className="flex flex-wrap gap-2">
@@ -76,10 +76,10 @@ export default function QuickRef({ terms, relatedPages }: Props) {
                   <Link
                     key={p.href}
                     href={p.href}
-                    className="rounded-xl border border-white/[0.10] bg-white/[0.03] px-3 py-1.5 hover:bg-white/[0.06] transition-colors"
+                    className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-3 py-1.5 hover:bg-white/[0.11] transition-colors"
                   >
                     <p className="font-mono text-[10px] text-slate-300">{p.label}</p>
-                    <p className="font-mono text-[9px] text-slate-600">{p.note}</p>
+                    <p className="font-mono text-[9px] text-slate-500">{p.note}</p>
                   </Link>
                 ))}
               </div>

@@ -47,14 +47,14 @@ const TIER_CONFIG: Record<
   NONE: {
     label: "待機中",
     badge: "待機",
-    badgeCls: "bg-white/[0.06] text-slate-400",
-    border: "border-white/[0.12] bg-white/[0.04]",
+    badgeCls: "bg-white/[0.11] text-slate-400",
+    border: "border-white/[0.22] bg-white/[0.14]",
   },
 };
 
 const JP_SIGNAL_CONFIG = {
   BUY:  { label: "割安", cls: "border-[#34d399]/40 bg-[#34d399]/[0.07] text-[#34d399]", badge: "bg-[#34d399]/15 text-[#34d399]" },
-  HOLD: { label: "中立", cls: "border-white/[0.12] bg-white/[0.04] text-slate-400",      badge: "bg-white/[0.06] text-slate-400" },
+  HOLD: { label: "中立", cls: "border-white/[0.22] bg-white/[0.14] text-slate-400",      badge: "bg-white/[0.11] text-slate-400" },
   SELL: { label: "割高", cls: "border-[#f87171]/40 bg-[#f87171]/[0.07] text-[#f87171]", badge: "bg-[#f87171]/15 text-[#f87171]" },
 };
 
@@ -93,8 +93,8 @@ export default async function SignalHubPage() {
         {/* ━━━ S&P 500 ━━━ */}
         <div className="mb-3 flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">S&amp;P 500</span>
-          <span className="flex-1 border-t border-white/[0.08]" />
-          <span className="font-mono text-[9px] text-slate-700">phi2 v3 · CRS · RSI · HYG · B4 · EFA</span>
+          <span className="flex-1 border-t border-white/[0.15]" />
+          <span className="font-mono text-[9px] text-slate-500">phi2 v3 · CRS · RSI · HYG · B4 · EFA</span>
         </div>
 
         <Link href="/signal/sp500" className="block group">
@@ -103,7 +103,7 @@ export default async function SignalHubPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <p className="font-mono text-xs font-bold text-[#e8f4ff]">S&amp;P 500</p>
-                  <span className="font-mono text-[9px] text-slate-600">^GSPC</span>
+                  <span className="font-mono text-[9px] text-slate-500">^GSPC</span>
                 </div>
                 <p className="text-sm font-medium text-slate-300">{sp500.label}</p>
                 {date && (
@@ -116,7 +116,7 @@ export default async function SignalHubPage() {
                 <span className={`rounded-full px-2.5 py-1 font-mono text-[10px] font-bold ${sp500.badgeCls}`}>
                   {sp500.badge}
                 </span>
-                <span className="font-mono text-[9px] text-slate-600 group-hover:text-slate-400 transition-colors">
+                <span className="font-mono text-[9px] text-slate-500 group-hover:text-slate-400 transition-colors">
                   詳細 →
                 </span>
               </div>
@@ -127,8 +127,8 @@ export default async function SignalHubPage() {
         {/* ━━━ 日本株（高配当） ━━━ */}
         <div className="mt-8 mb-3 flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">日本株（高配当）</span>
-          <span className="flex-1 border-t border-white/[0.08]" />
-          <span className="font-mono text-[9px] text-slate-700">配当利回り · 52週レンジ · decisions/0033</span>
+          <span className="flex-1 border-t border-white/[0.15]" />
+          <span className="font-mono text-[9px] text-slate-500">配当利回り · 52週レンジ · decisions/0033</span>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -183,10 +183,10 @@ export default async function SignalHubPage() {
                       </div>
                     </div>
                   ) : (
-                    <p className="font-mono text-[9px] text-slate-600">データ取得中...</p>
+                    <p className="font-mono text-[9px] text-slate-500">データ取得中...</p>
                   )}
 
-                  <p className="mt-3 font-mono text-[9px] text-slate-600 group-hover:text-slate-400 transition-colors text-right">
+                  <p className="mt-3 font-mono text-[9px] text-slate-500 group-hover:text-slate-400 transition-colors text-right">
                     詳細 →
                   </p>
                 </div>
@@ -198,8 +198,8 @@ export default async function SignalHubPage() {
         {/* ━━━ グローバル ETF ━━━ */}
         <div className="mt-8 mb-3 flex items-center gap-3">
           <span className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500">グローバル ETF</span>
-          <span className="flex-1 border-t border-white/[0.08]" />
-          <span className="font-mono text-[9px] text-slate-700">phi2条件 · CRS共用 · Round 42</span>
+          <span className="flex-1 border-t border-white/[0.15]" />
+          <span className="font-mono text-[9px] text-slate-500">phi2条件 · CRS共用 · Round 42</span>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -217,10 +217,10 @@ export default async function SignalHubPage() {
           ].map(({ ticker, name, href, athDd, active, note }) => {
             const border = active
               ? "border-[#34d399]/40 bg-[#34d399]/[0.07] text-[#34d399]"
-              : "border-white/[0.12] bg-white/[0.04] text-slate-400";
+              : "border-white/[0.22] bg-white/[0.14] text-slate-400";
             const badge = active
               ? "bg-[#34d399]/15 text-[#34d399]"
-              : "bg-white/[0.06] text-slate-400";
+              : "bg-white/[0.11] text-slate-400";
             return (
               <Link key={ticker} href={href} className="block group">
                 <div className={`rounded-2xl border p-4 backdrop-blur-sm transition-all group-hover:brightness-110 ${border}`}>
@@ -250,9 +250,9 @@ export default async function SignalHubPage() {
                         crs >= 5 ? "text-violet-300" : crs >= 2 ? "text-amber-400" : "text-[#e8f4ff]"
                       }`}>{crs}/6</span>
                     </div>
-                    <p className="font-mono text-[9px] text-slate-600 mt-1">{note}</p>
+                    <p className="font-mono text-[9px] text-slate-500 mt-1">{note}</p>
                   </div>
-                  <p className="mt-3 font-mono text-[9px] text-slate-600 group-hover:text-slate-400 transition-colors text-right">
+                  <p className="mt-3 font-mono text-[9px] text-slate-500 group-hover:text-slate-400 transition-colors text-right">
                     詳細 →
                   </p>
                 </div>
@@ -262,8 +262,8 @@ export default async function SignalHubPage() {
         </div>
 
         {/* 使い方ガイド */}
-        <div className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-4">
-          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-slate-600 mb-3">このページの見かた</p>
+        <div className="mt-8 rounded-2xl border border-white/[0.15] bg-white/[0.02] px-5 py-4">
+          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-3">このページの見かた</p>
           <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {[
               { num: "01", text: "S&P 500 は phi2 v3 等のシグナル体制。30年バックテスト済み。発動時に通知が届く" },
@@ -279,7 +279,7 @@ export default async function SignalHubPage() {
           </div>
         </div>
 
-        <p className="mt-6 font-mono text-[10px] leading-6 text-slate-600">
+        <p className="mt-6 font-mono text-[10px] leading-6 text-slate-500">
           データ: Yahoo Finance (^GSPC · 9432.T · 2914.T · 9433.T)。15分キャッシュ。これは投資助言ではありません。
         </p>
       </main>

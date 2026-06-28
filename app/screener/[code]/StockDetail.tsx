@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import {
@@ -131,7 +131,7 @@ export default function StockDetail({
 
         {/* 相場位�� + 騰落率 */}
         {(hasRange || hasChange) && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">相場位置</p>
 
             {hasChange && (
@@ -139,7 +139,7 @@ export default function StockDetail({
                 {[{ label: "1ヶ月", c: c1m }, { label: "3ヶ月", c: c3m }, { label: "1年", c: c1y }].map(({ label, c }) =>
                   c ? (
                     <div key={label} className="text-center">
-                      <p className="font-mono text-[9px] text-slate-600">{label}</p>
+                      <p className="font-mono text-[9px] text-slate-500">{label}</p>
                       <p className={`font-mono text-base font-semibold ${c.pos ? "text-[#34d399]" : "text-[#f87171]"}`}>
                         {c.text}
                       </p>
@@ -151,12 +151,12 @@ export default function StockDetail({
 
             {hasRange && (
               <div>
-                <div className="flex justify-between font-mono text-[9px] text-slate-600 mb-2">
+                <div className="flex justify-between font-mono text-[9px] text-slate-500 mb-2">
                   <span>52週安値  ¥{stock.week52_low!.toLocaleString()}</span>
                   <span className="text-slate-500">{rangePct!.toFixed(0)}% 位置</span>
                   <span>52週高値  ¥{stock.week52_high!.toLocaleString()}</span>
                 </div>
-                <div className="relative h-2 w-full rounded-full bg-white/[0.08]">
+                <div className="relative h-2 w-full rounded-full bg-white/[0.14]">
                   <div
                     className="absolute left-0 top-0 h-full rounded-full bg-[#38bdf8]/40"
                     style={{ width: `${rangePct}%` }}
@@ -183,14 +183,14 @@ export default function StockDetail({
         )}
 
         {/* TradingView チャート */}
-        <div className="rounded-2xl border border-white/[0.10] overflow-hidden bg-white/[0.02]">
-          <p className="px-4 pt-3 font-mono text-[9px] uppercase tracking-widest text-slate-600">株価チャート（週足）</p>
+        <div className="rounded-2xl border border-white/[0.18] overflow-hidden bg-white/[0.02]">
+          <p className="px-4 pt-3 font-mono text-[9px] uppercase tracking-widest text-slate-500">株価チャート（週足）</p>
           <iframe src={tvSrc} className="w-full" style={{ height: 400, display: "block" }} allowFullScreen />
         </div>
 
         {/* コーポレートイベント */}
         {hasEvents && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">コーポレートイベント</p>
             <div className="flex flex-wrap gap-6">
               {calendar.nextEarningsDate && (
@@ -216,14 +216,14 @@ export default function StockDetail({
         )}
 
         {/* 財務指標グリッド */}
-        <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+        <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
           <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">財務指標（直近通期）</p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {METRICS.map(({ label, value, note }) => (
-              <div key={label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+              <div key={label} className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-3 py-3">
                 <p className="font-mono text-[9px] text-slate-500">{label}</p>
                 <p className="mt-1 font-mono text-lg font-semibold text-[#e8f4ff]">{value}</p>
-                <p className="font-mono text-[8px] text-slate-700">{note}</p>
+                <p className="font-mono text-[8px] text-slate-500">{note}</p>
               </div>
             ))}
           </div>
@@ -231,10 +231,10 @@ export default function StockDetail({
 
         {/* 業種内ランク */}
         {peerStats && peerStats.ranks.length > 0 && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <div className="flex items-baseline justify-between mb-4">
               <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">業種内ランク</p>
-              <p className="font-mono text-[9px] text-slate-600">{peerStats.sector} / {peerStats.sectorCount}銘柄中</p>
+              <p className="font-mono text-[9px] text-slate-500">{peerStats.sector} / {peerStats.sectorCount}銘柄中</p>
             </div>
             <div className="space-y-3">
               {peerStats.ranks.map(({ label, value, rank }) => {
@@ -244,22 +244,22 @@ export default function StockDetail({
                 return (
                   <div key={label} className="flex items-center gap-3">
                     <p className="font-mono text-[9px] text-slate-500 w-20 shrink-0">{label}</p>
-                    <div className="flex-1 h-1.5 rounded-full bg-white/[0.07]">
+                    <div className="flex-1 h-1.5 rounded-full bg-white/[0.13]">
                       <div className={`h-full rounded-full transition-all ${barCls}`} style={{ width: `${rank}%` }} />
                     </div>
                     <span className={`font-mono text-[10px] font-semibold ${rankCls} w-14 text-right shrink-0`}>上位{topPct}%</span>
-                    <span className="font-mono text-[9px] text-slate-600 w-12 text-right shrink-0">{value}</span>
+                    <span className="font-mono text-[9px] text-slate-500 w-12 text-right shrink-0">{value}</span>
                   </div>
                 );
               })}
             </div>
-            <p className="mt-3 font-mono text-[8px] text-slate-700">PBR割安度は低いほど割安（上位=割安）</p>
+            <p className="mt-3 font-mono text-[8px] text-slate-500">PBR割安度は低いほど割安（上位=割安）</p>
           </div>
         )}
 
         {/* アナリスト推奨 */}
         {analystData?.recommendation && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">
               アナリスト推奨（最新 / {analystData.recommendation.total}人）
             </p>
@@ -298,7 +298,7 @@ export default function StockDetail({
 
         {/* 機関投資家・インサイダー保有比率 */}
         {analystData?.holders && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">保有者構成</p>
             {(() => {
               const h = analystData.holders!;
@@ -311,13 +311,13 @@ export default function StockDetail({
                   {rows.map(({ label, pct, sub, cls }) => (
                     <div key={label} className="flex items-center gap-3">
                       <p className="font-mono text-[9px] text-slate-500 w-24 shrink-0">{label}</p>
-                      <div className="flex-1 h-1.5 rounded-full bg-white/[0.07]">
+                      <div className="flex-1 h-1.5 rounded-full bg-white/[0.13]">
                         <div className={`h-full rounded-full ${cls}`} style={{ width: `${Math.min(100, pct! * 100)}%` }} />
                       </div>
                       <span className="font-mono text-[10px] font-semibold text-slate-300 w-12 text-right shrink-0">
                         {(pct! * 100).toFixed(1)}%
                       </span>
-                      {sub && <span className="font-mono text-[9px] text-slate-600 shrink-0">{sub}</span>}
+                      {sub && <span className="font-mono text-[9px] text-slate-500 shrink-0">{sub}</span>}
                     </div>
                   ))}
                 </div>
@@ -328,7 +328,7 @@ export default function StockDetail({
 
         {/* 空売り残高 */}
         {analystData?.short && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">空売り残高（Yahoo Finance）</p>
             {(() => {
               const s = analystData.short!;
@@ -343,7 +343,7 @@ export default function StockDetail({
               return (
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                   {items.map(({ label, value }) => (
-                    <div key={label} className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+                    <div key={label} className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-3 py-3">
                       <p className="font-mono text-[9px] text-slate-500">{label}</p>
                       <p className="mt-1 font-mono text-sm font-semibold text-[#e8f4ff]">{value}</p>
                     </div>
@@ -356,27 +356,27 @@ export default function StockDetail({
 
         {/* 信用取引残高 */}
         {stock.margin_buy != null && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <div className="flex items-baseline justify-between mb-4">
               <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">信用取引残高</p>
               {stock.margin_date && (
-                <p className="font-mono text-[9px] text-slate-600">{stock.margin_date} 時点</p>
+                <p className="font-mono text-[9px] text-slate-500">{stock.margin_date} 時点</p>
               )}
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+              <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-3 py-3">
                 <p className="font-mono text-[9px] text-slate-500">信用買い残</p>
                 <p className="mt-1 font-mono text-sm font-semibold text-[#38bdf8]">
                   {stock.margin_buy!.toLocaleString()}株
                 </p>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+              <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-3 py-3">
                 <p className="font-mono text-[9px] text-slate-500">信用売り残</p>
                 <p className="mt-1 font-mono text-sm font-semibold text-[#f87171]">
                   {stock.margin_sell != null ? stock.margin_sell.toLocaleString() + "株" : "—"}
                 </p>
               </div>
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-3 py-3">
+              <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-3 py-3">
                 <p className="font-mono text-[9px] text-slate-500">信用倍率（買/売）</p>
                 <p className="mt-1 font-mono text-sm font-semibold text-[#e8f4ff]">
                   {stock.margin_ratio != null ? stock.margin_ratio.toFixed(2) + "倍" : "—"}
@@ -388,7 +388,7 @@ export default function StockDetail({
 
         {/* 四半期業績推移 */}
         {quarterly.length > 1 && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">四半期業績推移（億円・累計）</p>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={quarterly} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
@@ -407,7 +407,7 @@ export default function StockDetail({
         {/* 通期業績推移 */}
         {trend.length > 1 && (
           <div className="space-y-4">
-            <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+            <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
               <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">売上高・営業利益推移（億円・通期）</p>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={trend} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
@@ -423,7 +423,7 @@ export default function StockDetail({
             </div>
 
             {trend.some((t) => t.equityRatioPct !== null) && (
-              <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+              <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
                 <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">自己資本比率推移（%）</p>
                 <ResponsiveContainer width="100%" height={160}>
                   <LineChart data={trend} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
@@ -441,7 +441,7 @@ export default function StockDetail({
 
         {/* 配当履歴 */}
         {chartData.dividends.length > 0 && (
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">配当履歴（円/株）</p>
             <ResponsiveContainer width="100%" height={140}>
               <BarChart data={chartData.dividends.slice(-10)} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
@@ -456,12 +456,12 @@ export default function StockDetail({
         )}
 
         {/* 外部リンク */}
-        <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-4">
+        <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-4">
           <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-3">外部リンク</p>
           <div className="flex flex-wrap gap-2">
             {IR_LINKS.map(({ label, url }) => (
               <a key={label} href={url} target="_blank" rel="noopener noreferrer"
-                className="rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-1.5 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] hover:text-slate-200 transition-all">
+                className="rounded-lg border border-white/[0.18] bg-white/[0.14] px-3 py-1.5 font-mono text-[10px] text-slate-400 hover:bg-white/[0.14] hover:text-slate-200 transition-all">
                 {label} ↗
               </a>
             ))}
@@ -495,7 +495,7 @@ export default function StockDetail({
           </div>
         )}
 
-        <p className="font-mono text-[9px] text-slate-700">
+        <p className="font-mono text-[9px] text-slate-500">
           データ: J-Quants（財務）/ Yahoo Finance（株価・配当）/ TradingView（チャート）。これは投資助言ではありません。
         </p>
       </main>

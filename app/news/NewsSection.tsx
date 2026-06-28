@@ -29,7 +29,7 @@ interface NewsSectionProps {
 const IMPACT = {
   bullish: { label: "SP500 ↑",  color: "text-[#34d399] border-[#34d399]/30 bg-[#34d399]/[0.08]" },
   bearish: { label: "SP500 ↓",  color: "text-[#f87171] border-[#f87171]/30 bg-[#f87171]/[0.08]" },
-  neutral: { label: "SP500 →",  color: "text-slate-400 border-white/[0.12] bg-white/[0.06]" },
+  neutral: { label: "SP500 →",  color: "text-slate-400 border-white/[0.22] bg-white/[0.11]" },
 } as const;
 
 const DIR_ICON: Record<string, string> = { bullish: "↑", bearish: "↓", neutral: "→" };
@@ -144,9 +144,9 @@ function HeadlineCard({
   const impact = IMPACT[item.sp500_impact] ?? IMPACT.neutral;
 
   return (
-    <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] overflow-hidden backdrop-blur-sm">
+    <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] overflow-hidden backdrop-blur-sm">
       {/* clickable header */}
-      <button onClick={handleExpand} className="w-full px-5 py-4 text-left hover:bg-white/[0.03] transition-colors">
+      <button onClick={handleExpand} className="w-full px-5 py-4 text-left hover:bg-white/[0.11] transition-colors">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium leading-snug text-[#e8f4ff]">{item.title}</p>
@@ -162,10 +162,10 @@ function HeadlineCard({
           <p className="mt-1.5 text-[11px] text-slate-500">{item.sp500_reason}</p>
         )}
         <div className="mt-2 flex items-center gap-3">
-          <span className="rounded-full border border-white/[0.09] bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] text-slate-500">
+          <span className="rounded-full border border-white/[0.09] bg-white/[0.14] px-2 py-0.5 font-mono text-[10px] text-slate-500">
             {item.source}
           </span>
-          <span className="font-mono text-[10px] text-slate-600">
+          <span className="font-mono text-[10px] text-slate-500">
             {expanded ? "▲ 閉じる" : "▼ 深掘り分析"}
           </span>
         </div>
@@ -173,7 +173,7 @@ function HeadlineCard({
 
       {/* deep analysis */}
       {expanded && (
-        <div className="border-t border-white/[0.09] bg-white/[0.03] px-5 py-4">
+        <div className="border-t border-white/[0.09] bg-white/[0.11] px-5 py-4">
           {deepLoading ? (
             <p className="animate-pulse font-mono text-xs text-[#38bdf8]">● 分析中...</p>
           ) : deep ? (
@@ -204,7 +204,7 @@ function HeadlineCard({
               )}
             </div>
           ) : (
-            <p className="text-xs text-slate-600">分析に失敗しました</p>
+            <p className="text-xs text-slate-500">分析に失敗しました</p>
           )}
         </div>
       )}
@@ -228,7 +228,7 @@ function HeadlineCard({
           <span>{showComments ? "閉じる" : comments.length > 0 ? `${comments.length}件` : "コメント"}</span>
         </button>
         {user ? (
-          <span className="ml-auto font-mono text-[10px] text-slate-600 truncate max-w-[160px]">
+          <span className="ml-auto font-mono text-[10px] text-slate-500 truncate max-w-[160px]">
             {(user.user_metadata?.full_name as string | undefined) ?? user.email}
           </span>
         ) : (
@@ -245,7 +245,7 @@ function HeadlineCard({
       {showComments && (
         <div className="border-t border-white/[0.09] bg-white/[0.02] px-5 py-3 space-y-2">
           {comments.length === 0 && (
-            <p className="text-xs text-slate-600">まだコメントはありません</p>
+            <p className="text-xs text-slate-500">まだコメントはありません</p>
           )}
           {comments.map((c) => (
             <div key={c.id} className="text-xs leading-5">
@@ -262,7 +262,7 @@ function HeadlineCard({
                 onChange={(e) => setCommentText(e.target.value.slice(0, 200))}
                 onKeyDown={(e) => e.key === "Enter" && handleComment()}
                 placeholder="コメント（200字以内）..."
-                className="flex-1 rounded-xl border border-white/[0.12] bg-white/[0.06] px-3 py-1.5 text-xs text-slate-300 placeholder-slate-600 outline-none focus:border-[#38bdf8]/30"
+                className="flex-1 rounded-xl border border-white/[0.22] bg-white/[0.11] px-3 py-1.5 text-xs text-slate-300 placeholder-slate-600 outline-none focus:border-[#38bdf8]/30"
               />
               <button
                 onClick={handleComment}
@@ -275,7 +275,7 @@ function HeadlineCard({
           ) : (
             <button
               onClick={onLogin}
-              className="rounded-xl border border-white/[0.18] bg-white/[0.07] px-4 py-1.5 font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors"
+              className="rounded-xl border border-white/[0.18] bg-white/[0.13] px-4 py-1.5 font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors"
             >
               Google でログインしてコメントする
             </button>

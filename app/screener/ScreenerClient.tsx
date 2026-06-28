@@ -111,7 +111,7 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
   return (
     <div>
       {/* ── フィルター ── */}
-      <div className="rounded-2xl border border-white/[0.12] bg-white/[0.03] p-5 mb-6">
+      <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] p-5 mb-6">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           <FilterSlider label="PBR 以下" unit="倍" value={filters.pbr_max} min={0.1} max={3} step={0.1}
             inactive={filters.pbr_max >= INACTIVE.pbr_max}
@@ -146,7 +146,7 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
             <select
               value={filters.market}
               onChange={(e) => setF("market", e.target.value)}
-              className="w-full rounded-lg border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-300 focus:outline-none"
+              className="w-full rounded-lg border border-white/[0.18] bg-white/[0.14] px-2 py-1.5 font-mono text-xs text-slate-300 focus:outline-none"
             >
               {MARKETS.map((m) => <option key={m} value={m}>{m}</option>)}
             </select>
@@ -157,7 +157,7 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
             <select
               value={filters.value_flag}
               onChange={(e) => setF("value_flag", e.target.value)}
-              className="w-full rounded-lg border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-300 focus:outline-none"
+              className="w-full rounded-lg border border-white/[0.18] bg-white/[0.14] px-2 py-1.5 font-mono text-xs text-slate-300 focus:outline-none"
             >
               {VALUE_FLAGS.map((f) => <option key={f} value={f}>{f}</option>)}
             </select>
@@ -169,11 +169,11 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
       <div className="flex items-center gap-3 mb-4">
         <p className="font-mono text-xs text-slate-500">
           {loading ? "検索中..." : `${count} 件ヒット`}
-          <span className="text-slate-700 ml-2">/ DB {totalCount} 銘柄</span>
+          <span className="text-slate-500 ml-2">/ DB {totalCount} 銘柄</span>
         </p>
         <button
           onClick={search}
-          className="ml-auto rounded-lg border border-white/[0.10] bg-white/[0.04] px-3 py-1 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] transition-all"
+          className="ml-auto rounded-lg border border-white/[0.18] bg-white/[0.14] px-3 py-1 font-mono text-[10px] text-slate-400 hover:bg-white/[0.14] transition-all"
         >
           再検索
         </button>
@@ -181,16 +181,16 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
 
       {/* ── 結果テーブル ── */}
       {results.length === 0 && !loading ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-10 text-center">
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.02] p-10 text-center">
           <p className="text-sm text-slate-500">条件に合う銘柄が見つかりませんでした。フィルターを緩めてみてください。</p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.12]">
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.22]">
           <table className="w-full text-left">
             <thead>
-              <tr className="border-b border-white/[0.08] bg-white/[0.03]">
+              <tr className="border-b border-white/[0.15] bg-white/[0.11]">
                 {["コード", "銘柄名", "市場", "判定", "株価", "PBR", "PER", "ROE", "ROA", "自己資本比", "利回り", "売上成長"].map((h) => (
-                  <th key={h} className="px-3 py-2.5 font-mono text-[9px] text-slate-600 whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-3 py-2.5 font-mono text-[9px] text-slate-500 whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -198,7 +198,7 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
               {results.map((s, i) => (
                 <tr
                   key={s.code}
-                  className={`border-b border-white/[0.06] hover:bg-white/[0.03] transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}
+                  className={`border-b border-white/[0.06] hover:bg-white/[0.11] transition-colors ${i % 2 === 0 ? "" : "bg-white/[0.01]"}`}
                 >
                   <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500">
                     <Link href={`/screener/${s.code}`} className="hover:text-[#38bdf8] transition-colors">{s.code}</Link>
@@ -206,14 +206,14 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
                   <td className="px-3 py-2.5 text-xs text-slate-300 max-w-[140px] truncate">
                     <Link href={`/screener/${s.code}`} className="hover:text-[#e8f4ff] transition-colors">{s.name}</Link>
                   </td>
-                  <td className="px-3 py-2.5 font-mono text-[9px] text-slate-600">{s.market}</td>
+                  <td className="px-3 py-2.5 font-mono text-[9px] text-slate-500">{s.market}</td>
                   <td className="px-3 py-2.5">
                     {s.value_flag ? (
                       <span className={`rounded-full border px-2 py-0.5 font-mono text-[9px] ${VALUE_FLAG_CLS[s.value_flag] ?? "text-slate-500"}`}>
                         {s.value_flag}
                       </span>
                     ) : (
-                      <span className="font-mono text-[9px] text-slate-700">—</span>
+                      <span className="font-mono text-[9px] text-slate-500">—</span>
                     )}
                   </td>
                   <td className="px-3 py-2.5 font-mono text-xs text-slate-300">{s.price != null ? `¥${s.price.toFixed(1)}` : "—"}</td>
@@ -246,8 +246,8 @@ function FilterSlider({
   return (
     <div>
       <div className="flex justify-between mb-1">
-        <p className={`font-mono text-[9px] ${inactive ? "text-slate-600" : "text-slate-400"}`}>{label}</p>
-        <p className={`font-mono text-[9px] ${inactive ? "text-slate-600" : "text-[#38bdf8]"}`}>
+        <p className={`font-mono text-[9px] ${inactive ? "text-slate-500" : "text-slate-400"}`}>{label}</p>
+        <p className={`font-mono text-[9px] ${inactive ? "text-slate-500" : "text-[#38bdf8]"}`}>
           {inactive ? "制限なし" : `${value}${unit}`}
         </p>
       </div>

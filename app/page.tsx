@@ -38,13 +38,13 @@ function toVerdict(tier: string, athDd: number) {
       label: "弱いシグナル",
       sub: "短期的な売られすぎ。単独での根拠としては薄い",
       dot: "bg-slate-400",
-      badge: "border-white/[0.15] bg-white/[0.06] text-slate-400",
+      badge: "border-white/[0.15] bg-white/[0.11] text-slate-400",
     },
     NONE: {
       label: "様子見",
       sub: `高値からまだ${drop}%しか下がっていない。定期積立の継続が合理的`,
       dot: "bg-slate-600",
-      badge: "border-white/[0.12] bg-white/[0.04] text-slate-500",
+      badge: "border-white/[0.22] bg-white/[0.14] text-slate-500",
     },
   };
   return map[tier] ?? map.NONE;
@@ -104,14 +104,14 @@ export default async function HomePage() {
     open: "検証待ち", testing: "検証中", adopted: "採用", rejected: "棄却",
   };
   const STATUS_CLS: Record<string, string> = {
-    open: "text-[#38bdf8]", testing: "text-amber-400", adopted: "text-[#34d399]", rejected: "text-slate-600",
+    open: "text-[#38bdf8]", testing: "text-amber-400", adopted: "text-[#34d399]", rejected: "text-slate-500",
   };
 
   return (
     <div className="min-h-screen">
 
       {/* ━━━ 指令センター ━━━ */}
-      <div className="border-b border-white/[0.08] bg-gradient-to-b from-sky-400/[0.04] to-transparent">
+      <div className="border-b border-white/[0.15] bg-gradient-to-b from-sky-400/[0.04] to-transparent">
         <div className="mx-auto max-w-4xl px-6 py-10">
 
           {/* ヘッダー行 */}
@@ -122,7 +122,7 @@ export default async function HomePage() {
                 売る根拠も、買い足す根拠も、持ち続ける根拠も。
               </h1>
             </div>
-            {date && <p className="font-mono text-[10px] text-slate-600">{date} · 15分キャッシュ</p>}
+            {date && <p className="font-mono text-[10px] text-slate-500">{date} · 15分キャッシュ</p>}
           </div>
 
           {/* ダッシュボードグリッド */}
@@ -145,11 +145,11 @@ export default async function HomePage() {
             {/* CRS スコア */}
             <Link
               href="/signal/sp500"
-              className="rounded-2xl border border-white/[0.12] bg-white/[0.04] px-4 py-4 backdrop-blur-sm transition-all hover:bg-white/[0.07]"
+              className="rounded-2xl border border-white/[0.22] bg-white/[0.14] px-4 py-4 backdrop-blur-sm transition-all hover:bg-white/[0.13]"
             >
               <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-2">CRS スコア</p>
               <p className={`font-mono text-3xl font-bold ${crs >= 5 ? "text-[#f87171]" : crs >= 3 ? "text-amber-400" : crs >= 2 ? "text-[#38bdf8]" : "text-slate-400"}`}>
-                {crs}<span className="text-base font-normal text-slate-600">/6</span>
+                {crs}<span className="text-base font-normal text-slate-500">/6</span>
               </p>
               {/* バー */}
               <div className="mt-2.5 flex gap-0.5">
@@ -159,16 +159,16 @@ export default async function HomePage() {
                     className={`h-1.5 flex-1 rounded-full transition-colors ${
                       i < crs
                         ? crs >= 5 ? "bg-[#f87171]" : crs >= 3 ? "bg-amber-400" : "bg-[#38bdf8]"
-                        : "bg-white/[0.08]"
+                        : "bg-white/[0.14]"
                     }`}
                   />
                 ))}
               </div>
-              <p className="mt-1.5 font-mono text-[9px] text-slate-600">{CRS_LABEL[crs] ?? "—"}</p>
+              <p className="mt-1.5 font-mono text-[9px] text-slate-500">{CRS_LABEL[crs] ?? "—"}</p>
             </Link>
 
             {/* SP500 */}
-            <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] px-4 py-4 backdrop-blur-sm">
+            <div className="rounded-2xl border border-white/[0.22] bg-white/[0.14] px-4 py-4 backdrop-blur-sm">
               <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-2">S&amp;P 500</p>
               <p className="font-mono text-2xl font-bold text-[#e8f4ff] tabular-nums">
                 {price > 0 ? price.toLocaleString("ja-JP", { maximumFractionDigits: 0 }) : "—"}
@@ -179,7 +179,7 @@ export default async function HomePage() {
                     {dayRet >= 0 ? "+" : ""}{(dayRet * 100).toFixed(2)}%
                   </span>
                 )}
-                <span className="font-mono text-[9px] text-slate-600">
+                <span className="font-mono text-[9px] text-slate-500">
                   ATH {athDd >= 0 ? "+" : ""}{(athDd * 100).toFixed(1)}%
                 </span>
               </div>
@@ -192,8 +192,8 @@ export default async function HomePage() {
           {/* クイックナビ */}
           <div className="mt-4 flex flex-wrap gap-2">
             {[
-              { href: "/screener", label: "銘柄スクリーナー", cls: "text-slate-400 border-white/[0.10] bg-white/[0.03]" },
-              { href: "/news",     label: "最新ニュース",     cls: "text-slate-400 border-white/[0.10] bg-white/[0.03]" },
+              { href: "/screener", label: "銘柄スクリーナー", cls: "text-slate-400 border-white/[0.18] bg-white/[0.11]" },
+              { href: "/news",     label: "最新ニュース",     cls: "text-slate-400 border-white/[0.18] bg-white/[0.11]" },
               { href: "/simulate", label: "30年試算",         cls: "text-amber-400/70 border-amber-400/15 bg-amber-400/[0.04]" },
               { href: "/mypage",   label: "マイページ",       cls: "text-[#38bdf8]/70 border-[#38bdf8]/15 bg-[#38bdf8]/[0.04]" },
             ].map(({ href, label, cls }) => (
@@ -210,60 +210,60 @@ export default async function HomePage() {
       </div>
 
       {/* ━━━ 過去の買い場 ━━━ */}
-      <div className="border-b border-white/[0.08]">
+      <div className="border-b border-white/[0.15]">
         <div className="mx-auto max-w-4xl px-6 py-14">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600 mb-1">過去の実績</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">過去の実績</p>
           <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
             「買い場」と判定した日、その後どうなったか
           </h2>
-          <p className="text-xs text-slate-600 mb-6">
+          <p className="text-xs text-slate-500 mb-6">
             判定から2ヶ月後（約63営業日）のS&amp;P 500リターン。
           </p>
-          <div className="overflow-hidden rounded-2xl border border-white/[0.12]">
+          <div className="overflow-hidden rounded-2xl border border-white/[0.22]">
             {PAST_SIGNALS.map((s, i) => (
               <div
                 key={s.period}
                 className={`flex flex-col sm:flex-row sm:items-center gap-3 px-5 py-4 ${
-                  i !== PAST_SIGNALS.length - 1 ? "border-b border-white/[0.08]" : ""
+                  i !== PAST_SIGNALS.length - 1 ? "border-b border-white/[0.15]" : ""
                 }`}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-0.5">
                     <span className="font-mono text-xs text-slate-400">{s.period}</span>
-                    <span className="rounded-full border border-white/[0.10] bg-white/[0.04] px-2 py-0.5 font-mono text-[9px] text-slate-500">
+                    <span className="rounded-full border border-white/[0.18] bg-white/[0.14] px-2 py-0.5 font-mono text-[9px] text-slate-500">
                       {s.context}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-600">{s.note}</p>
+                  <p className="text-[11px] text-slate-500">{s.note}</p>
                 </div>
                 <div className="flex items-center gap-6 sm:shrink-0">
                   <div className="text-center">
-                    <p className="font-mono text-[9px] text-slate-600 mb-0.5">高値からの下落</p>
+                    <p className="font-mono text-[9px] text-slate-500 mb-0.5">高値からの下落</p>
                     <p className="font-mono text-sm font-bold text-[#f87171]">{s.drop}</p>
                   </div>
-                  <div className="font-mono text-slate-700 text-lg">→</div>
+                  <div className="font-mono text-slate-500 text-lg">→</div>
                   <div className="text-center">
-                    <p className="font-mono text-[9px] text-slate-600 mb-0.5">2ヶ月後</p>
+                    <p className="font-mono text-[9px] text-slate-500 mb-0.5">2ヶ月後</p>
                     <p className="font-mono text-sm font-bold text-[#34d399]">{s.ret}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
-          <p className="mt-3 font-mono text-[9px] text-slate-700">
+          <p className="mt-3 font-mono text-[9px] text-slate-500">
             過去30年（1994〜2024）の検証結果。将来のリターンを保証するものではありません。
           </p>
         </div>
       </div>
 
       {/* ━━━ シミュレーション ━━━ */}
-      <div className="border-b border-white/[0.08]">
+      <div className="border-b border-white/[0.15]">
         <div className="mx-auto max-w-4xl px-6 py-14">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600 mb-1">試算</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">試算</p>
           <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
             「なんとなく売らない」のではなく、数字で持ち続ける。
           </h2>
-          <p className="text-xs text-slate-600 mb-6">
+          <p className="text-xs text-slate-500 mb-6">
             毎月一定額を30年積み立てた場合のシミュレーション（年利10%想定 / S&amp;P 500の長期平均値）。
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 mb-5">
@@ -273,18 +273,18 @@ export default async function HomePage() {
                 className={`rounded-2xl border px-5 py-4 ${
                   t.highlight
                     ? "border-amber-400/30 bg-amber-400/[0.06]"
-                    : "border-white/[0.10] bg-white/[0.03]"
+                    : "border-white/[0.18] bg-white/[0.11]"
                 }`}
               >
                 <p className="font-mono text-xs text-slate-500 mb-1">{t.label} × {t.years}年</p>
                 <p className={`font-mono text-2xl font-bold ${t.highlight ? "text-amber-300" : "text-[#e8f4ff]"}`}>
                   {t.result}
                 </p>
-                <p className="font-mono text-[10px] text-slate-600 mt-1">{t.principal}</p>
+                <p className="font-mono text-[10px] text-slate-500 mt-1">{t.principal}</p>
               </div>
             ))}
           </div>
-          <div className="rounded-xl border border-white/[0.08] bg-white/[0.02] px-5 py-3 mb-5">
+          <div className="rounded-xl border border-white/[0.15] bg-white/[0.02] px-5 py-3 mb-5">
             <p className="text-[11px] leading-6 text-slate-500">
               コロナショック時（2020年3月）に1,000万円のポートフォリオを損切りし、1年後に戻した場合、
               その間に市場は <span className="text-[#f87171] font-mono font-bold">+79%</span> 上昇した。
@@ -301,13 +301,13 @@ export default async function HomePage() {
       </div>
 
       {/* ━━━ 検証の透明性 ━━━ */}
-      <div className="border-b border-white/[0.08]">
+      <div className="border-b border-white/[0.15]">
         <div className="mx-auto max-w-4xl px-6 py-14">
-          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600 mb-1">検証書庫</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">検証書庫</p>
           <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
             なぜこの数字を信じていいのか。根拠ごと全部公開。
           </h2>
-          <p className="text-xs text-slate-600 mb-6">
+          <p className="text-xs text-slate-500 mb-6">
             採用したシグナルだけでなく、棄却した仮説とその理由もすべてアーカイブしている。
           </p>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 mb-6">
@@ -317,9 +317,9 @@ export default async function HomePage() {
               { num: "5本",  desc: "最終的に採用したシグナル" },
               { num: "全公開", desc: "採用・棄却の理由を全てアーカイブ" },
             ].map((s) => (
-              <div key={s.num} className="rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3 text-center">
+              <div key={s.num} className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3 text-center">
                 <p className="font-mono text-xl font-bold text-[#e8f4ff]">{s.num}</p>
-                <p className="font-mono text-[9px] text-slate-600 mt-1 leading-4">{s.desc}</p>
+                <p className="font-mono text-[9px] text-slate-500 mt-1 leading-4">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -336,14 +336,14 @@ export default async function HomePage() {
                 </span>
                 <div>
                   <p className="font-mono text-xs text-slate-400">{r.name}</p>
-                  <p className="text-[11px] text-slate-600 mt-0.5">{r.stat}</p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">{r.stat}</p>
                 </div>
               </div>
             ))}
           </div>
           <Link
             href="/research"
-            className="inline-flex items-center gap-2 rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 py-2 font-mono text-xs text-slate-400 hover:text-slate-200 hover:bg-white/[0.07] transition-all"
+            className="inline-flex items-center gap-2 rounded-xl border border-white/[0.22] bg-white/[0.14] px-4 py-2 font-mono text-xs text-slate-400 hover:text-slate-200 hover:bg-white/[0.13] transition-all"
           >
             全ての検証記録を読む（採用5本・棄却7本+）→
           </Link>
@@ -352,17 +352,17 @@ export default async function HomePage() {
 
       {/* ━━━ 仮説投票 ━━━ */}
       <div className="mx-auto max-w-4xl px-6 py-14">
-        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-600 mb-1">仮説投票</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-slate-500 mb-1">仮説投票</p>
         <h2 className="text-lg font-semibold text-[#e8f4ff] mb-1">
           「これも調べてほしい」を投稿する。
         </h2>
-        <p className="text-xs text-slate-600 mb-6">
+        <p className="text-xs text-slate-500 mb-6">
           投票数の多い仮説を優先的に検証する。採用・棄却の結果は書庫に公開。
         </p>
         {recentHypotheses.length > 0 ? (
           <div className="space-y-2 mb-5">
             {recentHypotheses.map((h) => (
-              <div key={h.id} className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
+              <div key={h.id} className="flex items-center gap-3 rounded-xl border border-white/[0.15] bg-white/[0.02] px-4 py-3">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-slate-300 truncate">{h.title}</p>
                 </div>
@@ -370,14 +370,14 @@ export default async function HomePage() {
                   <span className={`font-mono text-[9px] ${STATUS_CLS[h.status] ?? "text-slate-500"}`}>
                     {STATUS_LABEL[h.status] ?? h.status}
                   </span>
-                  <span className="font-mono text-[10px] text-slate-600">▲ {h.vote_count}</span>
+                  <span className="font-mono text-[10px] text-slate-500">▲ {h.vote_count}</span>
                 </div>
               </div>
             ))}
           </div>
         ) : (
-          <div className="mb-5 rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-6 text-center">
-            <p className="text-xs text-slate-600">まだ仮説がありません。最初の1件を投稿してみてください。</p>
+          <div className="mb-5 rounded-xl border border-white/[0.15] bg-white/[0.02] px-4 py-6 text-center">
+            <p className="text-xs text-slate-500">まだ仮説がありません。最初の1件を投稿してみてください。</p>
           </div>
         )}
         <Link

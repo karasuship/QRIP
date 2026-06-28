@@ -41,7 +41,7 @@ export default async function PortfolioPage() {
           <p className="mt-8 font-mono text-sm text-red-400">SP500 価格の取得に失敗しました。しばらく後に再読み込みしてください。</p>
         ) : (
           <div className="mt-6">
-            <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-2.5">
+            <div className="mb-4 flex items-center gap-3 rounded-xl border border-white/[0.18] bg-white/[0.14] px-4 py-2.5">
               <span className="font-mono text-[10px] uppercase tracking-widest text-slate-500">SP500 現在値</span>
               <span className="font-mono text-base font-bold text-[#38bdf8]">{currentPrice.toLocaleString("ja-JP", { maximumFractionDigits: 2 })}</span>
               <span className="font-mono text-[10px] text-slate-500">({currentDate})</span>

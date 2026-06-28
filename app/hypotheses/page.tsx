@@ -60,18 +60,18 @@ export default async function HypothesesPage() {
             { step: "02", label: "投票する", desc: "面白いと思った仮説に投票（1人1票）" },
             { step: "03", label: "検証される", desc: "票数順にバックテスト。結果は /research に公開" },
           ].map((s) => (
-            <div key={s.step} className="rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3 flex gap-3">
+            <div key={s.step} className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3 flex gap-3">
               <span className="font-mono text-xl font-bold text-white/[0.08] shrink-0">{s.step}</span>
               <div>
                 <p className="text-sm font-medium text-slate-300">{s.label}</p>
-                <p className="text-xs text-slate-600 mt-0.5">{s.desc}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{s.desc}</p>
               </div>
             </div>
           ))}
         </div>
 
         {!dbReady ? (
-          <div className="mt-8 rounded-2xl border border-white/[0.10] bg-white/[0.04] p-8 text-center space-y-2">
+          <div className="mt-8 rounded-2xl border border-white/[0.18] bg-white/[0.14] p-8 text-center space-y-2">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">準備中</p>
             <p className="text-sm text-slate-400">データベースを初期化中です。しばらくお待ちください。</p>
           </div>

@@ -34,15 +34,15 @@ export default async function StockNews({
             href={n.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-col gap-0.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2 hover:bg-white/[0.06] transition-colors"
+            className="flex flex-col gap-0.5 rounded-xl border border-white/[0.07] bg-white/[0.11] px-3 py-2 hover:bg-white/[0.11] transition-colors"
           >
             <p className="text-xs leading-5 text-slate-300 line-clamp-2">{n.title}</p>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className="font-mono text-[9px] text-slate-600">{n.publisher}</span>
+              <span className="font-mono text-[9px] text-slate-500">{n.publisher}</span>
               {n.publishedAt && (
                 <>
-                  <span className="text-slate-700">·</span>
-                  <span className="font-mono text-[9px] text-slate-700">{relativeTime(n.publishedAt)}</span>
+                  <span className="text-slate-500">·</span>
+                  <span className="font-mono text-[9px] text-slate-500">{relativeTime(n.publishedAt)}</span>
                 </>
               )}
             </div>

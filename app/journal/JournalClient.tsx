@@ -116,7 +116,7 @@ export default function JournalClient({ todayCrs, todayPhi2 }: { todayCrs: numbe
   };
 
   if (user === "loading") {
-    return <p className="mt-12 font-mono text-xs text-slate-600 animate-pulse">● 読み込み中...</p>;
+    return <p className="mt-12 font-mono text-xs text-slate-500 animate-pulse">● 読み込み中...</p>;
   }
   if (!user) {
     return <LoginPrompt next="/journal" />;
@@ -137,50 +137,50 @@ export default function JournalClient({ todayCrs, todayPhi2 }: { todayCrs: numbe
 
       {/* 追加フォーム */}
       {showForm && (
-        <div className="mb-6 rounded-2xl border border-white/[0.12] bg-white/[0.05] p-5 space-y-3">
+        <div className="mb-6 rounded-2xl border border-white/[0.22] bg-white/[0.05] p-5 space-y-3">
           <p className="font-mono text-[10px] text-slate-400 uppercase tracking-widest">新しい記録</p>
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <div className="space-y-1">
-              <p className="font-mono text-[9px] text-slate-600 uppercase">日付</p>
+              <p className="font-mono text-[9px] text-slate-500 uppercase">日付</p>
               <input type="date" value={fDate} onChange={(e) => setFDate(e.target.value)}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]" />
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]" />
             </div>
             <div className="space-y-1">
-              <p className="font-mono text-[9px] text-slate-600 uppercase">ティッカー</p>
+              <p className="font-mono text-[9px] text-slate-500 uppercase">ティッカー</p>
               <input type="text" value={fTicker} onChange={(e) => setFTicker(e.target.value)}
                 placeholder="VOO, 7203.T…"
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]" />
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]" />
             </div>
             <div className="space-y-1">
-              <p className="font-mono text-[9px] text-slate-600 uppercase">アクション</p>
+              <p className="font-mono text-[9px] text-slate-500 uppercase">アクション</p>
               <select value={fAction} onChange={(e) => setFAction(e.target.value)}
-                className="w-full rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]">
+                className="w-full rounded-xl border border-white/[0.18] bg-[#0d1117] px-3 py-2 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]">
                 <option value="buy">買い</option>
                 <option value="sell">売り</option>
                 <option value="note">メモ</option>
               </select>
             </div>
             <div className="space-y-1">
-              <p className="font-mono text-[9px] text-slate-600 uppercase">金額（円）</p>
+              <p className="font-mono text-[9px] text-slate-500 uppercase">金額（円）</p>
               <input type="number" value={fAmount} onChange={(e) => setFAmount(e.target.value)}
                 placeholder="100000"
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]" />
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]" />
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <p className="font-mono text-[9px] text-slate-600 uppercase">CRS（当時）</p>
+              <p className="font-mono text-[9px] text-slate-500 uppercase">CRS（当時）</p>
               <input type="number" min="0" max="6" value={fCrs} onChange={(e) => setFCrs(e.target.value)}
                 placeholder="0〜6"
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]" />
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]" />
             </div>
             <div className="space-y-1">
-              <p className="font-mono text-[9px] text-slate-600 uppercase">phi2 発動</p>
+              <p className="font-mono text-[9px] text-slate-500 uppercase">phi2 発動</p>
               <button
                 onClick={() => setFPhi2((v) => !v)}
-                className={`w-full rounded-xl border px-3 py-2 font-mono text-xs transition-colors ${fPhi2 ? "border-[#34d399]/40 bg-[#34d399]/[0.10] text-[#34d399]" : "border-white/[0.10] bg-white/[0.04] text-slate-600"}`}
+                className={`w-full rounded-xl border px-3 py-2 font-mono text-xs transition-colors ${fPhi2 ? "border-[#34d399]/40 bg-[#34d399]/[0.10] text-[#34d399]" : "border-white/[0.18] bg-white/[0.14] text-slate-500"}`}
               >
                 {fPhi2 ? "✓ 発動中" : "未発動"}
               </button>
@@ -188,14 +188,14 @@ export default function JournalClient({ todayCrs, todayPhi2 }: { todayCrs: numbe
           </div>
 
           <div className="space-y-1">
-            <p className="font-mono text-[9px] text-slate-600 uppercase">メモ（なぜ買ったか・その時の感情）</p>
+            <p className="font-mono text-[9px] text-slate-500 uppercase">メモ（なぜ買ったか・その時の感情）</p>
             <textarea value={fNote} onChange={(e) => setFNote(e.target.value)}
               rows={3} placeholder="暴落が怖かった。でも CRS=5 だったので購入した。後から見直すために記録する。"
-              className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25] resize-none" />
+              className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25] resize-none" />
           </div>
 
           <div className="flex justify-end gap-2">
-            <button onClick={() => setShowForm(false)} className="font-mono text-[10px] text-slate-600 hover:text-slate-400 px-3 py-2">キャンセル</button>
+            <button onClick={() => setShowForm(false)} className="font-mono text-[10px] text-slate-500 hover:text-slate-400 px-3 py-2">キャンセル</button>
             <button
               onClick={save}
               disabled={saving}
@@ -209,14 +209,14 @@ export default function JournalClient({ todayCrs, todayPhi2 }: { todayCrs: numbe
 
       {/* エントリー一覧 */}
       {entries.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 text-center">
-          <p className="font-mono text-xs text-slate-600">まだ記録がありません。最初の取引を記録しましょう。</p>
-          <p className="mt-2 font-mono text-[10px] text-slate-700">暴落時に「なぜ買ったか」を残すのが最大の使い途。</p>
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.11] p-8 text-center">
+          <p className="font-mono text-xs text-slate-500">まだ記録がありません。最初の取引を記録しましょう。</p>
+          <p className="mt-2 font-mono text-[10px] text-slate-500">暴落時に「なぜ買ったか」を残すのが最大の使い途。</p>
         </div>
       ) : (
         <div className="space-y-2">
           {entries.map((e) => (
-            <div key={e.id} className="rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3">
+            <div key={e.id} className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap mb-1">
@@ -247,7 +247,7 @@ export default function JournalClient({ todayCrs, todayPhi2 }: { todayCrs: numbe
                 </div>
                 <button
                   onClick={() => deleteEntry(e.id)}
-                  className="shrink-0 font-mono text-[10px] text-slate-700 hover:text-[#f87171] transition-colors"
+                  className="shrink-0 font-mono text-[10px] text-slate-500 hover:text-[#f87171] transition-colors"
                 >
                   ✕
                 </button>

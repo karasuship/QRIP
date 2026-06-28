@@ -76,7 +76,7 @@ export default function AlertBanner({ signal }: { signal: SignalData }) {
         </div>
         <Link
           href="/signal"
-          className="shrink-0 rounded-lg border border-white/10 bg-white/[0.06] px-3 py-1 font-mono text-[10px] text-slate-300 hover:bg-white/10 hover:text-white transition-colors tracking-wider backdrop-blur-sm"
+          className="shrink-0 rounded-lg border border-white/10 bg-white/[0.11] px-3 py-1 font-mono text-[10px] text-slate-300 hover:bg-white/10 hover:text-white transition-colors tracking-wider backdrop-blur-sm"
         >
           詳細 →
         </Link>

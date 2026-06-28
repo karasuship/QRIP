@@ -63,7 +63,7 @@ function synthesize(
   return {
     label: "平穏",
     text:  "特に大きな変化はありません。通常の積立を継続してください。",
-    cls:   "border-white/[0.12] bg-white/[0.06] text-slate-300",
+    cls:   "border-white/[0.22] bg-white/[0.11] text-slate-300",
   };
 }
 
@@ -84,7 +84,7 @@ function sentimentMeta(score: number) {
 const PC_CONFIG: Record<string, { color: string; badge: string; label: string }> = {
   extreme_fear:  { color: "text-violet-300", badge: "border-violet-400/30 bg-violet-400/[0.08] text-violet-300", label: "歴史的な恐怖水準" },
   fear:          { color: "text-amber-400",  badge: "border-amber-400/30 bg-amber-400/[0.08] text-amber-400",   label: "下落への備えが多い" },
-  neutral:       { color: "text-slate-400",  badge: "border-white/[0.18] bg-white/[0.06] text-slate-400",       label: "どちらでもない" },
+  neutral:       { color: "text-slate-400",  badge: "border-white/[0.18] bg-white/[0.11] text-slate-400",       label: "どちらでもない" },
   greed:         { color: "text-[#34d399]",  badge: "border-[#34d399]/30 bg-[#34d399]/[0.08] text-[#34d399]",  label: "上昇への期待が多い" },
   extreme_greed: { color: "text-[#f87171]",  badge: "border-[#f87171]/30 bg-[#f87171]/[0.08] text-[#f87171]",  label: "楽観が行きすぎ" },
 };
@@ -119,12 +119,12 @@ const FED_CONFIG: Record<string, { label: string; plain: string; color: string }
   neutral: {
     label: "中立（様子見）",
     plain: "今のところ金利の方向性について明確な姿勢は示されていません。",
-    color: "border-white/[0.12] bg-white/[0.06] text-slate-400",
+    color: "border-white/[0.22] bg-white/[0.11] text-slate-400",
   },
   none: {
     label: "今日は言及なし",
     plain: "今日のニュースには中央銀行についての話題が特にありませんでした。",
-    color: "border-white/[0.09] bg-white/[0.04] text-slate-500",
+    color: "border-white/[0.09] bg-white/[0.14] text-slate-500",
   },
 };
 
@@ -132,7 +132,7 @@ const FED_CONFIG: Record<string, { label: string; plain: string; color: string }
 
 const CRS_IMPACT_CONFIG = {
   positive: { label: "不安材料あり", color: "border-amber-400/30 bg-amber-400/[0.08] text-amber-400" },
-  neutral:  { label: "影響は小さい", color: "border-white/[0.18] bg-white/[0.06] text-slate-500" },
+  neutral:  { label: "影響は小さい", color: "border-white/[0.18] bg-white/[0.11] text-slate-500" },
   negative: { label: "安心材料あり", color: "border-[#34d399]/30 bg-[#34d399]/[0.08] text-[#34d399]" },
 };
 
@@ -295,9 +295,9 @@ export default async function NewsPage() {
         </div>
 
         {!analysis ? (
-          <div className="mt-8 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-8 backdrop-blur-md text-center space-y-2">
+          <div className="mt-8 rounded-2xl border border-white/[0.22] bg-white/[0.11] p-8 backdrop-blur-md text-center space-y-2">
             <p className="text-slate-400">ニュースの取得に失敗しました</p>
-            <p className="font-mono text-[10px] text-slate-600">
+            <p className="font-mono text-[10px] text-slate-500">
               しばらくしてから再読み込みしてください（毎営業日 7:00 JST に自動更新）
             </p>
           </div>
@@ -319,7 +319,7 @@ export default async function NewsPage() {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
 
               {/* ニュースの論調（センチメント） */}
-              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-md">
+              <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] p-5 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-1">
                   今日のニュースは前向きか後ろ向きか
                 </p>
@@ -335,16 +335,16 @@ export default async function NewsPage() {
                     style={{ left: `${barPct}%` }}
                   />
                 </div>
-                <div className="mt-1.5 flex justify-between font-mono text-[10px] text-slate-600">
+                <div className="mt-1.5 flex justify-between font-mono text-[10px] text-slate-500">
                   <span>後ろ向き −1</span><span>中立 0</span><span>前向き +1</span>
                 </div>
-                <p className="mt-3 text-[11px] leading-5 text-slate-600">
+                <p className="mt-3 text-[11px] leading-5 text-slate-500">
                   AIが英語ニュース全体の論調を評価した数値。プラスが大きいほど良いニュースが多い。
                 </p>
               </div>
 
               {/* 投資家の警戒度（Put/Call） */}
-              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-md">
+              <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] p-5 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-1">
                   プロの投資家はどちら側に備えているか
                 </p>
@@ -359,20 +359,20 @@ export default async function NewsPage() {
                       </span>
                     </div>
                     <p className="mt-3 text-[11px] leading-5 text-slate-400">{pc.note}</p>
-                    <p className="mt-2 text-[10px] leading-5 text-slate-600">
+                    <p className="mt-2 text-[10px] leading-5 text-slate-500">
                       「下落保険（プット）」と「上昇賭け（コール）」の比率。1.0超えは本格的な警戒水準。
-                      <span className="text-slate-700"> （CBOE ^PCCE）</span>
+                      <span className="text-slate-500"> （CBOE ^PCCE）</span>
                     </p>
                   </>
                 ) : (
-                  <p className="mt-3 text-sm text-slate-600">市場クローズ後は取得できません</p>
+                  <p className="mt-3 text-sm text-slate-500">市場クローズ後は取得できません</p>
                 )}
               </div>
             </div>
 
             {/* ③ 待機資金の規模（MMF） */}
             {mmf && (
-              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-md">
+              <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] p-5 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-1">
                   株式市場に流れ込める「待機資金」はどれくらいあるか
                 </p>
@@ -382,10 +382,10 @@ export default async function NewsPage() {
                   }`}>{mmf.fuel_score}<span className="text-lg text-slate-500">/10</span></span>
                   <span className="mb-1 text-sm text-slate-400">
                     残高 <span className="font-mono font-semibold text-slate-300">${mmf.current_billions.toLocaleString()}B</span>
-                    <span className="ml-2 text-slate-600 text-xs">（52週 最小 ${mmf.min_52w.toLocaleString()}B → 最大 ${mmf.max_52w.toLocaleString()}B）</span>
+                    <span className="ml-2 text-slate-500 text-xs">（52週 最小 ${mmf.min_52w.toLocaleString()}B → 最大 ${mmf.max_52w.toLocaleString()}B）</span>
                   </span>
                 </div>
-                <div className="h-1.5 w-full rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-1.5 w-full rounded-full bg-white/[0.11] overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       mmf.fuel_score >= 7 ? "bg-[#34d399]" : mmf.fuel_score >= 4 ? "bg-amber-400" : "bg-slate-500"
@@ -396,20 +396,20 @@ export default async function NewsPage() {
                 <p className="mt-2 text-[11px] leading-5 text-slate-500">
                   MMF（普通預金より安全で利回りが出る短期金融商品）に眠っているお金の総量。
                   これが多いほど、相場が回復したときに株式市場へ流れ込む「燃料」が豊富な状態。
-                  <span className="text-slate-700">（データ: FRED WRMFSL、{mmf.last_date}時点）</span>
+                  <span className="text-slate-500">（データ: FRED WRMFSL、{mmf.last_date}時点）</span>
                 </p>
               </div>
             )}
 
             {/* ④ 金利環境 */}
             {rates && (
-              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-5 backdrop-blur-md">
+              <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] p-5 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-4">
                   お金を借りるコスト（金利）はどうなっているか
                 </p>
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {/* 長期金利 */}
-                  <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] px-4 py-3">
+                  <div className="rounded-xl border border-white/[0.09] bg-white/[0.11] px-4 py-3">
                     <p className="font-mono text-[10px] text-slate-500 mb-1">米国の長期金利（10年）</p>
                     <div className="flex items-baseline gap-2">
                       <span className={`font-mono text-2xl font-bold tabular-nums ${TNX_LEVEL[rates.tnxLevel].color}`}>
@@ -424,7 +424,7 @@ export default async function NewsPage() {
                     </p>
                   </div>
                   {/* イールドカーブ */}
-                  <div className="rounded-xl border border-white/[0.09] bg-white/[0.03] px-4 py-3">
+                  <div className="rounded-xl border border-white/[0.09] bg-white/[0.11] px-4 py-3">
                     <p className="font-mono text-[10px] text-slate-500 mb-1">金利の形（イールドカーブ）</p>
                     <div className="flex items-baseline gap-2">
                       <span className={`font-mono text-sm font-bold ${CURVE_SHAPE[rates.curveShape].color}`}>
@@ -435,13 +435,13 @@ export default async function NewsPage() {
                     <p className="mt-1.5 text-[11px] leading-5 text-slate-500">
                       {CURVE_SHAPE[rates.curveShape].note}
                     </p>
-                    <p className="mt-1 font-mono text-[9px] text-slate-700">
+                    <p className="mt-1 font-mono text-[9px] text-slate-500">
                       10年債 {rates.tnx}% 〔−〕 3ヶ月 {rates.irx}% ＝ {rates.spreadBp > 0 ? "+" : ""}{rates.spreadBp}bp
                     </p>
                   </div>
                 </div>
                 {/* 備考: なぜシグナルに使わないか */}
-                <p className="mt-3 text-[10px] leading-5 text-slate-600 border-t border-white/[0.07] pt-3">
+                <p className="mt-3 text-[10px] leading-5 text-slate-500 border-t border-white/[0.07] pt-3">
                   ※ このサイトの買いシグナル（phi2）は金利を使っていません。
                   理由: 金利が高いと株に悪いはずが、量的緩和（QE）期には逆の動きをすることが30年データで確認されたためです。
                   金利はあくまで「現在の相場環境の背景」として参考にしてください。
@@ -481,7 +481,7 @@ export default async function NewsPage() {
                       : "今日のニュースは安心材料が多く、恐怖スコア（CRS）を下げる方向の内容です。"
                   )}
                 </p>
-                <p className="mt-2 text-[10px] leading-5 text-slate-600">
+                <p className="mt-2 text-[10px] leading-5 text-slate-500">
                   CRSは「市場の恐怖の深さ」を0〜6で数値化したスコアです。
                   phi2シグナルはCRS 2以上の環境でのみ有効になります。
                   <Link href="/learn" className="ml-1 text-[#38bdf8]/50 hover:text-[#38bdf8] transition-colors">→ 詳細</Link>
@@ -491,7 +491,7 @@ export default async function NewsPage() {
 
             {/* ⑦ 特記事項 */}
             {analysis.notable_events && (
-              <div className="rounded-2xl border border-white/[0.09] bg-white/[0.04] px-5 py-3.5 backdrop-blur-sm">
+              <div className="rounded-2xl border border-white/[0.09] bg-white/[0.14] px-5 py-3.5 backdrop-blur-sm">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-1">今日の注目ポイント</p>
                 <p className="text-sm leading-6 text-slate-300">{analysis.notable_events}</p>
               </div>
@@ -510,7 +510,7 @@ export default async function NewsPage() {
           </div>
         )}
 
-        <p className="mt-8 font-mono text-[10px] leading-5 text-slate-600">
+        <p className="mt-8 font-mono text-[10px] leading-5 text-slate-500">
           ニュース分析: Claude Haiku（毎営業日 7:00 JST 自動更新）。Put/Call: CBOE ^PCCE。金利: Yahoo Finance ^TNX / ^IRX。
           これは投資助言ではありません。
         </p>

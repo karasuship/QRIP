@@ -135,10 +135,10 @@ export default function ResearchPage() {
         {/* 検証方法論 */}
         <section className="mt-8">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">検証の方法論</p>
-          <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 space-y-3">
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5 space-y-3">
             {METHODOLOGY.map((m) => (
               <div key={m.step} className="flex gap-4">
-                <span className="font-mono text-[10px] text-slate-600 shrink-0 pt-0.5 w-6">{m.step}</span>
+                <span className="font-mono text-[10px] text-slate-500 shrink-0 pt-0.5 w-6">{m.step}</span>
                 <div>
                   <p className="font-mono text-xs font-semibold text-slate-300">{m.title}</p>
                   <p className="mt-0.5 text-[11px] leading-5 text-slate-500">{m.desc}</p>
@@ -151,9 +151,9 @@ export default function ResearchPage() {
         {/* 採用シグナル */}
         <section className="mt-8">
           <div className="mb-4 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/[0.07]" />
+            <div className="h-px flex-1 bg-white/[0.13]" />
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">採用シグナル（5本）</p>
-            <div className="h-px flex-1 bg-white/[0.07]" />
+            <div className="h-px flex-1 bg-white/[0.13]" />
           </div>
           <div className="space-y-4">
             {ADOPTED.map((s) => (
@@ -167,11 +167,11 @@ export default function ResearchPage() {
                     {s.stat}
                   </span>
                 </div>
-                <p className="font-mono text-[10px] text-slate-500 mb-2 bg-white/[0.04] rounded-lg px-3 py-1.5">
+                <p className="font-mono text-[10px] text-slate-500 mb-2 bg-white/[0.14] rounded-lg px-3 py-1.5">
                   条件: {s.condition}
                 </p>
                 <p className="text-[11px] leading-6 text-slate-400">{s.story}</p>
-                <Link href={s.href} className="mt-2 inline-block font-mono text-[10px] text-slate-600 hover:text-slate-400 transition-colors">
+                <Link href={s.href} className="mt-2 inline-block font-mono text-[10px] text-slate-500 hover:text-slate-400 transition-colors">
                   → 用語集で詳細を見る
                 </Link>
               </div>
@@ -182,11 +182,11 @@ export default function ResearchPage() {
         {/* 棄却された仮説 */}
         <section className="mt-8">
           <div className="mb-4 flex items-center gap-3">
-            <div className="h-px flex-1 bg-white/[0.07]" />
+            <div className="h-px flex-1 bg-white/[0.13]" />
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">棄却された仮説（一部）</p>
-            <div className="h-px flex-1 bg-white/[0.07]" />
+            <div className="h-px flex-1 bg-white/[0.13]" />
           </div>
-          <p className="mb-3 text-[11px] text-slate-600">
+          <p className="mb-3 text-[11px] text-slate-500">
             棄却された仮説こそが「なぜ採用シグナルが本物か」を支える証拠。全てアーカイブに保存されている。
           </p>
           <div className="space-y-3">
@@ -194,7 +194,7 @@ export default function ResearchPage() {
               <div key={r.name} className={`rounded-xl border p-4 ${r.color}`}>
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <p className="font-mono text-xs font-semibold text-slate-400">{r.name}</p>
-                  <span className="font-mono text-[10px] text-slate-600">{r.rounds}</span>
+                  <span className="font-mono text-[10px] text-slate-500">{r.rounds}</span>
                 </div>
                 <p className="mt-1.5 text-[11px] leading-5 text-slate-500">{r.reason}</p>
               </div>
@@ -203,24 +203,24 @@ export default function ResearchPage() {
         </section>
 
         {/* 研究中 */}
-        <section className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.03] p-5">
+        <section className="mt-8 rounded-2xl border border-white/[0.15] bg-white/[0.11] p-5">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">現在研究中</p>
           <div className="space-y-2.5 text-[11px] leading-6 text-slate-500">
             <p>· <span className="text-slate-400">個別株シグナル（配当株・成熟株）</span> — NTT・JT等のような低ボラ高配当株への独自ロジック検証</p>
             <p>· <span className="text-slate-400">FOMC声明スコアリング</span> — FRBの声明文から政策体制を自動分類</p>
             <p>· <span className="text-slate-400">大口フロー推定</span> — 出来高・価格動態から「誰の金で動いているか」を推定</p>
           </div>
-          <p className="mt-4 font-mono text-[10px] text-slate-600">
+          <p className="mt-4 font-mono text-[10px] text-slate-500">
             仮説の提案・投票は{" "}
             <Link href="/board" className="text-slate-500 hover:text-slate-300 transition-colors">掲示板</Link>
             {" "}から。採用候補になった仮説はここに記録される。
           </p>
         </section>
 
-        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-700">
+        <p className="mt-8 font-mono text-[10px] leading-6 text-slate-500">
           Zスコアはバックテスト期間（1994〜2026）の統計値。将来の成果を保証しません。
           これは投資助言ではありません。用語の詳細は{" "}
-          <Link href="/glossary" className="text-slate-600 hover:text-slate-400">用語集</Link>
+          <Link href="/glossary" className="text-slate-500 hover:text-slate-400">用語集</Link>
           {" "}を参照。
         </p>
       </main>

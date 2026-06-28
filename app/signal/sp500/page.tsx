@@ -36,7 +36,7 @@ function CRSDot({ active, label }: { active: boolean; label: React.ReactNode }) 
       className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[10px] tracking-wide ${
         active
           ? "border-red-400/30 bg-red-400/10 text-red-400"
-          : "border-white/[0.18] bg-white/[0.06] text-white/25"
+          : "border-white/[0.18] bg-white/[0.11] text-white/25"
       }`}
     >
       <span className={`inline-block h-1.5 w-1.5 rounded-full ${active ? "bg-red-400" : "bg-white/30"}`} />
@@ -57,7 +57,7 @@ function SignalBadge({
     ? quality === "high" ? "border-[#34d399]/40 bg-[#34d399]/[0.08]"
     : quality === "mid"  ? "border-amber-400/40 bg-amber-400/[0.08]"
     : "border-sky-400/40 bg-sky-400/[0.08]"
-    : "border-white/[0.15] bg-white/[0.06]";
+    : "border-white/[0.15] bg-white/[0.11]";
 
   const dot = active
     ? quality === "high" ? "bg-[#34d399]"
@@ -198,7 +198,7 @@ export default async function Sp500SignalPage() {
       label: "待機中 — 発動圏外",
       sub: `ATH ${pct(athDd)} — phi2 圏（−10%）に達していない`,
       detail: "通常の市場状態。定期積立（DCA）を継続。",
-      border: "border-white/[0.15] bg-white/[0.06]",
+      border: "border-white/[0.15] bg-white/[0.11]",
       detailColor: "text-slate-400",
     },
   };
@@ -211,8 +211,8 @@ export default async function Sp500SignalPage() {
     if (hygSignal)               return { text: "⚡ HYG-8% シグナル発動中。クレジット市場の恐怖を検知。30年統計 TEST Z=+9.42。", cls: "border-amber-400/30 bg-amber-400/[0.08] text-amber-400" };
     if (b4Active)                return { text: "⚡ B4 追加タイミング。phi2 発動から7営業日、ATH-10% 圏内が継続しています。", cls: "border-sky-400/30 bg-sky-400/[0.08] text-sky-400" };
     if (signalTier === "RSI25")  return { text: "RSI<25 シグナル。短期反発の根拠は薄いが、長期保有前提の追加投入なら合理的。", cls: "border-amber-400/20 bg-amber-400/[0.05] text-amber-400/80" };
-    if (signalTier === "NEAR")   return { text: "発動圏内に入っています。条件はまだ揃っていません。引き続き定期積立を続けてください。", cls: "border-white/[0.18] bg-white/[0.07] text-slate-400" };
-    return { text: "今日は通常状態です。定期積立（DCA）を続けてください。", cls: "border-white/[0.13] bg-white/[0.06] text-slate-400" };
+    if (signalTier === "NEAR")   return { text: "発動圏内に入っています。条件はまだ揃っていません。引き続き定期積立を続けてください。", cls: "border-white/[0.18] bg-white/[0.13] text-slate-400" };
+    return { text: "今日は通常状態です。定期積立（DCA）を続けてください。", cls: "border-white/[0.13] bg-white/[0.11] text-slate-400" };
   })();
 
   return (
@@ -299,7 +299,7 @@ export default async function Sp500SignalPage() {
         <section className="mt-5">
           <div className="mb-2 flex items-center gap-2">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">ライブチャート</p>
-            <span className="rounded-full border border-white/[0.10] px-2 py-0.5 font-mono text-[9px] text-slate-600">S&amp;P 500 · 15分遅延</span>
+            <span className="rounded-full border border-white/[0.18] px-2 py-0.5 font-mono text-[9px] text-slate-500">S&amp;P 500 · 15分遅延</span>
           </div>
           <PriceChartClient />
         </section>
@@ -312,7 +312,7 @@ export default async function Sp500SignalPage() {
 
         {/* 購入後の行動ガイド */}
         {anySignalActive && (
-          <div className="mt-3 rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
+          <div className="mt-3 rounded-2xl border border-white/[0.22] bg-white/[0.11] p-4 backdrop-blur-md">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">購入後の行動ガイド</p>
             <div className="space-y-2.5">
               <div className="flex gap-3">
@@ -375,7 +375,7 @@ export default async function Sp500SignalPage() {
               crs >= 5 ? "bg-violet-400/15 text-violet-300"
               : crs >= 4 ? "bg-red-400/15 text-red-400"
               : crs >= 2 ? "bg-amber-400/15 text-amber-400"
-              : "bg-white/[0.06] text-slate-400"
+              : "bg-white/[0.11] text-slate-400"
             }`}>
               {crs} / 6
             </span>
@@ -394,7 +394,7 @@ export default async function Sp500SignalPage() {
           </div>
           <div className="mt-3 grid grid-cols-4 gap-1.5">
             {[
-              { range: "0〜1", label: "シグナル無効",   color: "text-slate-500 border-white/[0.08] bg-white/[0.03]" },
+              { range: "0〜1", label: "シグナル無効",   color: "text-slate-500 border-white/[0.15] bg-white/[0.11]" },
               { range: "2〜3", label: "有効",           color: "text-amber-400 border-amber-400/20 bg-amber-400/[0.05]" },
               { range: "4",   label: "高品質",          color: "text-[#f87171] border-[#f87171]/20 bg-[#f87171]/[0.05]" },
               { range: "5〜6", label: "2倍投入検討",    color: "text-violet-300 border-violet-400/30 bg-violet-400/[0.07]" },
@@ -449,17 +449,17 @@ export default async function Sp500SignalPage() {
               },
             ] as { key: string; label: React.ReactNode; ok: boolean; val: string }[]
           ).map(({ key, label, ok, val }) => (
-            <div key={key} className="flex items-center justify-between border-b border-white/[0.12] py-2 last:border-0">
+            <div key={key} className="flex items-center justify-between border-b border-white/[0.22] py-2 last:border-0">
               <span className="flex items-center gap-2 text-sm">
                 <span className={`font-mono ${ok ? "text-[#34d399]" : "text-slate-400"}`}>{ok ? "✓" : "○"}</span>
-                <span className={ok ? "text-[#e8f4ff]" : "text-slate-600"}>{label}</span>
+                <span className={ok ? "text-[#e8f4ff]" : "text-slate-500"}>{label}</span>
               </span>
               <span className={`font-mono text-sm ${ok ? "text-[#34d399]" : "text-slate-400"}`}>{val}</span>
             </div>
           ))}
 
           {aq && (
-            <div className="mt-3 rounded-xl border border-white/[0.09] bg-white/[0.04] px-3 py-2">
+            <div className="mt-3 rounded-xl border border-white/[0.09] bg-white/[0.14] px-3 py-2">
               <p className="font-mono text-[10px] text-slate-500 mb-1">ATH深度の品質</p>
               <div className="flex flex-col gap-1">
                 {[
@@ -480,12 +480,12 @@ export default async function Sp500SignalPage() {
 
         {/* 過去類似事例 */}
         {pastEpisodes.length > 0 && (
-          <section className="mt-8 border-t border-white/[0.12] pt-6">
+          <section className="mt-8 border-t border-white/[0.22] pt-6">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">過去2年の phi2 類似事例</p>
             <p className="mt-1 mb-3 text-xs text-slate-400">ATH−10% · 当日−2% · vol&gt;25% · age非L字を満たした日 — その後のリターン（実績）</p>
             <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
               <table className="w-full text-sm">
-                <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+                <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                   <tr>
                     {["日付","当日","ATH 乖離","今日まで","経過"].map(h => (
                       <th key={h} className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
@@ -511,7 +511,7 @@ export default async function Sp500SignalPage() {
         )}
 
         {/* 過去30日候補日 */}
-        <section className="mt-8 border-t border-white/[0.12] pt-6">
+        <section className="mt-8 border-t border-white/[0.22] pt-6">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">過去 30 日の phi2 v3 候補日</p>
           <p className="mt-1 mb-3 text-xs text-slate-400">ATH −10% · 当日 −2% · vol &gt; 25% を満たした日</p>
           {history.length === 0 ? (
@@ -519,7 +519,7 @@ export default async function Sp500SignalPage() {
           ) : (
             <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
               <table className="w-full text-sm">
-                <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+                <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                   <tr>
                     {["日付","当日","ATH 乖離","CRS","phi2 v3"].map(h => (
                       <th key={h} className={`px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-slate-400 ${h === "日付" ? "text-left" : "text-right"}`}>{h}</th>
@@ -549,8 +549,8 @@ export default async function Sp500SignalPage() {
         </section>
 
         {/* 今後のイベント */}
-        <section className="mt-8 rounded-2xl border border-white/[0.08] bg-white/[0.02] px-5 py-5">
-          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-slate-600 mb-4">今後のイベント</p>
+        <section className="mt-8 rounded-2xl border border-white/[0.15] bg-white/[0.02] px-5 py-5">
+          <p className="font-mono text-[9px] uppercase tracking-[0.25em] text-slate-500 mb-4">今後のイベント</p>
           <EconCalendar />
           <EarningsCalendar />
         </section>

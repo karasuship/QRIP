@@ -189,7 +189,7 @@ export default function MyPageClient() {
 
   // ── ローディング ─────────────────────────────────────────────────
   if (user === "loading") {
-    return <div className="mt-12 font-mono text-xs text-slate-600 animate-pulse">● 読み込み中...</div>;
+    return <div className="mt-12 font-mono text-xs text-slate-500 animate-pulse">● 読み込み中...</div>;
   }
 
   // ── 未ログイン ───────────────────────────────────────────────────
@@ -197,7 +197,7 @@ export default function MyPageClient() {
     return (
       <div className="mt-6 space-y-6">
         {/* 機能プレビュー：ウォッチリスト */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.04]">
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.22] bg-white/[0.14]">
           <div className="px-5 pt-4 pb-2">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">ウォッチリスト</p>
             <div className="space-y-2 pointer-events-none select-none blur-[2px] opacity-50">
@@ -206,7 +206,7 @@ export default function MyPageClient() {
                 { code: "2914", name: "JT",   div: "5.1%", pbr: "1.8x" },
                 { code: "9433", name: "KDDI", div: "3.0%", pbr: "2.1x" },
               ].map((s) => (
-                <div key={s.code} className="flex items-center gap-4 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5">
+                <div key={s.code} className="flex items-center gap-4 rounded-xl border border-white/[0.15] bg-white/[0.11] px-4 py-2.5">
                   <span className="font-mono text-sm font-bold text-[#e8f4ff] w-16">{s.name}</span>
                   <span className="font-mono text-[10px] text-slate-500">{s.code}</span>
                   <span className="font-mono text-[10px] text-[#34d399] ml-auto">配当 {s.div}</span>
@@ -224,7 +224,7 @@ export default function MyPageClient() {
         </div>
 
         {/* 機能プレビュー：スクリーナーアラート */}
-        <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.04]">
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.22] bg-white/[0.14]">
           <div className="px-5 pt-4 pb-2">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">スクリーナーアラート</p>
             <div className="space-y-2 pointer-events-none select-none blur-[2px] opacity-50">
@@ -232,7 +232,7 @@ export default function MyPageClient() {
                 { name: "高配当バリュー", tags: ["PBR≤1.0", "配当≥3.5%", "プライム"] },
                 { name: "優良小型株",     tags: ["PBR≤0.8", "ROE≥15%", "自己資本≥50%"] },
               ].map((a) => (
-                <div key={a.name} className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5">
+                <div key={a.name} className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-4 py-2.5">
                   <p className="font-mono text-xs font-semibold text-[#e8f4ff] mb-1.5">{a.name}</p>
                   <div className="flex gap-1.5">
                     {a.tags.map((t) => (
@@ -273,21 +273,21 @@ export default function MyPageClient() {
   return (
     <div className="mt-6 space-y-4">
       {/* ユーザー情報 */}
-      <div className="flex items-center justify-between rounded-xl border border-white/[0.10] bg-white/[0.04] px-4 py-3">
+      <div className="flex items-center justify-between rounded-xl border border-white/[0.18] bg-white/[0.14] px-4 py-3">
         <div className="flex items-center gap-2">
           <span className="h-2 w-2 rounded-full bg-[#34d399]" />
           <span className="font-mono text-xs text-slate-400">{user.email ?? "ログイン済み"}</span>
         </div>
         <button
           onClick={async () => { const sb = getSupabaseBrowser(); await sb?.auth.signOut(); setUser(null); }}
-          className="font-mono text-[10px] text-slate-600 hover:text-slate-400 transition-colors"
+          className="font-mono text-[10px] text-slate-500 hover:text-slate-400 transition-colors"
         >
           ログアウト
         </button>
       </div>
 
       {/* タブ */}
-      <div className="flex gap-1 rounded-xl border border-white/[0.10] bg-white/[0.04] p-1 w-fit">
+      <div className="flex gap-1 rounded-xl border border-white/[0.18] bg-white/[0.14] p-1 w-fit">
         {(["watchlist", "alerts"] as const).map((t) => (
           <button
             key={t}
@@ -305,7 +305,7 @@ export default function MyPageClient() {
       {tab === "watchlist" && (
         <div className="space-y-3">
           {/* 追加フォーム */}
-          <div className="rounded-2xl border border-white/[0.15] bg-white/[0.07] p-4">
+          <div className="rounded-2xl border border-white/[0.15] bg-white/[0.13] p-4">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">銘柄を追加</p>
             <div className="flex gap-2 flex-wrap">
               <input
@@ -313,14 +313,14 @@ export default function MyPageClient() {
                 value={wForm.code}
                 onChange={(e) => setWForm((f) => ({ ...f, code: e.target.value }))}
                 placeholder="銘柄コード（例: 9432）"
-                className="w-36 rounded-xl border border-white/[0.15] bg-white/[0.06] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
+                className="w-36 rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
               />
               <input
                 type="text"
                 value={wForm.name}
                 onChange={(e) => setWForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="名前（任意）"
-                className="flex-1 min-w-32 rounded-xl border border-white/[0.15] bg-white/[0.06] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
+                className="flex-1 min-w-32 rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
               />
               <button
                 onClick={addWatch}
@@ -335,15 +335,15 @@ export default function MyPageClient() {
 
           {/* 一覧 */}
           {watchlist.length === 0 ? (
-            <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] px-5 py-8 text-center">
-              <p className="font-mono text-xs text-slate-600">まだ銘柄が登録されていません。</p>
+            <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] px-5 py-8 text-center">
+              <p className="font-mono text-xs text-slate-500">まだ銘柄が登録されていません。</p>
             </div>
           ) : (
-            <div className="overflow-hidden rounded-2xl border border-white/[0.12]">
+            <div className="overflow-hidden rounded-2xl border border-white/[0.22]">
               {watchlist.map((w, i) => (
                 <div
                   key={w.id}
-                  className={`flex items-center gap-3 px-4 py-3 ${i !== watchlist.length - 1 ? "border-b border-white/[0.08]" : ""}`}
+                  className={`flex items-center gap-3 px-4 py-3 ${i !== watchlist.length - 1 ? "border-b border-white/[0.15]" : ""}`}
                 >
                   <div className="flex-1 flex items-center gap-3">
                     <Link
@@ -358,13 +358,13 @@ export default function MyPageClient() {
                   </div>
                   <Link
                     href={`/screener/${w.stock_code}`}
-                    className="font-mono text-[10px] text-slate-600 hover:text-[#38bdf8] transition-colors"
+                    className="font-mono text-[10px] text-slate-500 hover:text-[#38bdf8] transition-colors"
                   >
                     詳細 →
                   </Link>
                   <button
                     onClick={() => removeWatch(w.stock_code)}
-                    className="font-mono text-[10px] text-slate-700 hover:text-red-400 transition-colors"
+                    className="font-mono text-[10px] text-slate-500 hover:text-red-400 transition-colors"
                   >
                     削除
                   </button>
@@ -387,7 +387,7 @@ export default function MyPageClient() {
           </div>
 
           {/* 追加フォーム */}
-          <div className="rounded-2xl border border-white/[0.15] bg-white/[0.07] p-4">
+          <div className="rounded-2xl border border-white/[0.15] bg-white/[0.13] p-4">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">条件を追加</p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 mb-3">
               <div>
@@ -399,7 +399,7 @@ export default function MyPageClient() {
                   value={aForm.pbr_max ?? ""}
                   onChange={(e) => setAForm((f) => ({ ...f, pbr_max: e.target.value ? Number(e.target.value) : undefined }))}
                   placeholder="例: 1.0"
-                  className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div>
@@ -411,7 +411,7 @@ export default function MyPageClient() {
                   value={aForm.per_max ?? ""}
                   onChange={(e) => setAForm((f) => ({ ...f, per_max: e.target.value ? Number(e.target.value) : undefined }))}
                   placeholder="例: 15"
-                  className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div>
@@ -423,7 +423,7 @@ export default function MyPageClient() {
                   value={aForm.dividend_yield_min ?? ""}
                   onChange={(e) => setAForm((f) => ({ ...f, dividend_yield_min: e.target.value ? Number(e.target.value) : undefined }))}
                   placeholder="例: 3.5"
-                  className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div>
@@ -435,7 +435,7 @@ export default function MyPageClient() {
                   value={aForm.roe_min ?? ""}
                   onChange={(e) => setAForm((f) => ({ ...f, roe_min: e.target.value ? Number(e.target.value) : undefined }))}
                   placeholder="例: 10"
-                  className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div>
@@ -447,7 +447,7 @@ export default function MyPageClient() {
                   value={aForm.equity_ratio_min ?? ""}
                   onChange={(e) => setAForm((f) => ({ ...f, equity_ratio_min: e.target.value ? Number(e.target.value) : undefined }))}
                   placeholder="例: 40"
-                  className="w-full rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+                  className="w-full rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                 />
               </div>
               <div>
@@ -455,7 +455,7 @@ export default function MyPageClient() {
                 <select
                   value={aForm.market ?? ""}
                   onChange={(e) => setAForm((f) => ({ ...f, market: e.target.value || undefined }))}
-                  className="w-full rounded-xl border border-white/[0.12] bg-[#020c1b] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25"
+                  className="w-full rounded-xl border border-white/[0.22] bg-[#020c1b] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25"
                 >
                   <option value="">すべて</option>
                   <option value="プライム">プライム</option>
@@ -471,7 +471,7 @@ export default function MyPageClient() {
                 value={aForm.name}
                 onChange={(e) => setAForm((f) => ({ ...f, name: e.target.value }))}
                 placeholder="例: 高配当バリュー"
-                className="flex-1 rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25"
+                className="flex-1 rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/25"
               />
             </div>
             {aError && <p className="mb-2 font-mono text-xs text-red-400">{aError}</p>}
@@ -486,8 +486,8 @@ export default function MyPageClient() {
 
           {/* 一覧 */}
           {alerts.length === 0 ? (
-            <div className="rounded-2xl border border-white/[0.10] bg-white/[0.03] px-5 py-8 text-center">
-              <p className="font-mono text-xs text-slate-600">条件が登録されていません。</p>
+            <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] px-5 py-8 text-center">
+              <p className="font-mono text-xs text-slate-500">条件が登録されていません。</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -501,7 +501,7 @@ export default function MyPageClient() {
                 if (c.equity_ratio_min)    tags.push(`自己資本≥${(c.equity_ratio_min * 100).toFixed(0)}%`);
                 if (c.market)              tags.push(c.market);
                 return (
-                  <div key={a.id} className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-4 py-3">
+                  <div key={a.id} className="rounded-xl border border-white/[0.22] bg-white/[0.14] px-4 py-3">
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <p className="font-mono text-xs font-semibold text-[#e8f4ff] mb-1.5">{a.name}</p>
@@ -521,7 +521,7 @@ export default function MyPageClient() {
                       </div>
                       <button
                         onClick={() => removeAlert(a.id)}
-                        className="shrink-0 font-mono text-[10px] text-slate-700 hover:text-red-400 transition-colors"
+                        className="shrink-0 font-mono text-[10px] text-slate-500 hover:text-red-400 transition-colors"
                       >
                         削除
                       </button>

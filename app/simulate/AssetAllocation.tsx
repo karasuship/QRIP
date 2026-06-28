@@ -161,7 +161,7 @@ const THEMES = [
 
 export default function AssetAllocation() {
   return (
-    <div className="mt-14 space-y-10 border-t border-white/[0.10] pt-10">
+    <div className="mt-14 space-y-10 border-t border-white/[0.18] pt-10">
 
       {/* ヘッダー */}
       <div>
@@ -176,9 +176,9 @@ export default function AssetAllocation() {
       {/* 主要インデックス比較テーブル */}
       <section>
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">主要インデックス比較</p>
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.12]">
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.22]">
           <table className="w-full text-sm min-w-[600px]">
-            <thead className="border-b border-white/[0.10] bg-white/[0.05]">
+            <thead className="border-b border-white/[0.18] bg-white/[0.05]">
               <tr>
                 {["ティッカー", "対象", "年率リターン", "最大DD", "年率ボラ", "CAPE", "phi2相性"].map((h) => (
                   <th key={h} className="px-3 py-2.5 text-left font-mono text-[9px] uppercase tracking-widest text-slate-500">
@@ -189,17 +189,17 @@ export default function AssetAllocation() {
             </thead>
             <tbody>
               {ASSETS.map((a) => (
-                <tr key={a.ticker} className="border-t border-white/[0.08] hover:bg-white/[0.03]">
+                <tr key={a.ticker} className="border-t border-white/[0.15] hover:bg-white/[0.11]">
                   <td className="px-3 py-3">
                     <span className="font-mono text-sm font-bold" style={{ color: a.color }}>{a.ticker}</span>
-                    <span className="ml-2 font-mono text-[10px] text-slate-600">{a.region}</span>
+                    <span className="ml-2 font-mono text-[10px] text-slate-500">{a.region}</span>
                   </td>
                   <td className="px-3 py-3 text-xs text-slate-400">{a.name}</td>
                   <td className="px-3 py-3">
                     <span className="font-mono text-sm font-semibold" style={{ color: a.color }}>
                       +{a.annualReturn}%
                     </span>
-                    <span className="font-mono text-[9px] text-slate-700 ml-1">/年</span>
+                    <span className="font-mono text-[9px] text-slate-500 ml-1">/年</span>
                   </td>
                   <td className="px-3 py-3 font-mono text-xs text-[#f87171]">{a.maxDD}%</td>
                   <td className="px-3 py-3 font-mono text-xs text-slate-400">{a.vol}%</td>
@@ -211,10 +211,10 @@ export default function AssetAllocation() {
                       <span className={`font-mono text-sm ${
                         a.phi2 === "◎" ? "text-[#34d399]" :
                         a.phi2 === "○" ? "text-[#38bdf8]" :
-                        a.phi2 === "△" ? "text-amber-400" : "text-slate-600"
+                        a.phi2 === "△" ? "text-amber-400" : "text-slate-500"
                       }`}>{a.phi2}</span>
                       {a.phi2z && (
-                        <span className="font-mono text-[9px] text-slate-600">{a.phi2z}</span>
+                        <span className="font-mono text-[9px] text-slate-500">{a.phi2z}</span>
                       )}
                     </div>
                   </td>
@@ -223,13 +223,13 @@ export default function AssetAllocation() {
             </tbody>
           </table>
         </div>
-        <div className="mt-2 flex flex-wrap gap-4 font-mono text-[9px] text-slate-700">
+        <div className="mt-2 flex flex-wrap gap-4 font-mono text-[9px] text-slate-500">
           <span>◎ = バックテスト有効・推奨主軸</span>
           <span>○ = 有効確認済み・補完</span>
           <span>△ = 有効だが条件付き</span>
           <span>— = 未検証</span>
         </div>
-        <p className="mt-1 font-mono text-[9px] text-slate-700">
+        <p className="mt-1 font-mono text-[9px] text-slate-500">
           年率リターン: 公開データの長期幾何平均（SOXX は直近10年）。CAPE は2024年現在の概算値。最大DDはそのインデックス史上最大の下落幅。
         </p>
       </section>
@@ -239,13 +239,13 @@ export default function AssetAllocation() {
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">phi2シグナルとの相性詳細</p>
         <div className="space-y-2">
           {ASSETS.filter((a) => a.phi2note).map((a) => (
-            <div key={a.ticker} className="flex gap-3 rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3">
+            <div key={a.ticker} className="flex gap-3 rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3">
               <span className="shrink-0 font-mono text-sm font-bold w-12" style={{ color: a.color }}>{a.ticker}</span>
               <div>
                 <span className={`font-mono text-xs mr-2 ${
                   a.phi2 === "◎" ? "text-[#34d399]" :
                   a.phi2 === "○" ? "text-[#38bdf8]" :
-                  a.phi2 === "△" ? "text-amber-400" : "text-slate-600"
+                  a.phi2 === "△" ? "text-amber-400" : "text-slate-500"
                 }`}>{a.phi2} {a.phi2z ?? "未検証"}</span>
                 <span className="text-xs text-slate-500">{a.phi2note}</span>
               </div>
@@ -262,7 +262,7 @@ export default function AssetAllocation() {
         </p>
 
         {/* 配分バー */}
-        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-5">
+        <div className="rounded-2xl border border-white/[0.22] bg-white/[0.14] p-5">
           {/* ビジュアルバー */}
           <div className="flex h-8 w-full overflow-hidden rounded-lg">
             {RECOMMENDED_PORTFOLIO.map((a) => (
@@ -290,30 +290,30 @@ export default function AssetAllocation() {
                 </div>
                 <div>
                   <span className="text-xs text-slate-400">{a.name}</span>
-                  <span className="mx-2 text-slate-700">·</span>
-                  <span className="text-xs text-slate-600">{a.reason}</span>
+                  <span className="mx-2 text-slate-500">·</span>
+                  <span className="text-xs text-slate-500">{a.reason}</span>
                 </div>
               </div>
             ))}
           </div>
 
           {/* 期待値 */}
-          <div className="mt-4 pt-4 border-t border-white/[0.08] flex flex-wrap gap-6">
+          <div className="mt-4 pt-4 border-t border-white/[0.15] flex flex-wrap gap-6">
             <div>
-              <p className="font-mono text-[9px] uppercase text-slate-600">加重平均期待リターン</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">加重平均期待リターン</p>
               <p className="font-mono text-2xl font-bold text-[#34d399] mt-0.5">
                 +{weightedReturn.toFixed(1)}%<span className="text-sm font-normal text-slate-500">/年</span>
               </p>
             </div>
             <div>
-              <p className="font-mono text-[9px] uppercase text-slate-600">phi2発動対象</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">phi2発動対象</p>
               <p className="font-mono text-sm font-bold text-[#e8f4ff] mt-0.5">VOO + VEA（70%）</p>
-              <p className="font-mono text-[9px] text-slate-600">検証済みシグナル適用範囲</p>
+              <p className="font-mono text-[9px] text-slate-500">検証済みシグナル適用範囲</p>
             </div>
             <div>
-              <p className="font-mono text-[9px] uppercase text-slate-600">成長余力補完</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">成長余力補完</p>
               <p className="font-mono text-sm font-bold text-[#38bdf8] mt-0.5">QQQ（AI・テック）</p>
-              <p className="font-mono text-[9px] text-slate-600">phi2ではなく積立での保有推奨</p>
+              <p className="font-mono text-[9px] text-slate-500">phi2ではなく積立での保有推奨</p>
             </div>
           </div>
         </div>
@@ -349,7 +349,7 @@ export default function AssetAllocation() {
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
           GAFAM・半導体株の位置づけ
         </p>
-        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-5 space-y-4">
+        <div className="rounded-2xl border border-white/[0.22] bg-white/[0.14] p-5 space-y-4">
           <div>
             <p className="font-mono text-xs font-bold text-slate-300 mb-1">個別株（AAPL・NVDA・MSFT等）</p>
             <p className="text-xs leading-6 text-slate-500">
@@ -357,7 +357,7 @@ export default function AssetAllocation() {
               個別株を持つなら phi2 シグナルは適用せず、ファンダメンタルで独立判断する。
             </p>
           </div>
-          <div className="border-t border-white/[0.08] pt-4">
+          <div className="border-t border-white/[0.15] pt-4">
             <p className="font-mono text-xs font-bold text-slate-300 mb-1">現実的な選択肢</p>
             <div className="space-y-1">
               {[
@@ -385,7 +385,7 @@ export default function AssetAllocation() {
               <ul className="space-y-1">
                 {t.points.map((p, i) => (
                   <li key={i} className="flex gap-2 text-xs text-slate-500">
-                    <span className="shrink-0 text-slate-700">·</span>
+                    <span className="shrink-0 text-slate-500">·</span>
                     <span>{p}</span>
                   </li>
                 ))}
@@ -400,9 +400,9 @@ export default function AssetAllocation() {
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
           NISA口座への割り当て推奨順
         </p>
-        <div className="overflow-hidden rounded-2xl border border-white/[0.12]">
+        <div className="overflow-hidden rounded-2xl border border-white/[0.22]">
           <table className="w-full text-sm">
-            <thead className="border-b border-white/[0.10] bg-white/[0.05]">
+            <thead className="border-b border-white/[0.18] bg-white/[0.05]">
               <tr>
                 {["優先度", "ティッカー", "NISA推奨理由"].map((h) => (
                   <th key={h} className="px-4 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-500">{h}</th>
@@ -416,7 +416,7 @@ export default function AssetAllocation() {
                 { priority: "3rd", ticker: "VEA", reason: "中程度のリターン。NISA枠次第" },
                 { priority: "課税口座", ticker: "VWO", reason: "成長不確実性高い。NISA枠はリターン確実性が高いものへ優先配分" },
               ].map((r) => (
-                <tr key={r.priority} className="border-t border-white/[0.08]">
+                <tr key={r.priority} className="border-t border-white/[0.15]">
                   <td className="px-4 py-2.5 font-mono text-xs text-slate-400">{r.priority}</td>
                   <td className="px-4 py-2.5 font-mono text-xs font-bold text-[#34d399]">{r.ticker}</td>
                   <td className="px-4 py-2.5 text-xs text-slate-500">{r.reason}</td>
@@ -425,14 +425,14 @@ export default function AssetAllocation() {
             </tbody>
           </table>
         </div>
-        <p className="mt-2 font-mono text-[9px] text-slate-700">
+        <p className="mt-2 font-mono text-[9px] text-slate-500">
           新NISA年間上限: 360万（成長投資枠240万+積立投資枠120万）。
           NISA枠超過分は課税口座へ。VWOは新興国不確実性があるためNISA枠は確実性の高いVOO・QQQを優先。
         </p>
       </section>
 
       {/* 検証との接続 */}
-      <div className="rounded-2xl border border-white/[0.10] bg-white/[0.04] px-5 py-4">
+      <div className="rounded-2xl border border-white/[0.18] bg-white/[0.14] px-5 py-4">
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-2">このサイトのロジックとの接続</p>
         <p className="text-xs leading-6 text-slate-400">
           phi2シグナルが発動したとき、<strong className="text-slate-300">VOO（S&P500）と VEA（先進国）を同時に買う</strong>のが統計的に支持される行動。
@@ -448,7 +448,7 @@ export default function AssetAllocation() {
           </Link>
           <Link
             href="/learn"
-            className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1.5 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] transition-colors"
+            className="rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1.5 font-mono text-[10px] text-slate-400 hover:bg-white/[0.14] transition-colors"
           >
             → バックテスト結果を読む
           </Link>

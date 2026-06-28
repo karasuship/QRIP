@@ -226,7 +226,7 @@ function fYen(n: number) { return `¥${n.toLocaleString("ja-JP")}`; }
 function ChartTip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-xl border border-white/[0.12] bg-[#0d1117]/95 px-3 py-2 text-xs backdrop-blur-sm">
+    <div className="rounded-xl border border-white/[0.22] bg-[#0d1117]/95 px-3 py-2 text-xs backdrop-blur-sm">
       <p className="font-mono text-[10px] text-slate-500 mb-1">{label}</p>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((p: any) => (
@@ -378,44 +378,44 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
       {/* ━━ 積立設定 ━━━━━━━━━━━━━━━━━━━━━━━━ */}
       <section>
         <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">積立設定</p>
-        <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4 space-y-4">
+        <div className="rounded-2xl border border-white/[0.22] bg-white/[0.14] p-4 space-y-4">
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <label className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">初期一括投入（円）</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">初期一括投入（円）</p>
               <input type="number" value={initialLump} onChange={(e)=>setInitialLump(+e.target.value)} step={100000}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
             </label>
             <label className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">月次積立（円）</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">月次積立（円）</p>
               <input type="number" value={monthly} onChange={(e)=>setMonthly(+e.target.value)} step={10000}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
             </label>
             <label className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">月額の年率増加（%）</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">月額の年率増加（%）</p>
               <input type="number" value={monthlyGrowthPct} onChange={(e)=>setMonthlyGrowthPct(+e.target.value)} step={0.5} min={0} max={10}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
             </label>
             <label className="space-y-1">
-              <p className="font-mono text-[9px] uppercase text-slate-600">積立期間（年）</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">積立期間（年）</p>
               <input type="number" value={accumYears} onChange={(e)=>setAccumYears(Math.max(1,Math.min(40,+e.target.value)))} step={1} min={1} max={40}
-                className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
             </label>
           </div>
 
           {/* ボーナス月 */}
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <p className="font-mono text-[9px] uppercase text-slate-600">ボーナス投下月（複数選択可）</p>
+              <p className="font-mono text-[9px] uppercase text-slate-500">ボーナス投下月（複数選択可）</p>
               <input type="number" value={bonusAmount} onChange={(e)=>setBonusAmount(+e.target.value)} step={50000}
-                className="w-36 rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"
+                className="w-36 rounded-xl border border-white/[0.18] bg-white/[0.14] px-2 py-1 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"
                 placeholder="金額（円）"/>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {MONTH_NAMES.map((n, i) => (
                 <button key={i} onClick={()=>toggleBonus(i)}
                   className={`rounded-lg border px-2.5 py-1 font-mono text-[10px] transition-colors ${
-                    bonusMonths.has(i) ? "border-amber-400/40 bg-amber-400/[0.12] text-amber-400" : "border-white/[0.10] text-slate-600 hover:text-slate-400"
+                    bonusMonths.has(i) ? "border-amber-400/40 bg-amber-400/[0.12] text-amber-400" : "border-white/[0.18] text-slate-500 hover:text-slate-400"
                   }`}>
                   {n}
                 </button>
@@ -435,7 +435,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
             </span>
             {assets.length < 3 && (
               <button onClick={addAsset}
-                className="rounded-xl border border-white/[0.12] bg-white/[0.04] px-3 py-1 font-mono text-[10px] text-slate-400 hover:bg-white/[0.08] transition-colors">
+                className="rounded-xl border border-white/[0.22] bg-white/[0.14] px-3 py-1 font-mono text-[10px] text-slate-400 hover:bg-white/[0.14] transition-colors">
                 + 銘柄追加
               </button>
             )}
@@ -444,50 +444,50 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
 
         <div className="space-y-2">
           {assets.map((a, ai) => (
-            <div key={a.id} className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-4">
+            <div key={a.id} className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="h-2 w-2 rounded-sm shrink-0" style={{backgroundColor: ASSET_COLORS[ai]}} />
                 <select value={PRESETS.findIndex(p=>p.name===a.name)} onChange={(e)=>{
                   const pr = PRESETS[+e.target.value];
                   setAssets(prev=>prev.map(x=>x.id===a.id?{...x,...pr}:x));
-                }} className="flex-1 rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-1.5 font-mono text-xs text-slate-200 outline-none">
+                }} className="flex-1 rounded-xl border border-white/[0.18] bg-[#0d1117] px-3 py-1.5 font-mono text-xs text-slate-200 outline-none">
                   {PRESETS.map((p,i)=><option key={i} value={i}>{p.name}</option>)}
                 </select>
                 {assets.length > 1 && (
-                  <button onClick={()=>removeAsset(a.id)} className="font-mono text-[10px] text-slate-700 hover:text-[#f87171] transition-colors px-1">✕</button>
+                  <button onClick={()=>removeAsset(a.id)} className="font-mono text-[10px] text-slate-500 hover:text-[#f87171] transition-colors px-1">✕</button>
                 )}
               </div>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
                 <label className="space-y-0.5">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">配分%</p>
+                  <p className="font-mono text-[9px] uppercase text-slate-500">配分%</p>
                   <input type="number" value={a.pct} onChange={(e)=>updateAsset(a.id,"pct",+e.target.value)} step={5} min={0} max={100}
-                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                    className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
                 </label>
                 <label className="space-y-0.5">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">
+                  <p className="font-mono text-[9px] uppercase text-slate-500">
                     年率リターン%
                     {(a.totalRet === 10.4 || a.totalRet === 13.8) && (
-                      <span className="ml-1 text-slate-700 normal-case">
+                      <span className="ml-1 text-slate-500 normal-case">
                         {a.totalRet === 10.4 && "← DCA基準"}
                         {a.totalRet === 13.8 && "← QQQ長期平均"}
                       </span>
                     )}
                   </p>
                   <input type="number" value={a.totalRet} onChange={(e)=>updateAsset(a.id,"totalRet",+e.target.value)} step={0.5}
-                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                    className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
                   {a.totalRet === 10.4 && (
-                    <p className="font-mono text-[8px] text-slate-700 leading-3">
+                    <p className="font-mono text-[8px] text-slate-500 leading-3">
                       <TermTooltip term="phi2">phi2シグナル</TermTooltip>適用なら <button className="text-[#38bdf8] hover:underline" onClick={()=>updateAsset(a.id,"totalRet",12.7)}>12.7%に変更 →</button>
                     </p>
                   )}
                 </label>
                 <label className="space-y-0.5">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">配当利回り%</p>
+                  <p className="font-mono text-[9px] uppercase text-slate-500">配当利回り%</p>
                   <input type="number" value={a.divYield} onChange={(e)=>updateAsset(a.id,"divYield",+e.target.value)} step={0.1} min={0}
-                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
+                    className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-2 py-1.5 font-mono text-xs text-slate-200 outline-none focus:border-white/[0.25]"/>
                 </label>
                 <label className="space-y-0.5">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">配当</p>
+                  <p className="font-mono text-[9px] uppercase text-slate-500">配当</p>
                   <button onClick={()=>updateAsset(a.id,"drip",!a.drip)}
                     className={`w-full rounded-xl border px-2 py-1.5 font-mono text-[10px] transition-colors ${
                       a.drip ? "border-[#34d399]/40 bg-[#34d399]/[0.08] text-[#34d399]" : "border-amber-400/40 bg-amber-400/[0.08] text-amber-400"
@@ -508,12 +508,12 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
           {([["new","新NISA（非課税）"],["both","NISA＋課税口座"],["taxable","課税口座のみ"]] as const).map(([v,l])=>(
             <button key={v} onClick={()=>setNisaMode(v)}
               className={`rounded-xl border px-4 py-2 font-mono text-xs transition-colors ${
-                nisaMode===v ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]" : "border-white/[0.10] text-slate-500 hover:text-slate-300"
+                nisaMode===v ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]" : "border-white/[0.18] text-slate-500 hover:text-slate-300"
               }`}>{l}</button>
           ))}
         </div>
         {nisaMode !== "taxable" && (
-          <p className="mt-2 font-mono text-[10px] text-slate-600">
+          <p className="mt-2 font-mono text-[10px] text-slate-500">
             新NISA生涯上限 1,800万円 · 年間上限 360万円。NISA枠が埋まった後は課税口座へ。
           </p>
         )}
@@ -525,23 +525,23 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">取り崩しフェーズ</p>
           <button onClick={()=>setEnableDecum(v=>!v)}
             className={`rounded-full border px-3 py-1 font-mono text-[10px] transition-colors ${
-              enableDecum ? "border-[#34d399]/40 bg-[#34d399]/[0.10] text-[#34d399]" : "border-white/[0.10] text-slate-600 hover:text-slate-400"
+              enableDecum ? "border-[#34d399]/40 bg-[#34d399]/[0.10] text-[#34d399]" : "border-white/[0.18] text-slate-500 hover:text-slate-400"
             }`}>
             {enableDecum ? "ON" : "OFF — 積立のみ"}
           </button>
         </div>
         {enableDecum && (
-          <div className="rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4 space-y-3">
+          <div className="rounded-2xl border border-white/[0.22] bg-white/[0.14] p-4 space-y-3">
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
               <label className="space-y-1">
-                <p className="font-mono text-[9px] uppercase text-slate-600">取り崩し期間（年）</p>
+                <p className="font-mono text-[9px] uppercase text-slate-500">取り崩し期間（年）</p>
                 <input type="number" value={decumYears} onChange={(e)=>setDecumYears(Math.max(1,+e.target.value))} step={5}
-                  className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                  className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
               </label>
               <label className="space-y-1">
-                <p className="font-mono text-[9px] uppercase text-slate-600">方式</p>
+                <p className="font-mono text-[9px] uppercase text-slate-500">方式</p>
                 <select value={withdrawMode} onChange={(e)=>setWithdrawMode(e.target.value as typeof withdrawMode)}
-                  className="w-full rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-2 font-mono text-xs text-slate-200 outline-none">
+                  className="w-full rounded-xl border border-white/[0.18] bg-[#0d1117] px-3 py-2 font-mono text-xs text-slate-200 outline-none">
                   <option value="4pct">4%ルール（積立額の4%/年）</option>
                   <option value="fixed">固定額</option>
                   <option value="yield">配当のみ（元本を減らさない）</option>
@@ -549,9 +549,9 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
               </label>
               {withdrawMode === "fixed" && (
                 <label className="space-y-1">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">月額取り崩し（円）</p>
+                  <p className="font-mono text-[9px] uppercase text-slate-500">月額取り崩し（円）</p>
                   <input type="number" value={fixedMonthly} onChange={(e)=>setFixedMonthly(+e.target.value)} step={10000}
-                    className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+                    className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
                 </label>
               )}
             </div>
@@ -577,30 +577,30 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
           ] as const).map(([v,l])=>(
             <button key={v} onClick={()=>setScenario(v)}
               className={`rounded-xl border px-3 py-1.5 font-mono text-[10px] transition-colors ${
-                scenario===v ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]" : "border-white/[0.10] text-slate-500 hover:text-slate-300"
+                scenario===v ? "border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]" : "border-white/[0.18] text-slate-500 hover:text-slate-300"
               }`}>{l}</button>
           ))}
         </div>
         {scenario === "crash" && (
           <div className="flex items-center gap-3">
-            <p className="font-mono text-[9px] uppercase text-slate-600">暴落発生年（積立開始から）</p>
+            <p className="font-mono text-[9px] uppercase text-slate-500">暴落発生年（積立開始から）</p>
             <input type="number" value={crashYear} onChange={(e)=>setCrashYear(Math.max(1,+e.target.value))} min={1} max={accumYears}
-              className="w-24 rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-1.5 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
-            <p className="font-mono text-[10px] text-slate-600">年目に −40%（GFC相当）</p>
+              className="w-24 rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-1.5 font-mono text-sm text-slate-200 outline-none focus:border-white/[0.25]"/>
+            <p className="font-mono text-[10px] text-slate-500">年目に −40%（GFC相当）</p>
           </div>
         )}
         {scenario === "hist" && (
           <div className="flex items-center gap-3">
-            <p className="font-mono text-[9px] uppercase text-slate-600">開始年</p>
+            <p className="font-mono text-[9px] uppercase text-slate-500">開始年</p>
             <select value={histStart} onChange={(e)=>setHistStart(+e.target.value)}
-              className="rounded-xl border border-white/[0.10] bg-[#0d1117] px-3 py-1.5 font-mono text-xs text-slate-200 outline-none">
+              className="rounded-xl border border-white/[0.18] bg-[#0d1117] px-3 py-1.5 font-mono text-xs text-slate-200 outline-none">
               {HIST_YRS.map(y=><option key={y} value={y}>{y}年〜（{y}=+{((SP500_HIST[y]??0)*100).toFixed(1)}%）</option>)}
             </select>
-            <p className="font-mono text-[10px] text-slate-600">SP500の実際の年次リターン配列を使用。枠外は循環。</p>
+            <p className="font-mono text-[10px] text-slate-500">SP500の実際の年次リターン配列を使用。枠外は循環。</p>
           </div>
         )}
         {scenario === "bear" && (
-          <p className="font-mono text-[10px] text-slate-600">設定リターンから毎年3%引く。低成長・デフレシナリオの確認用。</p>
+          <p className="font-mono text-[10px] text-slate-500">設定リターンから毎年3%引く。低成長・デフレシナリオの確認用。</p>
         )}
       </section>
 
@@ -627,27 +627,27 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
               { l:"税引後",       v:fMan(last.afterTax),    c:"text-[#e8f4ff]",  s:nisaMode==="new"?"NISA非課税":"課税後(20.315%)" },
               { l:"vs 元本",      v:`×${(last.portfolio/Math.max(last.invested,1)).toFixed(1)}`,c:"text-[#38bdf8]",s:"何倍になったか" },
             ].map(c=>(
-              <div key={c.l} className="rounded-2xl border border-white/[0.10] bg-white/[0.04] px-4 py-3 text-center">
-                <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">{c.l}</p>
+              <div key={c.l} className="rounded-2xl border border-white/[0.18] bg-white/[0.14] px-4 py-3 text-center">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">{c.l}</p>
                 <p className={`font-mono text-xl font-bold mt-0.5 ${c.c}`}>{c.v}</p>
-                <p className="font-mono text-[9px] text-slate-700 mt-0.5">{c.s}</p>
+                <p className="font-mono text-[9px] text-slate-500 mt-0.5">{c.s}</p>
               </div>
             ))}
           </div>
 
           {/* ━ 資金効果の内訳 ━━━━━━━━━━━━━━━━━━━━━ */}
           {bonusMonths.size > 0 && (
-            <div className="mt-3 rounded-2xl border border-white/[0.12] bg-white/[0.03] p-4">
+            <div className="mt-3 rounded-2xl border border-white/[0.22] bg-white/[0.11] p-4">
               <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">
                 資金効果の内訳 — 「追加投入分でどれだけ増えるか」
               </p>
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
 
                 {/* 月次DCAのみ */}
-                <div className="rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-3">
-                  <p className="font-mono text-[9px] uppercase text-slate-600">月次DCAのみ（ボーナスなし）</p>
+                <div className="rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-3">
+                  <p className="font-mono text-[9px] uppercase text-slate-500">月次DCAのみ（ボーナスなし）</p>
                   <p className="font-mono text-base font-bold text-slate-300 mt-1">{fMan(noBonusLast.portfolio)}</p>
-                  <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                  <p className="font-mono text-[9px] text-slate-500 mt-0.5">
                     元本 {fMan(noBonusLast.invested)} → ×{(noBonusLast.portfolio/Math.max(noBonusLast.invested,1)).toFixed(1)}
                   </p>
                 </div>
@@ -656,11 +656,11 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
                 <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-3 py-3">
                   <p className="font-mono text-[9px] uppercase text-amber-400/70">ボーナス追加投入の貢献</p>
                   <p className="font-mono text-base font-bold text-amber-400 mt-1">+{fMan(bonusEffect)}</p>
-                  <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                  <p className="font-mono text-[9px] text-slate-500 mt-0.5">
                     ボーナス総投入額 {fMan(totalBonus)} が
                     {totalBonus > 0 ? `×${(1 + bonusRoi).toFixed(2)}に増殖` : "なし"}
                   </p>
-                  <p className="font-mono text-[9px] text-slate-700 mt-1">
+                  <p className="font-mono text-[9px] text-slate-500 mt-1">
                     ↑ これが「追加投入してるから当然高い」分
                   </p>
                 </div>
@@ -669,21 +669,21 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
                 <div className={`rounded-xl border px-3 py-3 ${
                   timingEffect > 0
                     ? "border-[#34d399]/20 bg-[#34d399]/[0.04]"
-                    : "border-white/[0.10] bg-white/[0.03]"
+                    : "border-white/[0.18] bg-white/[0.11]"
                 }`}>
-                  <p className="font-mono text-[9px] uppercase text-slate-600">
+                  <p className="font-mono text-[9px] uppercase text-slate-500">
                     投入タイミングの効果
-                    <span className="ml-1 text-slate-700">（同額均等配分との比較）</span>
+                    <span className="ml-1 text-slate-500">（同額均等配分との比較）</span>
                   </p>
                   <p className={`font-mono text-base font-bold mt-1 ${
                     timingEffect > 0 ? "text-[#34d399]" : timingEffect < 0 ? "text-[#f87171]" : "text-slate-400"
                   }`}>
                     {timingEffect > 0 ? "+" : ""}{fMan(timingEffect)}
                   </p>
-                  <p className="font-mono text-[9px] text-slate-600 mt-0.5">
+                  <p className="font-mono text-[9px] text-slate-500 mt-0.5">
                     同額を毎月均等投入した場合: {fMan(uniformLast.portfolio)}
                   </p>
-                  <p className="font-mono text-[9px] text-slate-700 mt-1">
+                  <p className="font-mono text-[9px] text-slate-500 mt-1">
                     {timingEffect > 0
                       ? "↑ ボーナス月に集中投入することで複利を多く得た分"
                       : timingEffect < 0
@@ -693,7 +693,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
                 </div>
               </div>
 
-              <p className="mt-2 font-mono text-[9px] text-slate-700 leading-5">
+              <p className="mt-2 font-mono text-[9px] text-slate-500 leading-5">
                 ※「タイミング効果」はシグナルによるリターン率アップを含まない。シグナル（phi2等）でリターン率が上がる場合は、
                 上の年率リターン欄を変えて比較してください（例: VOO 10.4% → phi2適用後 12.7%）。
               </p>
@@ -706,7 +706,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
               <div className="rounded-xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.05] px-4 py-3">
                 <p className="font-mono text-[9px] uppercase text-[#38bdf8]/70">NISA枠進捗</p>
                 <p className="font-mono text-lg font-bold text-[#38bdf8] mt-0.5">{fMan(endAccum.nisaProgress)}<span className="text-xs font-normal text-slate-500"> / 1800万</span></p>
-                <div className="mt-1.5 h-1.5 w-full rounded-full bg-white/[0.06]">
+                <div className="mt-1.5 h-1.5 w-full rounded-full bg-white/[0.11]">
                   <div className="h-1.5 rounded-full bg-[#38bdf8]/60" style={{width:`${Math.min(100,endAccum.nisaProgress/180000)}%`}}/>
                 </div>
               </div>
@@ -716,7 +716,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
               <div className="rounded-xl border border-[#34d399]/20 bg-[#34d399]/[0.05] px-4 py-3">
                 <p className="font-mono text-[9px] uppercase text-[#34d399]/70">取り崩し可能額（4%ルール）</p>
                 <p className="font-mono text-lg font-bold text-[#34d399] mt-0.5">{fYen(endAccum.safe4pct)}<span className="text-xs font-normal text-slate-500">/月</span></p>
-                <p className="font-mono text-[9px] text-slate-600">{accumYears}年後の資産×4%÷12</p>
+                <p className="font-mono text-[9px] text-slate-500">{accumYears}年後の資産×4%÷12</p>
               </div>
             )}
             {/* 配当収入 */}
@@ -724,7 +724,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
               <div className="rounded-xl border border-amber-400/20 bg-amber-400/[0.05] px-4 py-3">
                 <p className="font-mono text-[9px] uppercase text-amber-400/70">{accumYears}年後の年間現金配当</p>
                 <p className="font-mono text-lg font-bold text-amber-400 mt-0.5">{fMan(endAccum.divCash)}</p>
-                <p className="font-mono text-[9px] text-slate-600">DRIP=OFFの銘柄からの現金配当</p>
+                <p className="font-mono text-[9px] text-slate-500">DRIP=OFFの銘柄からの現金配当</p>
               </div>
             )}
           </div>
@@ -740,12 +740,12 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
             {([["wealth","資産"],["dividend","配当・取崩"]] as const).map(([v,l])=>(
               <button key={v} onClick={()=>setChartMode(v)}
                 className={`rounded-xl border px-3 py-1 font-mono text-[10px] transition-colors ${
-                  chartMode===v?"border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]":"border-white/[0.10] text-slate-500 hover:text-slate-300"
+                  chartMode===v?"border-[#38bdf8]/40 bg-[#38bdf8]/[0.10] text-[#38bdf8]":"border-white/[0.18] text-slate-500 hover:text-slate-300"
                 }`}>{l}</button>
             ))}
           </div>
         </div>
-        <div className="h-64 rounded-2xl border border-white/[0.10] bg-white/[0.03] p-3">
+        <div className="h-64 rounded-2xl border border-white/[0.18] bg-white/[0.11] p-3">
           <ResponsiveContainer width="100%" height="100%">
             <ComposedChart data={chartData} margin={{top:4,right:8,bottom:0,left:0}}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)"/>
@@ -769,7 +769,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
           </ResponsiveContainer>
         </div>
         {bonusMonths.size > 0 && chartMode === "wealth" && (
-          <div className="mt-2 flex flex-wrap gap-3 font-mono text-[9px] text-slate-600">
+          <div className="mt-2 flex flex-wrap gap-3 font-mono text-[9px] text-slate-500">
             <span><span className="text-[#34d399]">━</span> 現在の設定（月次+ボーナス）</span>
             <span><span className="text-amber-400">┅</span> 同額均等配分（同じ総資金を毎月均等）</span>
             <span><span className="text-slate-400">╌</span> 月次DCAのみ（ボーナスなし）</span>
@@ -786,9 +786,9 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
             {showAllYears ? "5年ごとに戻す" : "全年表示"}
           </button>
         </div>
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.12]">
+        <div className="overflow-x-auto rounded-2xl border border-white/[0.22]">
           <table className="w-full text-sm min-w-[640px]">
-            <thead className="border-b border-white/[0.10] bg-white/[0.05]">
+            <thead className="border-b border-white/[0.18] bg-white/[0.05]">
               <tr>
                 {["年",nisaMode!=="taxable"?"NISA":"",nisaMode!=="taxable"?"課税":"","資産合計","税引後","元本","年間配当",enableDecum?"年間取崩":"4%月額"].filter(Boolean).map(h=>(
                   <th key={h} className="px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-500">{h}</th>
@@ -799,7 +799,7 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
               {tableData.map((d)=>{
                 const isRetire = enableDecum && d.year === accumYears;
                 return (
-                  <tr key={d.year} className={`border-t border-white/[0.08] hover:bg-white/[0.03] ${isRetire ? "bg-[#34d399]/[0.04]" : ""}`}>
+                  <tr key={d.year} className={`border-t border-white/[0.15] hover:bg-white/[0.11] ${isRetire ? "bg-[#34d399]/[0.04]" : ""}`}>
                     <td className={`px-3 py-2.5 font-mono text-xs ${isRetire?"text-[#34d399]":"text-slate-400"}`}>
                       {d.label}{isRetire?" ⬅ 積立終了":""}
                     </td>
@@ -807,11 +807,11 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
                     {nisaMode!=="taxable" && <td className="px-3 py-2.5 font-mono text-xs text-slate-500">{fMan(d.taxable)}</td>}
                     <td className="px-3 py-2.5 font-mono text-xs font-semibold text-[#34d399]">{fMan(d.portfolio)}</td>
                     <td className="px-3 py-2.5 font-mono text-xs text-[#e8f4ff]">{fMan(d.afterTax)}</td>
-                    <td className="px-3 py-2.5 font-mono text-xs text-slate-600">{fMan(d.invested)}</td>
+                    <td className="px-3 py-2.5 font-mono text-xs text-slate-500">{fMan(d.invested)}</td>
                     <td className="px-3 py-2.5 font-mono text-xs text-amber-400">{fMan(d.divCash)}</td>
                     <td className="px-3 py-2.5 font-mono text-xs text-[#34d399]">
                       {enableDecum && d.year > accumYears ? fYen(d.withdrawal/12) : fYen(d.safe4pct)}
-                      <span className="text-slate-700">/月</span>
+                      <span className="text-slate-500">/月</span>
                     </td>
                   </tr>
                 );
@@ -832,8 +832,8 @@ export default function SimulateClient({ initialStock }: { initialStock?: Initia
       />
 
       {/* ━━ 免責 ━━━━━━━━━━━━━━━━━━━━━━━━━━━ */}
-      <div className="rounded-xl border border-white/[0.08] px-4 py-3">
-        <ul className="space-y-0.5 font-mono text-[10px] leading-5 text-slate-700">
+      <div className="rounded-xl border border-white/[0.15] px-4 py-3">
+        <ul className="space-y-0.5 font-mono text-[10px] leading-5 text-slate-500">
           <li>· 年率リターンはプリセット値（公開データの長期幾何平均）。実際のリターンは変動します</li>
           <li>· NISA取り崩し時の1800万枠回復は翌年。本シミュレーションは枠回復の再利用は考慮外</li>
           <li>· 課税計算は「最終時点での未実現益×20.315%」として簡易計算（毎年の確定申告は考慮外）</li>

@@ -82,7 +82,7 @@ export default function Learn() {
             { label: "捨てた仮説の一覧", body: "「高いときは買わない（CAPE）」「分割買い」「金利シグナル」など直感的に正しそうで実際は機能しなかった仮説の検証結果" },
             { label: "シグナルの読み方", body: "phi2・CRS・B4・HYG-8%の条件と統計的根拠。4体制がいずれかOR発動で累計TEST Z=+14.79" },
           ].map((c) => (
-            <div key={c.label} className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2.5">
+            <div key={c.label} className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2.5">
               <p className="font-mono text-[10px] font-semibold text-[#38bdf8]/80">{c.label}</p>
               <p className="mt-1 text-[11px] leading-5 text-slate-500">{c.body}</p>
             </div>
@@ -99,7 +99,7 @@ export default function Learn() {
               phi2Final={simResult.phi2Final}
               alpha={simResult.alpha}
             />
-            <div className="mt-2 flex flex-wrap gap-4 font-mono text-[10px] text-slate-600">
+            <div className="mt-2 flex flex-wrap gap-4 font-mono text-[10px] text-slate-500">
               <span>発動回数（2008〜）: <span className="text-slate-400">{simResult.totalSignals}回</span></span>
               <span>年平均: <span className="text-slate-400">{simResult.signalsPerYear}回</span></span>
             </div>
@@ -111,7 +111,7 @@ export default function Learn() {
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">使い方</p>
           <div className="mt-3 space-y-2">
             {STEPS.map((s) => (
-              <div key={s.n} className="flex gap-4 rounded-2xl border border-white/[0.18] bg-white/[0.07] p-4 backdrop-blur-sm">
+              <div key={s.n} className="flex gap-4 rounded-2xl border border-white/[0.18] bg-white/[0.13] p-4 backdrop-blur-sm">
                 <span className="w-7 shrink-0 pt-0.5 font-mono text-xl font-bold text-white/10">{s.n}</span>
                 <div>
                   <p className="text-sm font-semibold text-[#e8f4ff]">{s.title}</p>
@@ -153,7 +153,7 @@ export default function Learn() {
           </p>
           <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+              <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                 <tr>
                   {["スコア","状態","対応"].map(h => (
                     <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
@@ -187,7 +187,7 @@ export default function Learn() {
           </p>
           <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+              <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                 <tr>
                   {["インデックス","TEST Z","63日後","推奨"].map(h => (
                     <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
@@ -227,7 +227,7 @@ export default function Learn() {
           </p>
           <div className="mt-3 overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+              <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                 <tr>
                   {["保有期間","年率換算リターン","出口戦略","TEST Z"].map(h => (
                     <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
@@ -271,32 +271,32 @@ export default function Learn() {
               {
                 name: "RSI<25 単体",
                 why: "TRAIN Z=+0.06（ランダムと同等）。phi2条件と重なる局面でのみ意味を持つ。",
-                color: "border-white/[0.12] bg-white/[0.06]",
+                color: "border-white/[0.22] bg-white/[0.11]",
               },
               {
                 name: "分割買い（複数回に分けて購入）",
                 why: "全額即買いに負ける。phi2シグナルは「今日が統計的根拠のある日」であり、分割する意味がない。",
-                color: "border-white/[0.12] bg-white/[0.06]",
+                color: "border-white/[0.22] bg-white/[0.11]",
               },
               {
                 name: "ATHティア別加重（深いほど多く買う）",
                 why: "TRAIN/TESTで深度分布が逆転。GFC（-30%超）はTEST期間でゼロ。過去データへの過学習リスク。",
-                color: "border-white/[0.12] bg-white/[0.06]",
+                color: "border-white/[0.22] bg-white/[0.11]",
               },
               {
                 name: "金利シグナル（TNX・IRX）",
                 why: "QE前後で解釈が逆転。利上げ局面では「上がるから買い」、利下げ局面では「景気悪化の証拠」と真逆になる。体制依存で不採用。",
-                color: "border-white/[0.12] bg-white/[0.06]",
+                color: "border-white/[0.22] bg-white/[0.11]",
               },
               {
                 name: "CAPE割安フィルタ（高CAPEは買わない）",
                 why: "高CAPE（30〜35）環境でもTEST Z=+6.72。QE市場では割高でも回復が速い。CAPEは長期バリュエーションの参考にはなるが、シグナルフィルタには機能しない。",
-                color: "border-white/[0.12] bg-white/[0.06]",
+                color: "border-white/[0.22] bg-white/[0.11]",
               },
               {
                 name: "RSI>55での素早い出口（平均10日）",
                 why: "TEST Z=−1.12（負の方向）。短期バウンスへの反応に過ぎない。統計的に不安定。",
-                color: "border-white/[0.12] bg-white/[0.06]",
+                color: "border-white/[0.22] bg-white/[0.11]",
               },
             ].map(h => (
               <div key={h.name} className={`rounded-2xl border px-4 py-3 backdrop-blur-sm ${h.color}`}>
@@ -318,7 +318,7 @@ export default function Learn() {
           {/* 体制定義 */}
           <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm mb-3">
             <table className="w-full text-sm">
-              <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+              <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                 <tr>
                   {["体制","期間","特徴"].map(h => (
                     <th key={h} className="px-4 py-2 text-left font-mono text-[10px] uppercase tracking-widest text-slate-400">{h}</th>
@@ -350,7 +350,7 @@ export default function Learn() {
                 { label: "B QE体制", z: "Z = 5.33", mu: "+7.95%", n: "n=76" },
                 { label: "C 引締め", z: "Z = 4.12", mu: "+14.6%", n: "n=7" },
               ].map(r => (
-                <div key={r.label} className="rounded-xl border border-white/[0.09] bg-white/[0.04] px-3 py-2 text-center">
+                <div key={r.label} className="rounded-xl border border-white/[0.09] bg-white/[0.14] px-3 py-2 text-center">
                   <p className="font-mono text-[10px] text-slate-500">{r.label}</p>
                   <p className="font-mono text-sm font-bold text-[#34d399] mt-0.5">{r.z}</p>
                   <p className="font-mono text-[10px] text-slate-400">{r.mu} · {r.n}</p>
@@ -371,7 +371,7 @@ export default function Learn() {
                 { label: "CAPE > 25（高評価）", z: "Z = 7.93", mu: "+17.7%", n: "n=20", color: "text-amber-400 border-amber-400/30" },
                 { label: "CAPE ≤ 25（低評価）", z: "Z = 2.80", mu: "+4.5%",  n: "n=56", color: "text-slate-400 border-white/[0.09]" },
               ].map(r => (
-                <div key={r.label} className={`rounded-xl border bg-white/[0.04] px-3 py-2 text-center ${r.color}`}>
+                <div key={r.label} className={`rounded-xl border bg-white/[0.14] px-3 py-2 text-center ${r.color}`}>
                   <p className="font-mono text-[10px]">{r.label}</p>
                   <p className="font-mono text-sm font-bold mt-0.5">{r.z}</p>
                   <p className="font-mono text-[10px]">{r.mu} · {r.n}</p>
@@ -401,7 +401,7 @@ export default function Learn() {
         </section>
 
         {/* 区切り */}
-        <div className="mt-12 border-t border-white/[0.12] pt-10">
+        <div className="mt-12 border-t border-white/[0.22] pt-10">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400">なぜこのアプローチか — 検証で分かったこと</p>
           <p className="mt-2 text-sm leading-7 text-slate-400">
             「もっと安く買えたはず」「今は待つべきだ」——その直感を、30年分のデータで全部検証した。
@@ -445,7 +445,7 @@ export default function Learn() {
         </div>
 
         {/* クロージング */}
-        <div className="mt-12 border-t border-white/[0.12] pt-8">
+        <div className="mt-12 border-t border-white/[0.22] pt-8">
           <p className="text-base font-medium leading-7 text-[#e8f4ff]">{closing}</p>
           <Link
             href="/signal"
@@ -490,7 +490,7 @@ export default function Learn() {
                 href={b.url}
                 target="_blank"
                 rel="noopener noreferrer sponsored"
-                className="flex items-center gap-4 rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all group"
+                className="flex items-center gap-4 rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3 hover:bg-white/[0.11] hover:border-white/[0.18] transition-all group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
@@ -499,11 +499,11 @@ export default function Learn() {
                   </div>
                   <p className="text-xs text-slate-500">{b.desc}</p>
                 </div>
-                <span className="shrink-0 font-mono text-[10px] text-slate-600 group-hover:text-slate-400 transition-colors">開設 →</span>
+                <span className="shrink-0 font-mono text-[10px] text-slate-500 group-hover:text-slate-400 transition-colors">開設 →</span>
               </a>
             ))}
           </div>
-          <p className="mt-2 font-mono text-[9px] text-slate-700">※ アフィリエイトリンクを含みます。推奨内容はデータに基づき独立して決定しています。</p>
+          <p className="mt-2 font-mono text-[9px] text-slate-500">※ アフィリエイトリンクを含みます。推奨内容はデータに基づき独立して決定しています。</p>
         </section>
 
         <p className="mt-8 font-mono text-[10px] leading-6 text-slate-400">

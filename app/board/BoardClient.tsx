@@ -99,8 +99,8 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
               onClick={() => setActiveCategory(c)}
               className={`rounded-full border px-3 py-1 font-mono text-[10px] transition-colors ${
                 activeCategory === c
-                  ? "border-white/[0.25] bg-white/[0.08] text-slate-200"
-                  : "border-white/[0.10] text-slate-500 hover:text-slate-300 hover:border-white/[0.18]"
+                  ? "border-white/[0.25] bg-white/[0.14] text-slate-200"
+                  : "border-white/[0.18] text-slate-500 hover:text-slate-300 hover:border-white/[0.18]"
               }`}
             >
               {c}
@@ -110,7 +110,7 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
         <div className="flex items-center gap-2">
           <button
             onClick={changeHandle}
-            className="font-mono text-[10px] text-slate-600 hover:text-slate-400 transition-colors"
+            className="font-mono text-[10px] text-slate-500 hover:text-slate-400 transition-colors"
           >
             @{handle} ✎
           </button>
@@ -125,7 +125,7 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
 
       {/* 新規スレッド作成 */}
       {showNew && (
-        <div className="mb-4 rounded-2xl border border-white/[0.12] bg-white/[0.05] p-4 space-y-3">
+        <div className="mb-4 rounded-2xl border border-white/[0.22] bg-white/[0.05] p-4 space-y-3">
           <p className="font-mono text-[10px] text-slate-400">新規スレッド</p>
           <div className="flex gap-2 flex-wrap">
             {(["銘柄", "仮説", "考察", "サイトへの質問"] as const).map((c) => (
@@ -133,7 +133,7 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
                 key={c}
                 onClick={() => setNewCat(c)}
                 className={`rounded-full border px-2.5 py-0.5 font-mono text-[10px] transition-colors ${
-                  newCat === c ? CAT_STYLE[c] + " bg-current/[0.06]" : "border-white/[0.10] text-slate-600"
+                  newCat === c ? CAT_STYLE[c] + " bg-current/[0.06]" : "border-white/[0.18] text-slate-500"
                 }`}
               >
                 {c}
@@ -145,19 +145,19 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
               value={newTicker}
               onChange={(e) => setNewTicker(e.target.value)}
               placeholder="ティッカー（例: 7203.T, SPY）"
-              className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]"
+              className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 font-mono text-xs text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]"
             />
           )}
           <input
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
             placeholder="スレッドタイトル（例: NTTの配当落ち前後の動きを考察する）"
-            className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]"
+            className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25]"
           />
           <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] text-slate-600">投稿者: @{handle}</span>
+            <span className="font-mono text-[10px] text-slate-500">投稿者: @{handle}</span>
             <div className="flex gap-2">
-              <button onClick={() => setShowNew(false)} className="font-mono text-[10px] text-slate-600 hover:text-slate-400">キャンセル</button>
+              <button onClick={() => setShowNew(false)} className="font-mono text-[10px] text-slate-500 hover:text-slate-400">キャンセル</button>
               <button
                 onClick={postThread}
                 disabled={!newTitle.trim() || posting}
@@ -172,7 +172,7 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
 
       {/* スレッド一覧 */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-white/[0.08] bg-white/[0.03] p-8 text-center">
+        <div className="rounded-2xl border border-white/[0.15] bg-white/[0.11] p-8 text-center">
           <p className="font-mono text-xs text-slate-500">まだスレッドがありません。最初のスレッドを立てましょう。</p>
         </div>
       ) : (
@@ -181,7 +181,7 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
             <Link
               key={t.id}
               href={`/board/${t.id}`}
-              className="block rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3 hover:bg-white/[0.06] hover:border-white/[0.18] transition-all"
+              className="block rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3 hover:bg-white/[0.11] hover:border-white/[0.18] transition-all"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -194,11 +194,11 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
                     )}
                   </div>
                   <p className="text-sm text-slate-200 leading-snug line-clamp-1">{t.title}</p>
-                  <p className="mt-1 font-mono text-[10px] text-slate-600">@{t.handle} · {timeAgo(t.last_post_at)}</p>
+                  <p className="mt-1 font-mono text-[10px] text-slate-500">@{t.handle} · {timeAgo(t.last_post_at)}</p>
                 </div>
                 <div className="shrink-0 text-right">
                   <p className="font-mono text-xs text-slate-500">{t.post_count}</p>
-                  <p className="font-mono text-[9px] text-slate-700">件</p>
+                  <p className="font-mono text-[9px] text-slate-500">件</p>
                 </div>
               </div>
             </Link>
@@ -206,7 +206,7 @@ export default function BoardClient({ initialThreads }: { initialThreads: Thread
         </div>
       )}
 
-      <p className="mt-6 font-mono text-[10px] leading-6 text-slate-700">
+      <p className="mt-6 font-mono text-[10px] leading-6 text-slate-500">
         脅迫・個人情報の交換・スパムは即時削除。投資の最終判断はご自身で。
       </p>
     </div>

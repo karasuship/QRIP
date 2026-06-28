@@ -106,7 +106,7 @@ function ChartTooltip({ active, payload }: any) {
   const d = payload[0]?.payload;
   if (!d) return null;
   return (
-    <div className="rounded-xl border border-white/[0.12] bg-[#0d1117]/95 px-3 py-2 font-mono text-xs backdrop-blur-sm">
+    <div className="rounded-xl border border-white/[0.22] bg-[#0d1117]/95 px-3 py-2 font-mono text-xs backdrop-blur-sm">
       <p className="text-[10px] text-slate-500">{d.dateLabel}</p>
       <p className="text-[#34d399]">${d.close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
     </div>
@@ -218,15 +218,15 @@ export default function PriceChartClient() {
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          <span className="font-mono text-[10px] text-slate-700">
+          <span className="font-mono text-[10px] text-slate-500">
             15分遅延 · {minutesSinceUpdate != null ? `${minutesSinceUpdate}分前更新` : "更新中"}
           </span>
-          <button onClick={() => fetchData(range)} className="font-mono text-[10px] text-slate-600 hover:text-slate-400 transition-colors">↻</button>
+          <button onClick={() => fetchData(range)} className="font-mono text-[10px] text-slate-500 hover:text-slate-400 transition-colors">↻</button>
           <div className="flex gap-1">
             {RANGE_LABELS.map(([r, l]) => (
               <button key={r} onClick={() => setRange(r)}
                 className={`rounded-lg border px-2 py-0.5 font-mono text-[10px] transition-colors ${
-                  range === r ? "border-white/[0.20] text-slate-300" : "border-white/[0.08] text-slate-600 hover:text-slate-400"
+                  range === r ? "border-white/[0.20] text-slate-300" : "border-white/[0.15] text-slate-500 hover:text-slate-400"
                 }`}>{l}</button>
             ))}
           </div>
@@ -234,10 +234,10 @@ export default function PriceChartClient() {
       </div>
 
       {/* ── チャート本体 ─────────────────────────── */}
-      <div className="relative rounded-2xl border border-white/[0.10] bg-white/[0.03] p-3" style={{ height: 260 }}>
+      <div className="relative rounded-2xl border border-white/[0.18] bg-white/[0.11] p-3" style={{ height: 260 }}>
         {loading && (
           <div className="absolute inset-0 flex items-center justify-center">
-            <span className="font-mono text-[10px] text-slate-600 animate-pulse">データ取得中...</span>
+            <span className="font-mono text-[10px] text-slate-500 animate-pulse">データ取得中...</span>
           </div>
         )}
         {error && (
@@ -329,17 +329,17 @@ export default function PriceChartClient() {
           <h3 className={`mt-2 font-mono text-sm font-bold ${zone.color}`}>{zone.headline}</h3>
 
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">データソース</p>
+            <div className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">データソース</p>
               <p className="mt-0.5 font-mono text-xs text-slate-300">{zone.stats.source}</p>
             </div>
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">63日後の期待リターン</p>
+            <div className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2">
+              <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">63日後の期待リターン</p>
               <p className={`mt-0.5 font-mono text-sm font-bold ${zone.color}`}>{zone.stats.ret63d}</p>
             </div>
             {zone.stats.winPct && (
-              <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2">
-                <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">プラスリターン率</p>
+              <div className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2">
+                <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">プラスリターン率</p>
                 <p className={`mt-0.5 font-mono text-sm font-bold ${zone.color}`}>{zone.stats.winPct}%</p>
               </div>
             )}
@@ -351,7 +351,7 @@ export default function PriceChartClient() {
 
       {/* ATH付近の場合（下落していない）*/}
       {drawdown != null && drawdown > -0.05 && (
-        <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-3">
+        <div className="rounded-xl border border-white/[0.15] bg-white/[0.11] px-4 py-3">
           <p className="font-mono text-xs text-slate-400">
             <span className="text-slate-300">ATH付近 —</span> phi2シグナル未発動。高値圏では積立DCAを淡々と継続。
             ATH比−10%を超えた時点で本パネルに統計データが表示されます。
@@ -361,32 +361,32 @@ export default function PriceChartClient() {
 
       {/* ── SP500 回復統計テーブル ──────────────── */}
       <details className="group">
-        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-widest text-slate-600 hover:text-slate-400 transition-colors list-none flex items-center gap-2">
+        <summary className="cursor-pointer font-mono text-[10px] uppercase tracking-widest text-slate-500 hover:text-slate-400 transition-colors list-none flex items-center gap-2">
           <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
           SP500 過去の下落と回復期間（参考）
         </summary>
-        <div className="mt-2 overflow-x-auto rounded-xl border border-white/[0.08]">
+        <div className="mt-2 overflow-x-auto rounded-xl border border-white/[0.15]">
           <table className="w-full text-xs min-w-[480px]">
-            <thead className="border-b border-white/[0.08] bg-white/[0.04]">
+            <thead className="border-b border-white/[0.15] bg-white/[0.14]">
               <tr>
                 {["下落幅","分類","平均回復期間","解説"].map(h => (
-                  <th key={h} className="px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-600">{h}</th>
+                  <th key={h} className="px-3 py-2 text-left font-mono text-[9px] uppercase tracking-widest text-slate-500">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {RECOVERY.map((r, i) => (
-                <tr key={i} className="border-t border-white/[0.08] hover:bg-white/[0.02]">
+                <tr key={i} className="border-t border-white/[0.15] hover:bg-white/[0.02]">
                   <td className="px-3 py-2.5 font-mono text-[#34d399]">{r.range}</td>
                   <td className="px-3 py-2.5 font-mono text-slate-300">{r.label}</td>
                   <td className="px-3 py-2.5 font-mono text-amber-400">{r.avgDays}</td>
-                  <td className="px-3 py-2.5 font-mono text-slate-600 text-[10px]">{r.note}</td>
+                  <td className="px-3 py-2.5 font-mono text-slate-500 text-[10px]">{r.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p className="mt-1 font-mono text-[9px] text-slate-700">出典: SP500 1926〜2024の全調整・弱気相場の中央値。GFCと2020コロナを含む。1929年の大恐慌は除外。</p>
+        <p className="mt-1 font-mono text-[9px] text-slate-500">出典: SP500 1926〜2024の全調整・弱気相場の中央値。GFCと2020コロナを含む。1929年の大恐慌は除外。</p>
       </details>
     </div>
   );

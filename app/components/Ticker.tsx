@@ -51,11 +51,11 @@ export default function Ticker({ initial }: { initial: SignalData }) {
   const doubled = [...items, ...items];
 
   return (
-    <div className="overflow-hidden border-b border-white/[0.12] bg-white/[0.06] py-1.5 backdrop-blur-sm">
+    <div className="overflow-hidden border-b border-white/[0.22] bg-white/[0.11] py-1.5 backdrop-blur-sm">
       <div className="flex overflow-hidden">
         <div className="flex animate-ticker whitespace-nowrap">
           {doubled.map((item, i) => (
-            <span key={i} className="inline-flex items-center gap-2 border-r border-white/[0.12] px-6">
+            <span key={i} className="inline-flex items-center gap-2 border-r border-white/[0.22] px-6">
               <span className="font-mono text-[10px] uppercase tracking-widest text-slate-400">
                 {item.label}
               </span>

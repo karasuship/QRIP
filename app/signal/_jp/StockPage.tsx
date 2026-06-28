@@ -8,7 +8,7 @@ function W52Bar({ pos }: { pos: number }) {
   const pct = Math.round(pos * 100);
   return (
     <div className="mt-1">
-      <div className="relative h-1.5 w-full rounded-full bg-white/[0.08]">
+      <div className="relative h-1.5 w-full rounded-full bg-white/[0.14]">
         <div
           className={`absolute left-0 top-0 h-full rounded-full ${
             pos <= 0.20 ? "bg-[#34d399]" : pos >= 0.80 ? "bg-[#f87171]" : "bg-slate-500"
@@ -16,7 +16,7 @@ function W52Bar({ pos }: { pos: number }) {
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="mt-1 flex justify-between font-mono text-[9px] text-slate-600">
+      <div className="mt-1 flex justify-between font-mono text-[9px] text-slate-500">
         <span>52週安値</span>
         <span>52週高値</span>
       </div>
@@ -60,7 +60,7 @@ export default async function JpStockPage({ code }: { code: string }) {
   const signalCls =
     s?.signal === "BUY"  ? "border-[#34d399]/40 bg-[#34d399]/[0.08] text-[#34d399]" :
     s?.signal === "SELL" ? "border-[#f87171]/40 bg-[#f87171]/[0.08] text-[#f87171]" :
-    "border-white/[0.15] bg-white/[0.06] text-slate-400";
+    "border-white/[0.15] bg-white/[0.11] text-slate-400";
 
   const conclusionText = (() => {
     if (!s) return "データ取得中 — しばらくしてから再読み込みしてください。";
@@ -109,7 +109,7 @@ export default async function JpStockPage({ code }: { code: string }) {
 
         {/* 指標カード */}
         {s ? (
-          <div className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.06] p-5 backdrop-blur-md">
+          <div className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5 backdrop-blur-md">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-4">現在の指標</p>
 
             <div className="grid grid-cols-3 gap-4 mb-5">
@@ -153,14 +153,14 @@ export default async function JpStockPage({ code }: { code: string }) {
             </div>
 
             {/* BUY条件チェック */}
-            <div className="border-t border-white/[0.08] pt-4">
+            <div className="border-t border-white/[0.15] pt-4">
               <p className="font-mono text-[9px] text-slate-500 mb-2">BUY 条件チェック</p>
               <div className="space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <span className={`font-mono text-sm ${s.divYield >= cfg.buyYield ? "text-[#34d399]" : "text-slate-600"}`}>
+                  <span className={`font-mono text-sm ${s.divYield >= cfg.buyYield ? "text-[#34d399]" : "text-slate-500"}`}>
                     {s.divYield >= cfg.buyYield ? "✓" : "○"}
                   </span>
-                  <span className={`text-xs ${s.divYield >= cfg.buyYield ? "text-slate-300" : "text-slate-600"}`}>
+                  <span className={`text-xs ${s.divYield >= cfg.buyYield ? "text-slate-300" : "text-slate-500"}`}>
                     配当利回り ≥ {(cfg.buyYield * 100).toFixed(1)}%
                     <span className="ml-2 font-mono text-[10px] text-slate-500">
                       （現在 {(s.divYield * 100).toFixed(2)}%）
@@ -168,10 +168,10 @@ export default async function JpStockPage({ code }: { code: string }) {
                   </span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`font-mono text-sm ${s.w52Pos <= 0.20 ? "text-[#34d399]" : "text-slate-600"}`}>
+                  <span className={`font-mono text-sm ${s.w52Pos <= 0.20 ? "text-[#34d399]" : "text-slate-500"}`}>
                     {s.w52Pos <= 0.20 ? "✓" : "○"}
                   </span>
-                  <span className={`text-xs ${s.w52Pos <= 0.20 ? "text-slate-300" : "text-slate-600"}`}>
+                  <span className={`text-xs ${s.w52Pos <= 0.20 ? "text-slate-300" : "text-slate-500"}`}>
                     52週レンジ下位 20%
                     <span className="ml-2 font-mono text-[10px] text-slate-500">
                       （現在 {(s.w52Pos * 100).toFixed(0)}%）
@@ -182,7 +182,7 @@ export default async function JpStockPage({ code }: { code: string }) {
             </div>
 
             {/* 利回り閾値ガイド */}
-            <div className="mt-4 border-t border-white/[0.08] pt-4">
+            <div className="mt-4 border-t border-white/[0.15] pt-4">
               <p className="font-mono text-[9px] text-slate-500 mb-2">利回りゾーン</p>
               <div className="grid grid-cols-3 gap-2">
                 {[
@@ -190,7 +190,7 @@ export default async function JpStockPage({ code }: { code: string }) {
                   { label: "中立（HOLD）",  range: `${(cfg.sellYield * 100).toFixed(1)}〜${(cfg.buyYield * 100).toFixed(1)}%`, cls: "border-slate-500/30 text-slate-400", active: s.divYield > cfg.sellYield && s.divYield < cfg.buyYield },
                   { label: "割高（SELL）",  range: `≤ ${(cfg.sellYield * 100).toFixed(1)}%`,  cls: "border-[#f87171]/30 text-[#f87171]", active: s.divYield <= cfg.sellYield },
                 ].map((z) => (
-                  <div key={z.label} className={`rounded-xl border px-3 py-2 text-center ${z.cls} ${z.active ? "opacity-100 bg-white/[0.04]" : "opacity-30"}`}>
+                  <div key={z.label} className={`rounded-xl border px-3 py-2 text-center ${z.cls} ${z.active ? "opacity-100 bg-white/[0.14]" : "opacity-30"}`}>
                     <p className="font-mono text-[9px]">{z.label}</p>
                     <p className="font-mono text-xs font-bold mt-0.5">{z.range}</p>
                     {z.active && <p className="font-mono text-[9px] mt-0.5">← 現在</p>}
@@ -200,13 +200,13 @@ export default async function JpStockPage({ code }: { code: string }) {
             </div>
           </div>
         ) : (
-          <div className="mt-4 rounded-2xl border border-white/[0.10] bg-white/[0.04] p-5">
+          <div className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.14] p-5">
             <p className="text-xs text-slate-500">株価データを取得できませんでした。市場時間外または一時的なエラーです。</p>
           </div>
         )}
 
         {/* シグナル根拠 */}
-        <div className="mt-4 rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5">
+        <div className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
           <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500 mb-3">シグナルの根拠</p>
           <div className="space-y-2 text-xs leading-5 text-slate-400">
             <p>
@@ -218,7 +218,7 @@ export default async function JpStockPage({ code }: { code: string }) {
               <span className="font-mono text-slate-300">Z = 1.88 · n = 20 · 26年統計（1998〜2024）</span>
               — 買い条件充足後30日の超過リターン検定。有意水準5%（片側）を上回る。
             </p>
-            <p className="text-slate-600">
+            <p className="text-slate-500">
               過剰落ち仮説（権利落ち日後のアルファ）は Round 44-45 で棄却済み（decisions/0032）。
               現シグナルは純粋な利回りバリュエーションのみに基づく。
             </p>
@@ -235,7 +235,7 @@ export default async function JpStockPage({ code }: { code: string }) {
           <StockNews ticker={ticker} label={`${cfg.name} 関連ニュース`} />
         </div>
 
-        <p className="mt-6 font-mono text-[10px] leading-6 text-slate-600">
+        <p className="mt-6 font-mono text-[10px] leading-6 text-slate-500">
           データ: Yahoo Finance ({ticker})。配当利回りシグナル: Z=1.88, n=20, 26年統計 (decisions/0033)。
           これは投資助言ではありません。
         </p>

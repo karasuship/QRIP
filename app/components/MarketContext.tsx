@@ -29,7 +29,7 @@ export default async function MarketContext() {
   const commodities = quotes.filter((q) => q.category === "commodity");
 
   return (
-    <section className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.06] p-4 backdrop-blur-md">
+    <section className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.11] p-4 backdrop-blur-md">
       <p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-slate-400">
         市場文脈 — 今日の主要指数
       </p>
@@ -38,7 +38,7 @@ export default async function MarketContext() {
           <QuoteCard key={q.symbol} q={q} />
         ))}
       </div>
-      <p className="mt-2.5 font-mono text-[9px] leading-4 text-slate-600">
+      <p className="mt-2.5 font-mono text-[9px] leading-4 text-slate-500">
         NASDAQ100（テック/成長）·
         ラッセル2000（小型株・信用感応度高い）·
         KOSPI（グローバルリスクの先行指標）·

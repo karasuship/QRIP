@@ -15,7 +15,7 @@ export default function LoginPrompt({ next }: { next: string }) {
   };
 
   return (
-    <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-white/[0.12] bg-white/[0.04] p-10 text-center">
+    <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-white/[0.22] bg-white/[0.14] p-10 text-center">
       <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">ログインが必要</p>
       <p className="text-sm text-slate-400">このページはログインユーザーのみ利用できます。</p>
       <button

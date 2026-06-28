@@ -36,13 +36,13 @@ export default function Nav() {
   };
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/[0.08] bg-[#020c1b]/85 backdrop-blur-xl">
+    <header className="sticky top-0 z-50 border-b border-white/[0.15] bg-[#020c1b]/85 backdrop-blur-xl">
       <div className="mx-auto flex max-w-5xl items-center justify-between px-6 py-3">
         <Link href="/" className="flex items-center gap-3 group shrink-0">
           <span className="font-mono text-sm font-bold tracking-widest text-[#38bdf8] group-hover:text-sky-300 transition-colors">
             QRIP
           </span>
-          <span className="hidden text-[10px] tracking-widest text-slate-600 sm:block uppercase">
+          <span className="hidden text-[10px] tracking-widest text-slate-500 sm:block uppercase">
             市場観測システム
           </span>
         </Link>
@@ -57,8 +57,8 @@ export default function Nav() {
                 title={desc}
                 className={`relative flex items-center rounded-lg px-3 py-2 text-xs font-medium tracking-wide transition-all ${
                   active
-                    ? "bg-white/[0.08] text-[#e8f4ff]"
-                    : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]"
+                    ? "bg-white/[0.14] text-[#e8f4ff]"
+                    : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.14]"
                 }`}
               >
                 {active && (
@@ -75,8 +75,8 @@ export default function Nav() {
               onClick={() => setMoreOpen((v) => !v)}
               className={`relative flex items-center rounded-lg px-3 py-2 text-xs font-medium tracking-wide transition-all ${
                 isMoreActive || moreOpen
-                  ? "bg-white/[0.08] text-[#e8f4ff]"
-                  : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.04]"
+                  ? "bg-white/[0.14] text-[#e8f4ff]"
+                  : "text-slate-500 hover:text-slate-300 hover:bg-white/[0.14]"
               }`}
             >
               {isMoreActive && (
@@ -88,7 +88,7 @@ export default function Nav() {
             {moreOpen && (
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setMoreOpen(false)} />
-                <div className="absolute right-0 top-full mt-2 z-50 w-44 rounded-2xl border border-white/[0.12] bg-[#020c1b]/95 backdrop-blur-xl shadow-xl overflow-hidden">
+                <div className="absolute right-0 top-full mt-2 z-50 w-44 rounded-2xl border border-white/[0.22] bg-[#020c1b]/95 backdrop-blur-xl shadow-xl overflow-hidden">
                   {MORE_LINKS.map(({ href, label, desc }) => {
                     const active = pathname.startsWith(href);
                     return (
@@ -99,18 +99,18 @@ export default function Nav() {
                         onClick={() => setMoreOpen(false)}
                         className={`flex items-center px-4 py-2.5 text-xs transition-colors ${
                           active
-                            ? "bg-white/[0.08] text-[#e8f4ff]"
-                            : "text-slate-400 hover:bg-white/[0.06] hover:text-slate-200"
+                            ? "bg-white/[0.14] text-[#e8f4ff]"
+                            : "text-slate-400 hover:bg-white/[0.11] hover:text-slate-200"
                         }`}
                       >
                         {label}
                       </Link>
                     );
                   })}
-                  <div className="border-t border-white/[0.08] px-4 py-2.5">
+                  <div className="border-t border-white/[0.15] px-4 py-2.5">
                     <button
                       onClick={() => { setMoreOpen(false); handleSignOut(); }}
-                      className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
+                      className="text-xs text-slate-500 hover:text-slate-400 transition-colors"
                     >
                       ログアウト
                     </button>

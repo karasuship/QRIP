@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import Link from "next/link";
 import { getSupabaseServer } from "@/lib/supabase";
 import ThreadClient from "./ThreadClient";
@@ -69,7 +69,7 @@ export default async function ThreadPage({ params }: { params: { id: string } })
             )}
           </div>
           <h1 className="text-xl font-semibold text-[#e8f4ff] leading-snug">{thread.title}</h1>
-          <p className="mt-1 font-mono text-[10px] text-slate-600">
+          <p className="mt-1 font-mono text-[10px] text-slate-500">
             @{thread.handle} · スレッド作成
           </p>
         </div>

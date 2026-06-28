@@ -67,7 +67,31 @@ body {
 }
 .ping-slow { animation: ping-slow 2s cubic-bezier(0,0,0.2,1) infinite; }
 
+/* ── Input / Form ─────────────────────────────────────────── */
+
+input, textarea, select {
+  background-color: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #e8f4ff;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+  outline: none;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: rgba(56,189,248,0.50);
+  background-color: rgba(255,255,255,0.10);
+}
+input::placeholder, textarea::placeholder {
+  color: rgba(148,163,184,0.55);
+}
+select option {
+  background-color: #0f1f35;
+  color: #e8f4ff;
+}
+
 /* ── Scrollbar ────────────────────────────────────────────── */
 ::-webkit-scrollbar       { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: #020c1b; }
-::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.18); border-radius: 2px; }

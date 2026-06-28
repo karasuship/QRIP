@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { getSupabaseBrowser } from "@/lib/supabase";
@@ -65,14 +65,14 @@ export default function ThreadClient({ threadId, initialPosts }: { threadId: num
       {/* 投稿一覧 */}
       <div className="space-y-3">
         {posts.length === 0 && (
-          <p className="font-mono text-xs text-slate-600 py-4">まだ投稿がありません。最初のコメントを書きましょう。</p>
+          <p className="font-mono text-xs text-slate-500 py-4">まだ投稿がありません。最初のコメントを書きましょう。</p>
         )}
         {posts.map((p, i) => (
-          <div key={p.id} className="rounded-xl border border-white/[0.10] bg-white/[0.03] px-4 py-3">
+          <div key={p.id} className="rounded-xl border border-white/[0.18] bg-white/[0.11] px-4 py-3">
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-mono text-[10px] text-slate-600">#{i + 1}</span>
+              <span className="font-mono text-[10px] text-slate-500">#{i + 1}</span>
               <span className="font-mono text-[10px] text-slate-400">@{p.handle}</span>
-              <span className="font-mono text-[10px] text-slate-700 ml-auto">{timeAgo(p.created_at)}</span>
+              <span className="font-mono text-[10px] text-slate-500 ml-auto">{timeAgo(p.created_at)}</span>
             </div>
             <p className="text-sm leading-7 text-slate-300 whitespace-pre-wrap">{p.content}</p>
           </div>
@@ -81,17 +81,17 @@ export default function ThreadClient({ threadId, initialPosts }: { threadId: num
       </div>
 
       {/* 投稿フォーム */}
-      <div className="mt-6 rounded-2xl border border-white/[0.12] bg-white/[0.04] p-4 space-y-3">
+      <div className="mt-6 rounded-2xl border border-white/[0.22] bg-white/[0.14] p-4 space-y-3">
         <p className="font-mono text-[10px] text-slate-500">返信する（@{handle}）</p>
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="投稿内容を入力..."
           rows={4}
-          className="w-full rounded-xl border border-white/[0.10] bg-white/[0.04] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25] resize-none"
+          className="w-full rounded-xl border border-white/[0.18] bg-white/[0.14] px-3 py-2.5 text-sm text-slate-200 placeholder-slate-600 outline-none focus:border-white/[0.25] resize-none"
         />
         <div className="flex items-center justify-between">
-          <p className="font-mono text-[10px] text-slate-700">
+          <p className="font-mono text-[10px] text-slate-500">
             脅迫・個人情報の開示は即削除。投資推奨は「このサイトのロジックでは」で枕詞をつけてください。
           </p>
           <button

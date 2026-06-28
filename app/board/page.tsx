@@ -56,10 +56,10 @@ export default async function BoardPage() {
         </div>
 
         {!dbReady ? (
-          <div className="mt-8 rounded-2xl border border-white/[0.10] bg-white/[0.04] p-8 text-center space-y-2">
+          <div className="mt-8 rounded-2xl border border-white/[0.18] bg-white/[0.14] p-8 text-center space-y-2">
             <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">準備中</p>
             <p className="text-sm text-slate-400">掲示板のデータベースを初期化中です。しばらくお待ちください。</p>
-            <p className="font-mono text-[10px] text-slate-600">（管理者: Supabase で board_threads・board_posts テーブルを作成してください）</p>
+            <p className="font-mono text-[10px] text-slate-500">（管理者: Supabase で board_threads・board_posts テーブルを作成してください）</p>
           </div>
         ) : (
           <BoardClient initialThreads={threads} />

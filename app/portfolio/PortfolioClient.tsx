@@ -126,7 +126,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
   return (
     <div className="space-y-4">
       {/* タブ */}
-      <div className="flex gap-1 rounded-xl border border-white/[0.10] bg-white/[0.04] p-1 w-fit">
+      <div className="flex gap-1 rounded-xl border border-white/[0.18] bg-white/[0.14] p-1 w-fit">
         {(["summary", "log"] as const).map((t) => (
           <button
             key={t}
@@ -144,7 +144,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
       {tab === "summary" && (
         <div className="space-y-3">
           {entries.length === 0 ? (
-            <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] px-5 py-8 text-center">
+            <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] px-5 py-8 text-center">
               <p className="font-mono text-xs text-slate-500">まだ記録がありません。「売買ログ」タブから追加してください。</p>
             </div>
           ) : (
@@ -159,7 +159,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                     { label: "損益", value: `¥${fmt(totalPnl)}`, color: totalPnl >= 0 ? "text-[#34d399]" : "text-[#f87171]" },
                     { label: "リターン", value: fmtPct(totalReturn), color: totalReturn >= 0 ? "text-[#34d399]" : "text-[#f87171]" },
                   ].map((c) => (
-                    <div key={c.label} className="rounded-xl border border-white/[0.09] bg-white/[0.04] p-3">
+                    <div key={c.label} className="rounded-xl border border-white/[0.09] bg-white/[0.14] p-3">
                       <p className="font-mono text-[9px] text-slate-500 mb-1">{c.label}</p>
                       <p className={`font-mono text-base font-bold tabular-nums ${c.color}`}>{c.value}</p>
                     </div>
@@ -168,7 +168,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
               </div>
 
               {/* phi2 vs DCA 比較 */}
-              <div className="rounded-2xl border border-white/[0.12] bg-white/[0.06] p-4 backdrop-blur-md">
+              <div className="rounded-2xl border border-white/[0.22] bg-white/[0.11] p-4 backdrop-blur-md">
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">phi2 シグナル vs DCAベースライン</p>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -190,7 +190,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                     </span>
                   </div>
                 </div>
-                <p className="mt-2 font-mono text-[9px] text-slate-600">
+                <p className="mt-2 font-mono text-[9px] text-slate-500">
                   SP500 現在値: {fmt(currentPrice, 2)} ({currentDate}) · 加重平均買値: {avgBuyLevel > 0 ? fmt(avgBuyLevel, 2) : "—"}
                 </p>
               </div>
@@ -203,7 +203,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                 const cur = es.reduce((s, e) => s + e.amount * (currentPrice / e.sp500Level), 0);
                 const ret = (cur - inv) / inv;
                 return (
-                  <div key={t} className="flex items-center justify-between rounded-xl border border-white/[0.09] bg-white/[0.04] px-4 py-2.5">
+                  <div key={t} className="flex items-center justify-between rounded-xl border border-white/[0.09] bg-white/[0.14] px-4 py-2.5">
                     <div className="flex items-center gap-2">
                       <span className={`font-mono text-xs font-semibold ${TYPE_COLOR[t]}`}>{TYPE_LABEL[t]}</span>
                       <span className="font-mono text-[10px] text-slate-500">{es.length}件 · ¥{fmt(inv)}</span>
@@ -230,7 +230,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                   type="date"
                   value={form.date}
                   onChange={(e) => { setForm((f) => ({ ...f, date: e.target.value })); fetchPrice(e.target.value); }}
-                  className="w-full rounded-xl border border-white/[0.15] bg-white/[0.06] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
+                  className="w-full rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
                 />
               </div>
               <div>
@@ -244,7 +244,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                   readOnly
                   value={fetchedLevel ? String(fetchedLevel.price) : ""}
                   placeholder="日付選択で自動取得"
-                  className="w-full rounded-xl border border-white/[0.10] bg-white/[0.03] px-3 py-2 font-mono text-sm text-slate-400 outline-none"
+                  className="w-full rounded-xl border border-white/[0.18] bg-white/[0.11] px-3 py-2 font-mono text-sm text-slate-400 outline-none"
                 />
               </div>
               <div>
@@ -256,7 +256,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                   value={form.amount}
                   onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
                   placeholder="例: 30000"
-                  className="w-full rounded-xl border border-white/[0.15] bg-white/[0.06] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-full rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
               </div>
               <div>
@@ -278,7 +278,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                   value={form.label}
                   onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
                   placeholder="例: コロナ暴落時"
-                  className="w-full rounded-xl border border-white/[0.15] bg-white/[0.06] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
+                  className="w-full rounded-xl border border-white/[0.15] bg-white/[0.11] px-3 py-2 font-mono text-sm text-[#e8f4ff] outline-none focus:border-white/30"
                 />
               </div>
             </div>
@@ -295,7 +295,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
           {entries.length > 0 && (
             <div className="overflow-hidden rounded-2xl border border-white/[0.18] backdrop-blur-sm">
               <table className="w-full text-sm">
-                <thead className="border-b border-white/[0.13] bg-white/[0.06]">
+                <thead className="border-b border-white/[0.13] bg-white/[0.11]">
                   <tr>
                     {["日付", "種別", "投入額", "買値", "現在値", "損益率", ""].map((h) => (
                       <th key={h} className={`px-3 py-2 font-mono text-[9px] uppercase tracking-widest text-slate-400 ${h === "日付" || h === "種別" ? "text-left" : "text-right"}`}>{h}</th>
@@ -311,7 +311,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                         <td className="px-3 py-2 font-mono text-xs text-slate-400">{e.date}</td>
                         <td className="px-3 py-2">
                           <span className={`font-mono text-[10px] font-semibold ${TYPE_COLOR[e.type]}`}>{TYPE_LABEL[e.type]}</span>
-                          {e.label && <span className="ml-1.5 font-mono text-[10px] text-slate-600">{e.label}</span>}
+                          {e.label && <span className="ml-1.5 font-mono text-[10px] text-slate-500">{e.label}</span>}
                         </td>
                         <td className="px-3 py-2 text-right font-mono text-xs text-slate-400">¥{fmt(e.amount)}</td>
                         <td className="px-3 py-2 text-right font-mono text-xs text-slate-500">{fmt(e.sp500Level, 2)}</td>
@@ -322,7 +322,7 @@ export default function PortfolioClient({ currentPrice, currentDate }: Props) {
                         <td className="px-3 py-2 text-right">
                           <button
                             onClick={() => removeEntry(e.id)}
-                            className="font-mono text-[10px] text-slate-600 hover:text-red-400 transition-colors"
+                            className="font-mono text-[10px] text-slate-500 hover:text-red-400 transition-colors"
                           >
                             削除
                           </button>

@@ -63,7 +63,7 @@ export default function NttCalendar() {
           const hasExdate = events.some((e) => e.type === "exdate");
           return (
             <div key={date}>
-              <p className={`font-mono text-[10px] mb-1 ${isToday ? "text-amber-400" : hasExdate ? "text-amber-400/70" : "text-slate-600"}`}>
+              <p className={`font-mono text-[10px] mb-1 ${isToday ? "text-amber-400" : hasExdate ? "text-amber-400/70" : "text-slate-500"}`}>
                 {isToday ? "▶ 今日 " : ""}{label}
               </p>
               <div className="space-y-1">
@@ -72,14 +72,14 @@ export default function NttCalendar() {
                   return (
                     <div
                       key={e.label}
-                      className="flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-1.5"
+                      className="flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.11] px-3 py-1.5"
                     >
                       <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] ${cfg.color}`}>
                         {cfg.label}
                       </span>
                       <span className="text-xs text-slate-400 flex-1">{e.label}</span>
                       {!e.confirmed && (
-                        <span className="font-mono text-[9px] text-slate-700 shrink-0">推定</span>
+                        <span className="font-mono text-[9px] text-slate-500 shrink-0">推定</span>
                       )}
                     </div>
                   );
@@ -89,7 +89,7 @@ export default function NttCalendar() {
           );
         })}
       </div>
-      <p className="mt-2 font-mono text-[9px] text-slate-700">
+      <p className="mt-2 font-mono text-[9px] text-slate-500">
         権利落ち日は前営業日に保有が必要。配当・決算日程は推定。確定情報は NTT IR サイトで確認。
       </p>
     </div>

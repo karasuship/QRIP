@@ -82,19 +82,19 @@ export default function EconCalendar() {
           const isToday = date === today;
           return (
             <div key={date}>
-              <p className={`font-mono text-[10px] mb-1.5 ${isToday ? "text-amber-400" : "text-slate-600"}`}>
+              <p className={`font-mono text-[10px] mb-1.5 ${isToday ? "text-amber-400" : "text-slate-500"}`}>
                 {isToday ? "▶ 今日 " : ""}{label}
               </p>
               <div className="space-y-1">
                 {events.map((e) => (
                   <div
                     key={e.label}
-                    className="flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-1.5"
+                    className="flex items-center gap-2.5 rounded-xl border border-white/[0.07] bg-white/[0.11] px-3 py-1.5"
                   >
                     <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] ${MARKET_COLOR[e.market]}`}>
                       {MARKET_LABEL[e.market]}
                     </span>
-                    <span className="font-mono text-[10px] text-slate-600 shrink-0 w-10">{e.time}</span>
+                    <span className="font-mono text-[10px] text-slate-500 shrink-0 w-10">{e.time}</span>
                     <span className={`text-xs ${e.importance === "high" ? "text-slate-300" : "text-slate-500"}`}>
                       {e.label}
                     </span>
@@ -108,7 +108,7 @@ export default function EconCalendar() {
           );
         })}
       </div>
-      <p className="mt-2 font-mono text-[9px] text-slate-700">
+      <p className="mt-2 font-mono text-[9px] text-slate-500">
         時刻は JST。PCE・CPI・雇用統計・FOMC は SP500 の急変動を引き起こしやすい。
       </p>
     </div>

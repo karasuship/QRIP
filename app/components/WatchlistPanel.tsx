@@ -25,12 +25,12 @@ function StockCard({ s }: { s: StockRow }) {
   return (
     <Link
       href={`/screener/${s.code}`}
-      className="group rounded-xl border border-white/[0.10] bg-white/[0.03] px-3 py-2.5 transition-all hover:bg-white/[0.06]"
+      className="group rounded-xl border border-white/[0.18] bg-white/[0.11] px-3 py-2.5 transition-all hover:bg-white/[0.11]"
     >
       <div className="flex items-start justify-between gap-2 mb-2">
         <div>
           <p className="font-mono text-xs font-bold text-[#e8f4ff]">{s.name || s.code}</p>
-          <p className="font-mono text-[9px] text-slate-600">{s.code} · {s.market ?? "—"}</p>
+          <p className="font-mono text-[9px] text-slate-500">{s.code} · {s.market ?? "—"}</p>
         </div>
         <p className="font-mono text-sm font-bold text-[#e8f4ff] tabular-nums shrink-0">
           {s.price != null ? `¥${s.price.toLocaleString("ja-JP")}` : "—"}
@@ -49,7 +49,7 @@ function StockCard({ s }: { s: StockRow }) {
         )}
       </div>
       {pos != null && (
-        <div className="mt-2 relative h-1 rounded-full bg-white/[0.06]">
+        <div className="mt-2 relative h-1 rounded-full bg-white/[0.11]">
           <div className="absolute top-0 bottom-0 left-0 rounded-full bg-[#38bdf8]/40" style={{ width: `${(pos * 100).toFixed(0)}%` }} />
           <div className="absolute top-1/2 -translate-y-1/2 h-2 w-0.5 rounded-full bg-[#38bdf8]" style={{ left: `${(pos * 100).toFixed(0)}%` }} />
         </div>
@@ -103,8 +103,8 @@ export default function WatchlistPanel() {
   // ── ウォッチリスト空（ログイン済みで未登録） ──
   if (mode === "empty") {
     return (
-      <div className="mt-4 flex items-center justify-between rounded-xl border border-white/[0.08] bg-white/[0.02] px-4 py-3">
-        <p className="font-mono text-[9px] text-slate-600">ウォッチリストに銘柄がありません</p>
+      <div className="mt-4 flex items-center justify-between rounded-xl border border-white/[0.15] bg-white/[0.02] px-4 py-3">
+        <p className="font-mono text-[9px] text-slate-500">ウォッチリストに銘柄がありません</p>
         <Link href="/mypage" className="font-mono text-[10px] text-[#38bdf8] hover:opacity-80 transition-opacity">
           銘柄を追加 →
         </Link>
@@ -117,8 +117,8 @@ export default function WatchlistPanel() {
     return (
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
-          <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">ウォッチリスト</p>
-          <Link href="/mypage" className="font-mono text-[9px] text-slate-600 hover:text-slate-400 transition-colors">管理 →</Link>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">ウォッチリスト</p>
+          <Link href="/mypage" className="font-mono text-[9px] text-slate-500 hover:text-slate-400 transition-colors">管理 →</Link>
         </div>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {stocks.map((s) => <StockCard key={s.code} s={s} />)}
@@ -132,7 +132,7 @@ export default function WatchlistPanel() {
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
-          <p className="font-mono text-[9px] uppercase tracking-widest text-slate-600">ウォッチリスト</p>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">ウォッチリスト</p>
           <span className="rounded-full border border-amber-400/30 bg-amber-400/[0.08] px-2 py-0.5 font-mono text-[8px] text-amber-400">
             サンプル
           </span>

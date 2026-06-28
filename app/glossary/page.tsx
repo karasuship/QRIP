@@ -320,7 +320,7 @@ export default function GlossaryPage() {
             <a
               key={cat}
               href={`#${cat}`}
-              className="rounded-full border border-white/[0.12] bg-white/[0.04] px-3 py-1 font-mono text-[10px] text-slate-400 hover:text-slate-200 hover:border-white/[0.25] transition-colors"
+              className="rounded-full border border-white/[0.22] bg-white/[0.14] px-3 py-1 font-mono text-[10px] text-slate-400 hover:text-slate-200 hover:border-white/[0.25] transition-colors"
             >
               {cat}
             </a>
@@ -338,16 +338,16 @@ export default function GlossaryPage() {
           {CATEGORIES.map((cat) => (
             <section key={cat} id={cat}>
               <div className="mb-4 flex items-center gap-3">
-                <div className="h-px flex-1 bg-white/[0.07]" />
+                <div className="h-px flex-1 bg-white/[0.13]" />
                 <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">{cat}</p>
-                <div className="h-px flex-1 bg-white/[0.07]" />
+                <div className="h-px flex-1 bg-white/[0.13]" />
               </div>
               <div className="space-y-4">
                 {byCategory[cat].map((term) => (
                   <div
                     key={term.id}
                     id={term.id}
-                    className="rounded-2xl border border-white/[0.10] bg-white/[0.03] p-5 backdrop-blur-sm"
+                    className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5 backdrop-blur-sm"
                   >
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
@@ -363,19 +363,19 @@ export default function GlossaryPage() {
                     <p className="mt-3 text-[11px] leading-6 text-slate-500">{term.detail}</p>
                     {term.related && (
                       <div className="mt-3 flex flex-wrap gap-1.5">
-                        <span className="font-mono text-[9px] text-slate-600 pt-0.5">関連：</span>
+                        <span className="font-mono text-[9px] text-slate-500 pt-0.5">関連：</span>
                         {term.related.map((r) => {
                           const target = TERMS.find((t) => t.name === r || t.id === r.toLowerCase().replace(/[^a-z0-9]/g, "-"));
                           return target ? (
                             <a
                               key={r}
                               href={`#${target.id}`}
-                              className="rounded border border-white/[0.10] px-1.5 py-0.5 font-mono text-[9px] text-slate-500 hover:text-slate-300 hover:border-white/[0.20] transition-colors"
+                              className="rounded border border-white/[0.18] px-1.5 py-0.5 font-mono text-[9px] text-slate-500 hover:text-slate-300 hover:border-white/[0.20] transition-colors"
                             >
                               {r}
                             </a>
                           ) : (
-                            <span key={r} className="rounded border border-white/[0.08] px-1.5 py-0.5 font-mono text-[9px] text-slate-600">{r}</span>
+                            <span key={r} className="rounded border border-white/[0.15] px-1.5 py-0.5 font-mono text-[9px] text-slate-500">{r}</span>
                           );
                         })}
                       </div>
@@ -387,7 +387,7 @@ export default function GlossaryPage() {
           ))}
         </div>
 
-        <p className="mt-10 font-mono text-[10px] leading-6 text-slate-700">
+        <p className="mt-10 font-mono text-[10px] leading-6 text-slate-500">
           用語の解釈は「このサイトのロジックでは」という前提。一般的な金融定義と一部異なる場合があります。
           根拠となる検証は <Link href="/research" className="text-slate-500 hover:text-slate-400">書庫</Link> を参照。
           これは投資助言ではありません。

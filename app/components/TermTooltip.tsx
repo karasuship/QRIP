@@ -66,7 +66,7 @@ export default function TermTooltip({ term, children, className }: Props) {
             </p>
             <button
               onClick={() => setOpen(false)}
-              className="font-mono text-[10px] text-slate-700 hover:text-slate-400 transition-colors shrink-0"
+              className="font-mono text-[10px] text-slate-500 hover:text-slate-400 transition-colors shrink-0"
               aria-label="閉じる"
             >✕</button>
           </div>

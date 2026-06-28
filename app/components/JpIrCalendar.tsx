@@ -86,14 +86,14 @@ export default function JpIrCalendar({ stock }: { stock?: "NTT" | "JT" | "KDDI" 
           const isToday = date === today;
           return (
             <div key={date}>
-              <p className={`font-mono text-[10px] mb-1 ${isToday ? "text-amber-400" : "text-slate-600"}`}>
+              <p className={`font-mono text-[10px] mb-1 ${isToday ? "text-amber-400" : "text-slate-500"}`}>
                 {isToday ? "▶ 今日 " : ""}{mmdd}（{weekday}）
               </p>
               <div className="space-y-1">
                 {events.map((e) => (
                   <div
                     key={e.label}
-                    className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-1.5"
+                    className="flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.11] px-3 py-1.5"
                   >
                     <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] ${STOCK_COLOR[e.stock]}`}>
                       {e.stock}
@@ -103,7 +103,7 @@ export default function JpIrCalendar({ stock }: { stock?: "NTT" | "JT" | "KDDI" 
                     </span>
                     <span className="text-xs text-slate-400 flex-1">{e.label}</span>
                     {!e.confirmed && (
-                      <span className="font-mono text-[9px] text-slate-700 shrink-0">推定</span>
+                      <span className="font-mono text-[9px] text-slate-500 shrink-0">推定</span>
                     )}
                   </div>
                 ))}
@@ -112,7 +112,7 @@ export default function JpIrCalendar({ stock }: { stock?: "NTT" | "JT" | "KDDI" 
           );
         })}
       </div>
-      <p className="mt-2 font-mono text-[9px] text-slate-700">
+      <p className="mt-2 font-mono text-[9px] text-slate-500">
         推定日程は過去パターンから計算。権利落ち日は前日までの保有が必要。
         確定情報は各社 IR サイトで確認。
       </p>
