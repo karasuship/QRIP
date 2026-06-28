@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { fetchJpStockSignals, JP_STOCKS } from "@/lib/jp-stock-signal";
-import type { JpStockSignal } from "@/lib/jp-stock-signal";
+import { fetchJpStockSignals, JP_STOCKS, fetchYieldStats } from "@/lib/jp-stock-signal";
+import type { JpStockSignal, YieldStats } from "@/lib/jp-stock-signal";
 import JpIrCalendar from "@/app/components/JpIrCalendar";
 import StockNews from "@/app/components/NttNews";
 
@@ -46,7 +46,10 @@ export default async function JpStockPage({ code }: { code: string }) {
   const cfg = JP_STOCKS.find((s) => s.code === code);
   if (!cfg) return <div className="p-8 text-red-400">銘柄が見つかりません</div>;
 
-  const signals = await fetchJpStockSignals().catch(() => [] as JpStockSignal[]);
+  const [signals, yieldStats] = await Promise.all([
+    fetchJpStockSignals().catch(() => [] as JpStockSignal[]),
+    fetchYieldStats(cfg).catch(() => null as YieldStats | null),
+  ]);
   const s = signals.find((sig) => sig.code === code);
 
   const extra = STOCK_EXTRA[code];
@@ -202,6 +205,135 @@ export default async function JpStockPage({ code }: { code: string }) {
         ) : (
           <div className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.14] p-5">
             <p className="text-xs text-slate-500">株価データを取得できませんでした。市場時間外または一時的なエラーです。</p>
+          </div>
+        )}
+
+        {/* 利回り分布統計（5年） */}
+        {yieldStats && s && (
+          <div className="mt-4 rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-4">
+              利回り分布（過去5年 · {yieldStats.totalDays}営業日）
+            </p>
+
+            {/* 分布ゲージ */}
+            {(() => {
+              const lo  = yieldStats.yieldMin;
+              const hi  = yieldStats.yieldMax;
+              const range = hi - lo;
+              const pos  = (cur: number) => Math.max(0, Math.min(100, ((cur - lo) / range) * 100));
+
+              const sellPos = pos(cfg.sellYield);
+              const buyPos  = pos(cfg.buyYield);
+              const curPos  = pos(s.divYield);
+
+              return (
+                <div className="mb-5">
+                  <div className="relative h-5 w-full rounded-full overflow-hidden bg-white/[0.06]">
+                    {/* 割高ゾーン（赤） */}
+                    <div className="absolute top-0 left-0 h-full bg-[#f87171]/20 rounded-l-full" style={{ width: `${sellPos}%` }} />
+                    {/* 割安ゾーン（緑） */}
+                    <div className="absolute top-0 h-full bg-[#34d399]/20 rounded-r-full" style={{ left: `${buyPos}%`, width: `${100 - buyPos}%` }} />
+                    {/* SELL閾値線 */}
+                    <div className="absolute top-0 h-full w-px bg-[#f87171]/50" style={{ left: `${sellPos}%` }} />
+                    {/* BUY閾値線 */}
+                    <div className="absolute top-0 h-full w-px bg-[#34d399]/50" style={{ left: `${buyPos}%` }} />
+                    {/* 中央値マーク */}
+                    <div className="absolute top-0 h-full w-px bg-white/20" style={{ left: `${pos(yieldStats.yieldMedian)}%` }} />
+                    {/* 現在地マーカー */}
+                    <div
+                      className="absolute top-0 h-full w-1 rounded-full"
+                      style={{
+                        left: `${curPos}%`,
+                        transform: "translateX(-50%)",
+                        background: s.divYield >= cfg.buyYield ? "#34d399" : s.divYield <= cfg.sellYield ? "#f87171" : "#e8f4ff",
+                        boxShadow: `0 0 8px ${s.divYield >= cfg.buyYield ? "rgba(52,211,153,0.6)" : s.divYield <= cfg.sellYield ? "rgba(248,113,113,0.6)" : "rgba(232,244,255,0.4)"}`,
+                      }}
+                    />
+                  </div>
+                  {/* ラベル */}
+                  <div className="mt-1.5 relative h-4">
+                    <span className="absolute font-mono text-[8px] text-[#f87171]" style={{ left: 0 }}>
+                      {(lo * 100).toFixed(1)}% 割高
+                    </span>
+                    <span
+                      className={`absolute -translate-x-1/2 font-mono text-[9px] font-bold ${
+                        s.divYield >= cfg.buyYield ? "text-[#34d399]" : s.divYield <= cfg.sellYield ? "text-[#f87171]" : "text-[#e8f4ff]"
+                      }`}
+                      style={{ left: `${curPos}%` }}
+                    >
+                      ▲ {(s.divYield * 100).toFixed(2)}%
+                    </span>
+                    <span className="absolute right-0 font-mono text-[8px] text-[#34d399]">
+                      割安 {(hi * 100).toFixed(1)}%
+                    </span>
+                  </div>
+                  <p className="mt-2 font-mono text-[10px] text-slate-400">
+                    現在の利回りは過去5年の
+                    <span className={`mx-1 font-bold ${
+                      yieldStats.currentPercentile >= 70 ? "text-[#34d399]"
+                      : yieldStats.currentPercentile <= 30 ? "text-[#f87171]"
+                      : "text-[#e8f4ff]"
+                    }`}>
+                      上位{100 - yieldStats.currentPercentile}%
+                    </span>
+                    （中央値 {(yieldStats.yieldMedian * 100).toFixed(2)}%）
+                  </p>
+                </div>
+              );
+            })()}
+
+            {/* エピソード継続期間 */}
+            <div className="border-t border-white/[0.08] pt-4">
+              <p className="font-mono text-[9px] text-slate-500 mb-3">各状態の継続期間（過去5年実績）</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  {
+                    label: "割高（SELL）状態",
+                    ep: yieldStats.sellEpisodes,
+                    cls: "border-[#f87171]/20 bg-[#f87171]/[0.03]",
+                    color: "text-[#f87171]",
+                    note: "割高から中立に戻るまでの目安",
+                  },
+                  {
+                    label: "割安（BUY）状態",
+                    ep: yieldStats.buyEpisodes,
+                    cls: "border-[#34d399]/20 bg-[#34d399]/[0.03]",
+                    color: "text-[#34d399]",
+                    note: "買い場の継続期間目安",
+                  },
+                ].map(({ label, ep, cls, color, note }) => (
+                  <div key={label} className={`rounded-xl border ${cls} px-4 py-3`}>
+                    <p className="font-mono text-[9px] text-slate-500 mb-2">{label}</p>
+                    {ep ? (
+                      <>
+                        <div className="grid grid-cols-3 gap-1 mb-2">
+                          {[
+                            { k: "発生回数", v: `${ep.count}回` },
+                            { k: "平均",     v: `${ep.avgDays}日` },
+                            { k: "最長",     v: `${ep.maxDays}日` },
+                          ].map(({ k, v }) => (
+                            <div key={k} className="text-center">
+                              <p className="font-mono text-[7px] text-slate-600">{k}</p>
+                              <p className={`font-mono text-sm font-bold ${color}`}>{v}</p>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="font-mono text-[8px] text-slate-600">{note}</p>
+                        <p className="font-mono text-[8px] text-slate-500 mt-0.5">
+                          中央値 {ep.medianDays}日 ≈ 約{Math.round(ep.medianDays / 30)}ヶ月
+                        </p>
+                      </>
+                    ) : (
+                      <p className="font-mono text-[10px] text-slate-600">過去5年で該当なし</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <p className="mt-3 font-mono text-[8px] text-slate-600">
+              ※ 過去利回りは現在の年間配当 ¥{cfg.annualDiv}/株 で近似計算。実際の過去配当とは異なる場合があります。
+            </p>
           </div>
         )}
 

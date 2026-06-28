@@ -43,9 +43,9 @@ export interface JpStockSignal extends JpStockConfig {
   signal: JpSignalType;
 }
 
-async function fetchPrice(code: string): Promise<[string[], number[]] | null> {
+async function fetchPrice(code: string, range = "1y"): Promise<[string[], number[]] | null> {
   const url =
-    `https://query1.finance.yahoo.com/v8/finance/chart/${code}.T?range=1y&interval=1d`;
+    `https://query1.finance.yahoo.com/v8/finance/chart/${code}.T?range=${range}&interval=1d`;
   try {
     const res = await fetch(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
@@ -113,3 +113,85 @@ export async function fetchJpStockSignals(): Promise<JpStockSignal[]> {
 // decisions/0033 との後方互換（cron で使用中）
 export { fetchJpStockSignals as fetchNttSignal };
 export type { JpStockSignal as NttSignal };
+
+// ── 利回り分布統計 ─────────────────────────────────────────────────────────────
+
+export interface EpisodeStats {
+  count: number;
+  avgDays: number;
+  medianDays: number;
+  maxDays: number;
+}
+
+export interface YieldStats {
+  yieldMin: number;          // 5年最低利回り（高値時）
+  yieldMax: number;          // 5年最高利回り（安値時）
+  yieldMedian: number;       // 5年中央値
+  yieldP25: number;          // 25%ile
+  yieldP75: number;          // 75%ile
+  currentPercentile: number; // 現在が何%ile（高い=割安）
+  totalDays: number;
+  sellEpisodes: EpisodeStats | null;  // 割高エピソード
+  buyEpisodes:  EpisodeStats | null;  // 割安エピソード
+  annualDiv: number;                  // 計算に使った年間配当（近似の注記用）
+}
+
+function computeEpisodes(yields: number[], threshold: number, above: boolean): EpisodeStats | null {
+  const durations: number[] = [];
+  let inEpisode = false;
+  let days = 0;
+
+  for (const y of yields) {
+    const hit = above ? y >= threshold : y <= threshold;
+    if (hit) {
+      inEpisode = true;
+      days++;
+    } else if (inEpisode) {
+      durations.push(days);
+      inEpisode = false;
+      days = 0;
+    }
+  }
+  if (inEpisode && days > 0) durations.push(days);
+  if (durations.length === 0) return null;
+
+  const sorted = [...durations].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return {
+    count:      durations.length,
+    avgDays:    Math.round(durations.reduce((s, d) => s + d, 0) / durations.length),
+    medianDays: sorted.length % 2 === 0 ? Math.round((sorted[mid - 1] + sorted[mid]) / 2) : sorted[mid],
+    maxDays:    sorted[sorted.length - 1],
+  };
+}
+
+export async function fetchYieldStats(cfg: JpStockConfig): Promise<YieldStats | null> {
+  const result = await fetchPrice(cfg.code, "5y");
+  if (!result) return null;
+
+  const [, prices] = result;
+  if (prices.length < 60) return null;
+
+  // 現在の annualDiv で過去利回りを近似計算（利回りは高い方が割安）
+  const yields = prices.map((p) => cfg.annualDiv / p);
+  const sorted = [...yields].sort((a, b) => a - b);
+
+  const n = sorted.length;
+  const p = (pct: number) => sorted[Math.min(Math.floor(n * pct), n - 1)];
+
+  const currentYield = yields[yields.length - 1];
+  const rank = sorted.filter((y) => y <= currentYield).length;
+
+  return {
+    yieldMin:          sorted[0],
+    yieldMax:          sorted[n - 1],
+    yieldMedian:       p(0.5),
+    yieldP25:          p(0.25),
+    yieldP75:          p(0.75),
+    currentPercentile: Math.round((rank / n) * 100),
+    totalDays:         n,
+    sellEpisodes:      computeEpisodes(yields, cfg.sellYield, false),
+    buyEpisodes:       computeEpisodes(yields, cfg.buyYield, true),
+    annualDiv:         cfg.annualDiv,
+  };
+}
