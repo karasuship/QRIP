@@ -2,6 +2,7 @@ import Link from "next/link";
 import { fetchSignal } from "@/lib/signal";
 import { getSupabaseServer } from "@/lib/supabase";
 import type { Metadata } from "next";
+import WatchlistPanel from "@/app/components/WatchlistPanel";
 
 export const metadata: Metadata = {
   title: "QRIP — 売る根拠も、買う根拠も、持ち続ける根拠も。",
@@ -184,6 +185,9 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+
+          {/* ウォッチリスト */}
+          <WatchlistPanel />
 
           {/* クイックナビ */}
           <div className="mt-4 flex flex-wrap gap-2">
