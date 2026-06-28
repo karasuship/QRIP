@@ -195,20 +195,76 @@ export default function MyPageClient() {
   // ── 未ログイン ───────────────────────────────────────────────────
   if (!user) {
     return (
-      <div className="mt-12 flex flex-col items-center gap-4 rounded-2xl border border-white/[0.12] bg-white/[0.04] p-10 text-center">
-        <p className="font-mono text-[10px] uppercase tracking-widest text-slate-500">ログインが必要</p>
-        <p className="text-sm text-slate-400 max-w-sm">
-          ウォッチリストやスクリーナーアラートを利用するにはログインが必要です。
-        </p>
-        <button
-          onClick={signIn}
-          className="mt-2 flex items-center gap-2 rounded-xl border border-[#38bdf8]/30 bg-[#38bdf8]/[0.08] px-5 py-2.5 font-mono text-xs text-[#38bdf8] hover:bg-[#38bdf8]/[0.16] transition-colors"
-        >
-          Google でログイン
-        </button>
-        <p className="font-mono text-[9px] text-slate-700">
-          Google アカウントでワンタップ。メールや電話番号の入力は不要。
-        </p>
+      <div className="mt-6 space-y-6">
+        {/* 機能プレビュー：ウォッチリスト */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.04]">
+          <div className="px-5 pt-4 pb-2">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">ウォッチリスト</p>
+            <div className="space-y-2 pointer-events-none select-none blur-[2px] opacity-50">
+              {[
+                { code: "9432", name: "NTT",  div: "3.4%", pbr: "1.2x" },
+                { code: "2914", name: "JT",   div: "5.1%", pbr: "1.8x" },
+                { code: "9433", name: "KDDI", div: "3.0%", pbr: "2.1x" },
+              ].map((s) => (
+                <div key={s.code} className="flex items-center gap-4 rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5">
+                  <span className="font-mono text-sm font-bold text-[#e8f4ff] w-16">{s.name}</span>
+                  <span className="font-mono text-[10px] text-slate-500">{s.code}</span>
+                  <span className="font-mono text-[10px] text-[#34d399] ml-auto">配当 {s.div}</span>
+                  <span className="font-mono text-[10px] text-slate-400">PBR {s.pbr}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-[#020c1b]/40 backdrop-blur-[1px]">
+            <div className="text-center">
+              <p className="text-sm font-medium text-[#e8f4ff] mb-0.5">監視したい銘柄を登録</p>
+              <p className="font-mono text-[10px] text-slate-400">価格・配当・PBRをまとめて追跡</p>
+            </div>
+          </div>
+        </div>
+
+        {/* 機能プレビュー：スクリーナーアラート */}
+        <div className="relative overflow-hidden rounded-2xl border border-white/[0.12] bg-white/[0.04]">
+          <div className="px-5 pt-4 pb-2">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-slate-400 mb-3">スクリーナーアラート</p>
+            <div className="space-y-2 pointer-events-none select-none blur-[2px] opacity-50">
+              {[
+                { name: "高配当バリュー", tags: ["PBR≤1.0", "配当≥3.5%", "プライム"] },
+                { name: "優良小型株",     tags: ["PBR≤0.8", "ROE≥15%", "自己資本≥50%"] },
+              ].map((a) => (
+                <div key={a.name} className="rounded-xl border border-white/[0.08] bg-white/[0.03] px-4 py-2.5">
+                  <p className="font-mono text-xs font-semibold text-[#e8f4ff] mb-1.5">{a.name}</p>
+                  <div className="flex gap-1.5">
+                    {a.tags.map((t) => (
+                      <span key={t} className="rounded-lg border border-[#38bdf8]/20 bg-[#38bdf8]/[0.06] px-2 py-0.5 font-mono text-[9px] text-[#38bdf8]">{t}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute inset-0 flex items-center justify-center bg-[#020c1b]/40 backdrop-blur-[1px]">
+            <div className="text-center">
+              <p className="text-sm font-medium text-[#e8f4ff] mb-0.5">条件を保存して毎夜通知</p>
+              <p className="font-mono text-[10px] text-slate-400">「PBR1倍以下・配当3.5%以上」が出たら知らせる</p>
+            </div>
+          </div>
+        </div>
+
+        {/* ログイン CTA */}
+        <div className="rounded-2xl border border-[#38bdf8]/20 bg-[#38bdf8]/[0.04] px-6 py-5 text-center">
+          <p className="text-base font-semibold text-[#e8f4ff] mb-1">Google アカウントで 1 タップ</p>
+          <p className="font-mono text-[10px] text-slate-400 mb-4">メール・電話番号の入力は不要</p>
+          <button
+            onClick={signIn}
+            className="inline-flex items-center gap-2 rounded-xl border border-[#38bdf8]/30 bg-[#38bdf8]/[0.10] px-6 py-2.5 font-mono text-sm text-[#38bdf8] hover:bg-[#38bdf8]/[0.18] transition-colors"
+          >
+            <svg width="16" height="16" viewBox="0 0 48 48" fill="none">
+              <path d="M44.5 20H24v8.5h11.8C34.7 33.9 29.9 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 5.9 1.1 8.1 2.9l6.4-6.4C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.5 0 20-7.8 20-21 0-1.4-.1-2.7-.5-4z" fill="#38bdf8" opacity=".8"/>
+            </svg>
+            Google でログインして使う
+          </button>
+        </div>
       </div>
     );
   }
