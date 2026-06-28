@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "QRIP — 検証書庫",
-  description: "Round 01〜43の検証アーカイブ。採用・棄却の全記録と根拠。",
+  title: "検証書庫 — Round 01〜49 のバックテスト全記録",
+  description: "phi2 v3・CRS・RSI<25・HYG-8%・EFA/EEM/QQQ/VTシグナルの採用・棄却全記録。30年統計検証の根拠を公開。多重比較補正済み。",
 };
 
 export const revalidate = 86400;
@@ -114,9 +114,20 @@ const METHODOLOGY = [
   { step: "05", title: "失敗を捨てない", desc: "棄却された仮説も全てアーカイブに保存。失敗の数こそ、成功が本物か偶然かの判定材料。" },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "検証書庫 — phi2・CRS・RSI<25 シグナル採用の根拠（Round 01〜49）",
+  "description": "phi2 v3・CRS・RSI<25・HYG-8%・EFA/EEM/QQQ/VT シグナルの採用・棄却全記録。30年統計検証、TRAIN/TEST分離、Bonferroni補正済みの根拠を公開。",
+  "publisher": { "@type": "Organization", "name": "QRIP", "url": "https://qrip-eight.vercel.app" },
+  "inLanguage": "ja",
+  "url": "https://qrip-eight.vercel.app/research",
+};
+
 export default function ResearchPage() {
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <Link href="/" className="font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors">
           ← ホームにもどる

@@ -4,8 +4,8 @@ import SimulateClient from "./SimulateClient";
 import AssetAllocation from "./AssetAllocation";
 
 export const metadata: Metadata = {
-  title: "QRIP — 資産シミュレーション・配分例",
-  description: "月次積立・ボーナス・NISA・phi2戦略の30年試算。インデックス比較と推奨ポートフォリオ例。",
+  title: "積立シミュレーション — NISA・30年試算・ボーナス投下",
+  description: "月次積立・ボーナス・NISA・取り崩しに対応した30年資産シミュレーター。VOO/QQQ/VEA/VWOなどのインデックスETFを比較し、推奨ポートフォリオ例も掲載。",
 };
 
 export default async function SimulatePage({

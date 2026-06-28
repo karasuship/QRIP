@@ -9,8 +9,8 @@ import type { PutCallData, RateData } from "@/lib/market-fetch";
 import NewsSection from "./NewsSection";
 
 export const metadata: Metadata = {
-  title: "QRIP — 今日のニュース",
-  description: "市場の雰囲気・金利・待機資金・投資家心理をわかりやすく整理",
+  title: "市場ニュース — 今日の相場と投資家心理",
+  description: "株式市場の今日のニュースをAIが要約。センチメント・VIX・金利・待機資金など投資家心理を数値とわかりやすい言葉で毎営業日更新。",
 };
 
 export const revalidate = 3600;

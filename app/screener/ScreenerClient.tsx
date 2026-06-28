@@ -185,14 +185,15 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
           <p className="text-sm text-slate-500">条件に合う銘柄が見つかりませんでした。フィルターを緩めてみてください。</p>
         </div>
       ) : (
-        {results.length > 100 && (
-          <div className="mb-2 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-2">
-            <p className="font-mono text-[10px] text-amber-400">
-              {results.length.toLocaleString()} 件ヒット — 上位 100 件を表示。条件を絞り込んでください。
-            </p>
-          </div>
-        )}
-        <div className="overflow-x-auto rounded-2xl border border-white/[0.22]">
+        <>
+          {results.length > 100 && (
+            <div className="mb-2 rounded-xl border border-amber-400/20 bg-amber-400/[0.06] px-4 py-2">
+              <p className="font-mono text-[10px] text-amber-400">
+                {results.length.toLocaleString()} 件ヒット — 上位 100 件を表示。条件を絞り込んでください。
+              </p>
+            </div>
+          )}
+          <div className="overflow-x-auto rounded-2xl border border-white/[0.22]">
           <table className="w-full text-left">
             <thead>
               <tr className="border-b border-white/[0.15] bg-white/[0.11]">
@@ -237,7 +238,8 @@ export default function ScreenerClient({ totalCount }: { totalCount: number }) {
               ))}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

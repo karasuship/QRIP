@@ -13,6 +13,7 @@ const MAIN_LINKS = [
 ];
 
 const MORE_LINKS = [
+  { href: "/radar",      label: "レーダー", desc: "成長加速企業トップ10・入れ替え予測" },
   { href: "/simulate",   label: "試算",   desc: "30年資産シミュレーション" },
   { href: "/portfolio",  label: "実績",   desc: "ポートフォリオ記録" },
   { href: "/journal",    label: "日誌",   desc: "投資日誌・暴落時の記録" },

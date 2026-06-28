@@ -3,8 +3,8 @@ import { getSupabaseServer } from "@/lib/supabase";
 import ScreenerClient from "./ScreenerClient";
 
 export const metadata: Metadata = {
-  title: "QRIP — バリュー株スクリーナー",
-  description: "PBR・PER・自己資本比率・配当利回り・ROE・ROA・営業利益率・売上成長率で全上場銘柄をスクリーニング。解釈ラベル付き。",
+  title: "株スクリーナー — PBR・PER・配当利回りで全上場銘柄を絞り込む",
+  description: "約3700銘柄をPBR・PER・自己資本比率・配当利回り・ROE・ROA・営業利益率・売上成長率でスクリーニング。割安・高配当・高ROEのバリュー株を簡単に発見。",
 };
 
 export const revalidate = 3600;

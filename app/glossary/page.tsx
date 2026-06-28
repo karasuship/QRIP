@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "QRIP — 用語集",
-  description: "phi2・CRS・ATH・vol20・DCA・ドライパウダーなど、QRIPで使われる用語の解説",
+  title: "用語集 — phi2・CRS・ATH・DCA・Zスコアの定義と根拠",
+  description: "phi2・CRS・ATH・vol20・DCA・ドライパウダー・Bonferroni補正・Jackknife など、QRIPで使われる用語の定義と30年統計検証に基づく根拠を解説。",
 };
 
 export const revalidate = 86400;
@@ -43,6 +43,17 @@ const TERMS: {
       "phi2と同時発動（DOUBLE）すると30年で8回のみの超希少局面になる。",
     stat: "TEST Z=+3.92 / 勝率90%",
     related: ["phi2", "RSI14", "DOUBLE"],
+  },
+  {
+    id: "double",
+    name: "DOUBLE（phi2 + RSI<25 同時発動）",
+    category: "シグナル",
+    short: "phi2 v3 と RSI<25 が同一日に同時成立する超希少局面。30年で8回のみ。",
+    detail:
+      "phi2とRSI<25の重複率は約5%（ほぼ独立した条件）のため、同時成立は極めてまれ。" +
+      "Round 41の検証では、年平均0.3回の発動。発動時は「暴落×売られすぎの極致×高ボラ×CRS有効」が重なる最大警戒局面を示す。" +
+      "歴史的な事例はコロナショック（2020年3月）とGFC（2009年3月付近）など。",
+    related: ["phi2", "RSI<25 シグナル", "CRS"],
   },
   {
     id: "hyg8",
@@ -86,6 +97,28 @@ const TERMS: {
     short: "新興国株式ETFがATH-10%圏内かつSP500 CRS有効な局面を検知。",
     detail: "EFAと同じロジック。新興国はボラが高くリターンのばらつきも大きい。SP500 CRSが新興国危機も捕捉できることをRound 42で確認。",
     related: ["EFA", "CRS"],
+  },
+  {
+    id: "qqq-signal",
+    name: "QQQ phi2シグナル（弱）",
+    category: "シグナル",
+    short: "ナスダック100 ETF (QQQ) がATH-18%以下に達した局面を検知する弱シグナル。",
+    detail:
+      "SP500 phi2（ATH-10%閾値）よりも深い下落（-18%）を条件とする。TEST Z=+6.77（n=20）で統計的には有効だが、サンプル数が少ないため「弱シグナル」扱い。" +
+      "SP500 phi2 と同時発動した際の補助確認として使用することを推奨。QQQ単独での大きなポジション投入は非推奨。",
+    stat: "TEST Z=+6.77（弱シグナル）",
+    related: ["phi2", "VT phi2シグナル", "CRS"],
+  },
+  {
+    id: "vt-signal",
+    name: "VT phi2シグナル",
+    category: "シグナル",
+    short: "全世界株 ETF (VT・オルカン) 向けのシグナル。SP500 phi2 と完全連動。",
+    detail:
+      "VT独立のシグナル条件は設けていない。合成オルカン（SP500×65%+EFA×25%+EEM×10%）の30年バックテストでTEST Z=+7.21。" +
+      "「SP500 phi2が発動したらVTも同時購入する」戦略の統計的根拠として使用する。オルカン積立に信号を重ねる使い方が最も自然。",
+    stat: "合成オルカン TEST Z=+7.21",
+    related: ["phi2", "EFA シグナル", "EEM シグナル"],
   },
   // ── スコア・指標 ──────────────────────────────────────────
   {
@@ -169,7 +202,7 @@ const TERMS: {
       "HYGが大きく下落する = 信用市場が恐怖状態 = 企業倒産リスクを織り込み始めている。" +
       "CRSの第2成分（HYG 3日落）と第5成分（HYG 60日高値-8%以下）として使用。" +
       "株式市場より先行してリスクを示すことが多い。",
-    related: ["CRS", "HYG-8%シグナル", "DXY"],
+    related: ["CRS", "HYG-8% QE後シグナル", "DXY"],
   },
   {
     id: "dxy",
@@ -191,6 +224,29 @@ const TERMS: {
       "RSPがSP500より弱い状態 = 大型テック株だけが上がって中小型は置いてけぼり = 市場幅の狭まり。" +
       "CRSの第6成分（RSP 5日リターン < SP500）として使用。",
     related: ["CRS", "市場幅"],
+  },
+  {
+    id: "cape",
+    name: "CAPE（シラーPER / 景気循環調整後PER）",
+    category: "スコア・指標",
+    short: "過去10年の実質利益平均でSP500を割った長期バリュエーション指標。ノーベル賞経済学者シラーが提唱。",
+    detail:
+      "通常PERが1年の利益を使うのに対し、CAPEは景気サイクル平均で割るため景気過熱の影響を排除できる。" +
+      "歴史的平均は約17倍。30倍超は割高圏とされることが多い。" +
+      "Round 35の検証では、高CAPE（30〜35）環境でもTEST Z=+6.72でphi2は機能することを確認。" +
+      "「高CAPEだから下がる」という単純な論理はQE市場では成立しないことも判明しており、CAPE単独シグナルは採用していない。",
+    related: ["phi2", "CRS", "TRAIN / TEST 分割"],
+  },
+  {
+    id: "market-breadth",
+    name: "市場幅（Market Breadth）",
+    category: "スコア・指標",
+    short: "上昇銘柄と下落銘柄の広がりを見る指標。少数の大型株だけが相場を引っ張る「幅の狭い相場」を検知する。",
+    detail:
+      "均等加重SP500（RSP）が時価総額加重SP500（SPY）より弱い状態が「市場幅の縮小」の代理指標として機能する。" +
+      "GAFAMのような大型テック株が上がっても中小型株が下落していれば、市場全体の健全性が低いことを示す。" +
+      "CRSの第6成分（RSP 5日リターン < SP500）として組み込まれている。",
+    related: ["RSP（均等加重SP500）", "CRS"],
   },
   {
     id: "put-call",
@@ -224,6 +280,18 @@ const TERMS: {
       "30年検証（Round 38）では、毎月の積立に加えて3〜12ヶ月分を積み立てておいても結果は変わらず。" +
       "phi2は30年間で月次連続発動がゼロ（つまり準備期間は十分ある）。",
     related: ["phi2", "DCA"],
+  },
+  {
+    id: "qe",
+    name: "QE（量的緩和 / Quantitative Easing）",
+    category: "投資用語",
+    short: "中央銀行が国債・社債などを大量購入し市場に資金を供給する非伝統的金融政策。",
+    detail:
+      "リーマンショック後（2009年3月〜）にFRBが開始し、以降の金融市場の構造を大きく変えた。" +
+      "QE以前は「HYG下落＝株も長期低迷」だったが、QE以降は「FRB介入でV字回復」のパターンが定式化した。" +
+      "このサイトの HYG-8% シグナルが「2009年3月以降」という条件を持つのはこのため（Round 16で確認）。" +
+      "「同じシグナルが政策体制で意味を反転させる」という QRIP の重要発見の一つ。",
+    related: ["HYG-8% QE後シグナル", "CRS"],
   },
   {
     id: "nisa",
@@ -281,6 +349,17 @@ const TERMS: {
     related: ["Zスコア", "TRAIN/TEST分割"],
   },
   {
+    id: "jackknife",
+    name: "Jackknife（ジャックナイフ）分析",
+    category: "検証方法論",
+    short: "特定の時代・期間に依存した過学習でないかを確認するため、期間を変えて繰り返し検証する手法。",
+    detail:
+      "例えばGFC（2008〜2009）の1年だけがシグナルの成績を引き上げている場合、その期間を除いた再検証で成績が大幅に落ちる。" +
+      "このサイトでは RSI<25 シグナルのTRAIN成績が低かった原因を追跡するために使用し（Round 11）、ドットコム崩壊期の希釈効果が原因と特定した。" +
+      "全サブ期間でDCAを上回ることを確認してから採用するための「頑健性チェック」。",
+    related: ["TRAIN / TEST 分割", "Zスコア", "Bonferroni補正"],
+  },
+  {
     id: "l-zone",
     name: "L字ゾーン（ageAth 91〜252日）",
     category: "検証方法論",
@@ -293,6 +372,16 @@ const TERMS: {
   },
 ];
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "DefinedTermSet",
+  "name": "QRIP 用語集",
+  "description": "phi2・CRS・ATH・DCA・Zスコア・Jackknife など、QRIPで使われる投資・検証用語の定義集",
+  "url": "https://qrip-eight.vercel.app/glossary",
+  "publisher": { "@type": "Organization", "name": "QRIP", "url": "https://qrip-eight.vercel.app" },
+  "inLanguage": "ja",
+};
+
 export default function GlossaryPage() {
   const byCategory = CATEGORIES.reduce<Record<string, typeof TERMS>>((acc, cat) => {
     acc[cat] = TERMS.filter((t) => t.category === cat);
@@ -301,6 +390,7 @@ export default function GlossaryPage() {
 
   return (
     <div className="min-h-screen">
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className="mx-auto max-w-4xl px-6 py-12">
         <Link href="/" className="font-mono text-xs text-slate-400 hover:text-slate-300 transition-colors">
           ← ホームにもどる

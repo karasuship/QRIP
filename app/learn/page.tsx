@@ -5,7 +5,7 @@ import type { SimMonthly, Phi2Signal } from "@/app/components/charts/SimulationC
 import SimulationChart from "@/app/components/charts/SimulationChartClient";
 
 export const metadata = {
-  title: "QRIP — 使い方と検証結果",
+  title: "投資シグナルの根拠 — phi2・CRS 30年バックテスト結果",
   description:
     "QRIPの使い方・phi2/CRS/シグナルの読み方と、30年バックテストで分かったこと。DCAを超える条件は3つだけ、すべて暴落に耐える胆力が前提だった。",
 };

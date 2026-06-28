@@ -5,8 +5,8 @@ import type { SignalData } from "@/lib/signal";
 import type { JpStockSignal } from "@/lib/jp-stock-signal";
 
 export const metadata: Metadata = {
-  title: "QRIP — シグナル一覧",
-  description: "S&P 500・NTT・JT・KDDI のシグナル状態を一覧表示。各銘柄の詳細ページへのハブ。",
+  title: "買い場シグナル一覧 — S&P500・ETF・日本株 リアルタイム",
+  description: "S&P500・EFA・EEM・QQQ・VT・NTT・JT・KDDI の買い場シグナル発動状態をリアルタイム表示。phi2 v3・CRS スコア・RSI<25 など5本のシグナル体制。",
 };
 
 export const revalidate = 900;

@@ -131,6 +131,9 @@ Round 01〜36 主要発見まとめ：
 - ✅ ホームセクション折り畳み（CollapseSection コンポーネント）
 - ✅ SP500詳細ページ整理（CRS/phi2条件/30日候補日を CollapseBlock 化）
 - ✅ スクリーナー100件上限バナー・試算プリセットボタン・ウォッチリスト株価表示
+- ✅ 用語集（/glossary）強化：DOUBLE・QE・CAPE・市場幅・Jackknife・QQQ/VTシグナル追加、JSON-LD、title修正
+- ✅ SEO全面改善：動的サイトマップ（全3700銘柄）・銘柄ページgenerateMetadata強化・JSON-LD（WebApplication/Article/FinancialProduct）・全ページtitleテンプレート統一
+- ✅ 成長加速企業レーダー（`/radar`）：Mag7 vs SPY比較・非Mag7寄与分解・動的成長Top10バスケット（Round 50/52結果）
 
 ### スクリーナー（2026-06-27 完了）
 - ✅ /screener 一覧：8スライダー（PBR/PER/自己資本比率/配当利回り/ROE/ROA/営業利益率/売上成長率）+ 市場・判定フラグ絞り込み

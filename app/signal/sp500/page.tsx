@@ -19,9 +19,9 @@ import QuickRef from "@/app/components/QuickRef";
 import CollapseBlock from "@/app/components/CollapseBlock";
 
 export const metadata: Metadata = {
-  title: "QRIP — S&P 500 シグナル",
+  title: "S&P500 買い場シグナル — phi2 v3・CRS スコア リアルタイム",
   description:
-    "phi2 v3 / RSI<25 / HYG-8% / B4 / EFA / EEM のリアルタイム発動状態（Yahoo Finance 15分更新）",
+    "S&P500のphi2 v3・RSI<25・HYG-8%・B4のリアルタイム発動状態。30年バックテスト TEST Z=+8.65。CRS スコアで危機の深さを0〜6点で判定。Yahoo Finance 15分更新。",
 };
 
 export const revalidate = 900;

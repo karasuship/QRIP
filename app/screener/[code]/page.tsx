@@ -78,9 +78,27 @@ export async function generateMetadata(
   props: { params: Promise<{ code: string }> }
 ): Promise<Metadata> {
   const { code } = await props.params;
+  try {
+    const db = getSupabaseServer();
+    const { data } = await db
+      .from("screener_stocks")
+      .select("name,price,dividend_yield")
+      .eq("code", code)
+      .single();
+    if (data) {
+      const name = (data.name as string | null) ?? code;
+      const pricePart = data.price != null ? `株価¥${(data.price as number).toLocaleString("ja-JP")}` : "";
+      const divPart = data.dividend_yield != null ? `配当利回り${((data.dividend_yield as number) * 100).toFixed(1)}%` : "";
+      const stat = [pricePart, divPart].filter(Boolean).join("・");
+      return {
+        title: `${name}（${code}）株価・配当・財務分析`,
+        description: `${name}（${code}）の${stat ? stat + "。" : ""}財務推移・業種比較・信用取引残高・配当履歴。`,
+      };
+    }
+  } catch { /* silent */ }
   return {
-    title: `QRIP — ${code} 銘柄詳細`,
-    description: `${code} の財務指標・推移チャート`,
+    title: `${code} 株価・配当・財務分析`,
+    description: `${code} の財務指標・推移チャート・業種比較。`,
   };
 }
 
@@ -166,15 +184,28 @@ export default async function StockPage(
   const quarterly = buildQuarterlyTrend(allSummaries);
   const peerStats = buildPeerStats(stock, (peersRes.data ?? []) as PeerRow[]);
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FinancialProduct",
+    "name": `${(stock.name as string | null) ?? code}（${code}）`,
+    "description": `${(stock.name as string | null) ?? code} の財務指標・推移チャート・業種比較・配当履歴`,
+    "url": `https://qrip-eight.vercel.app/screener/${code}`,
+    "provider": { "@type": "Organization", "name": "QRIP", "url": "https://qrip-eight.vercel.app" },
+    "inLanguage": "ja",
+  };
+
   return (
-    <StockDetail
-      stock={stock}
-      trend={trend}
-      quarterly={quarterly}
-      calendar={calendar}
-      chartData={chartData}
-      peerStats={peerStats}
-      analystData={analystData}
-    />
+    <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <StockDetail
+        stock={stock}
+        trend={trend}
+        quarterly={quarterly}
+        calendar={calendar}
+        chartData={chartData}
+        peerStats={peerStats}
+        analystData={analystData}
+      />
+    </>
   );
 }

@@ -6,9 +6,9 @@ import WatchlistPanel from "@/app/components/WatchlistPanel";
 import CollapseSection from "@/app/components/CollapseSection";
 
 export const metadata: Metadata = {
-  title: "QRIP — 売る根拠も、買う根拠も、持ち続ける根拠も。",
+  title: "株の買い場を30年統計で判定 — phi2・CRS シグナル",
   description:
-    "30年分の相場データを毎日スキャンし、今日「買い場か」を判定する。シグナル・試算・検証書庫・仮説投票を統合した統計ベースの投資判断支援ツール。",
+    "暴落で投げ売りする前に。S&P500・ETF・日本株の買い場シグナルを30年バックテストで検証し、毎日リアルタイム判定。スクリーナー・30年試算・検証書庫を統合。",
 };
 
 export const revalidate = 900;

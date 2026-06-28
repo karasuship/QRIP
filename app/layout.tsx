@@ -18,24 +18,24 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "QRIP — いま売るべきか、過去はこうだった",
+    default: "QRIP — 株の買い場を30年統計で判定",
     template: "%s | QRIP",
   },
   description:
-    "暴落で投げ売りする前に。30年統計に基づいた行動根拠を渡す。phi2 v3・CRS スコア・過去類似事例をリアルタイム表示。",
+    "S&P500・ETF・日本株の買い場シグナルを30年バックテストで検証し毎日リアルタイム判定。phi2 v3・CRS スコア・類似事例・スクリーナー・30年試算を統合した投資判断支援ツール。",
   metadataBase: new URL("https://qrip-eight.vercel.app"),
   openGraph: {
     type: "website",
     locale: "ja_JP",
     url: "https://qrip-eight.vercel.app",
     siteName: "QRIP",
-    title: "QRIP — いま売るべきか、過去はこうだった",
-    description: "暴落で投げ売りする前に。30年統計に基づいた行動根拠を渡す。",
+    title: "QRIP — 株の買い場を30年統計で判定",
+    description: "暴落で投げ売りする前に。phi2 v3・CRS スコアで今日が買い場かを判定する投資判断支援ツール。",
   },
   twitter: {
     card: "summary",
-    title: "QRIP — いま売るべきか、過去はこうだった",
-    description: "暴落で投げ売りする前に。30年統計に基づいた行動根拠を渡す。",
+    title: "QRIP — 株の買い場を30年統計で判定",
+    description: "暴落で投げ売りする前に。phi2 v3・CRS スコアで今日が買い場かを判定する投資判断支援ツール。",
   },
   robots: { index: true, follow: true },
   verification: {
@@ -55,6 +55,21 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} dark h-full`}
     >
       <body className="min-h-full flex flex-col antialiased">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "QRIP",
+            "url": "https://qrip-eight.vercel.app",
+            "description": "S&P500・ETF・日本株の買い場シグナルを30年バックテストで検証し毎日リアルタイム判定する投資判断支援ツール。phi2 v3・CRS スコア・スクリーナー・30年試算を統合。",
+            "applicationCategory": "FinanceApplication",
+            "operatingSystem": "Web",
+            "inLanguage": "ja",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+            "publisher": { "@type": "Organization", "name": "QRIP", "url": "https://qrip-eight.vercel.app" }
+          })}}
+        />
         <Nav />
         {initialSignal && <AlertBanner signal={initialSignal} />}
         {initialSignal && <Ticker initial={initialSignal} />}
