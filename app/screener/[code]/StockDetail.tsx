@@ -7,6 +7,7 @@ import {
   ResponsiveContainer, Legend,
 } from "recharts";
 import type { TrendItem, QuarterlyItem, StockCalendar, ChartData, PeerStats, AnalystData, ShortData } from "./page";
+import type { Headline } from "@/lib/news-fetch";
 
 interface Stock {
   code: string; name: string; market: string; sector: string;
@@ -53,7 +54,7 @@ function daysUntil(dateStr: string | null): number | null {
 }
 
 export default function StockDetail({
-  stock, trend, quarterly, calendar, chartData, peerStats, analystData,
+  stock, trend, quarterly, calendar, chartData, peerStats, analystData, tickerNews,
 }: {
   stock: Stock;
   trend: TrendItem[];
@@ -62,6 +63,7 @@ export default function StockDetail({
   chartData: ChartData;
   peerStats?: PeerStats | null;
   analystData?: AnalystData | null;
+  tickerNews?: Headline[];
 }) {
   const code4 = stock.code.slice(0, 4);
   const tvSrc = `https://www.tradingview.com/widgetembed/?symbol=${encodeURIComponent(`TSE:${code4}`)}&interval=W&theme=Dark&style=1&locale=ja&timezone=Asia%2FTokyo&hide_side_toolbar=0`;
@@ -129,7 +131,26 @@ export default function StockDetail({
           </div>
         </div>
 
-        {/* 相場位�� + 騰落率 */}
+        {/* 関連ニュース（自動取得） */}
+        {tickerNews && tickerNews.length > 0 && (
+          <div className="rounded-2xl border border-white/[0.18] bg-white/[0.04] px-5 py-4">
+            <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-3">関連ニュース</p>
+            <ul className="space-y-2">
+              {tickerNews.map((n, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className="font-mono text-[9px] text-slate-600 shrink-0 mt-0.5 w-4">{i + 1}.</span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] leading-5 text-slate-300 line-clamp-2">{n.title}</p>
+                    <p className="font-mono text-[9px] text-slate-600 mt-0.5">{n.source}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 font-mono text-[9px] text-slate-600">Yahoo Finance より自動取得 · 英語原文</p>
+          </div>
+        )}
+
+        {/* 相場位置 + 騰落率 */}
         {(hasRange || hasChange) && (
           <div className="rounded-2xl border border-white/[0.18] bg-white/[0.11] p-5">
             <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 mb-4">相場位置</p>

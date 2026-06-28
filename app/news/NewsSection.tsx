@@ -161,10 +161,15 @@ function HeadlineCard({
         {item.sp500_reason && (
           <p className="mt-1.5 text-[11px] text-slate-500">{item.sp500_reason}</p>
         )}
-        <div className="mt-2 flex items-center gap-3">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-white/[0.09] bg-white/[0.14] px-2 py-0.5 font-mono text-[10px] text-slate-500">
             {item.source}
           </span>
+          {item.stock_mentions?.map((ticker) => (
+            <span key={ticker} className="rounded-full border border-[#38bdf8]/25 bg-[#38bdf8]/[0.07] px-2 py-0.5 font-mono text-[10px] text-[#38bdf8]">
+              {ticker}
+            </span>
+          ))}
           <span className="font-mono text-[10px] text-slate-500">
             {expanded ? "▲ 閉じる" : "▼ 深掘り分析"}
           </span>

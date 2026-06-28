@@ -100,21 +100,33 @@ const RSS_FALLBACKS = [
 // ── 公開エントリーポイント ────────────────────────────────────────────────────
 
 export async function fetchHeadlines(): Promise<Headline[]> {
-  // 1st: Yahoo Finance JSON（株価APIと同じサーバー、最も安定）
-  // SPY/QQQ ticker クエリで市場ニュース、economy で マクロニュース
-  const [yf1, yf2] = await Promise.all([
+  // SPY/QQQ+マクロ + Mag7個別株の3クエリ並列
+  const [yf1, yf2, yf3] = await Promise.all([
     fetchYahooNews("SPY+QQQ+stock+market"),
     fetchYahooNews("economy+interest+rate+inflation"),
+    fetchYahooNews("NVDA+AAPL+MSFT+TSLA+META+AMZN+GOOGL+earnings"),
   ]);
 
-  const combined = dedup([...yf1, ...yf2]);
-  if (combined.length >= 5) return combined.slice(0, 10);
+  const combined = dedup([...yf1, ...yf2, ...yf3]);
+  if (combined.length >= 5) return combined.slice(0, 14);
 
-  // 2nd: RSS フォールバック（Yahoo が返せない場合）
+  // フォールバック
   const rssResults = await Promise.all(
     RSS_FALLBACKS.map((s) => fetchRSS(s.url, s.source))
   );
-  return dedup([...combined, ...rssResults.flat()]).slice(0, 10);
+  return dedup([...combined, ...rssResults.flat()]).slice(0, 14);
+}
+
+// 個別ページ用: 銘柄コード or 社名でニュースを取得（Claude分析なし・生ヘッドライン）
+export async function fetchTickerNews(
+  ticker: string,
+  companyName?: string,
+): Promise<Headline[]> {
+  // JP株は "7203 Toyota stock" 形式、US株は "NVDA stock earnings"
+  const query = companyName
+    ? encodeURIComponent(`${companyName.slice(0, 15)} stock`)
+    : encodeURIComponent(`${ticker} stock earnings`);
+  return fetchYahooNews(query);
 }
 
 function dedup(headlines: Headline[]): Headline[] {

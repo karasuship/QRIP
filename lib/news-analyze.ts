@@ -7,6 +7,7 @@ export interface HeadlineJa {
   source: string;
   sp500_impact: "bullish" | "bearish" | "neutral";
   sp500_reason: string;
+  stock_mentions: string[]; // ["NVDA", "TSLA"] など、個別株ティッカー
 }
 
 export interface NewsAnalysis {
@@ -51,7 +52,8 @@ ${headlineText}
       "title": "日本語タイトル（簡潔に）",
       "description": "日本語説明（元のdescriptionが空なら空文字）",
       "sp500_impact": "bullish または bearish または neutral",
-      "sp500_reason": "SP500への影響理由（15字以内の日本語）"
+      "sp500_reason": "SP500への影響理由（15字以内の日本語）",
+      "stock_mentions": ["NVDA", "TSLA"] // そのヘッドラインで言及されている米国個別株ティッカー。なければ空配列
     }
   ]
 }`;
@@ -76,6 +78,7 @@ ${headlineText}
       ? parsed.headlines_ja.slice(0, headlines.length).map((h: {
           title?: string; description?: string;
           sp500_impact?: string; sp500_reason?: string;
+          stock_mentions?: unknown[];
         }, i: number) => ({
           title:        String(h.title || headlines[i]?.title || ""),
           description:  String(h.description || ""),
@@ -84,10 +87,14 @@ ${headlineText}
             ? (h.sp500_impact as HeadlineJa["sp500_impact"])
             : "neutral",
           sp500_reason: String(h.sp500_reason || "").slice(0, 30),
+          stock_mentions: Array.isArray(h.stock_mentions)
+            ? (h.stock_mentions as unknown[]).filter((t): t is string => typeof t === "string").slice(0, 5)
+            : [],
         }))
       : headlines.map((h) => ({
           title: h.title, description: h.description,
-          source: h.source, sp500_impact: "neutral" as const, sp500_reason: "",
+          source: h.source, sp500_impact: "neutral" as const,
+          sp500_reason: "", stock_mentions: [],
         }));
 
     return {

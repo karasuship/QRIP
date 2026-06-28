@@ -4,6 +4,8 @@ import { getSupabaseServer } from "@/lib/supabase";
 import { fetchFinSummary, type JqFinSummary } from "@/lib/jquants";
 import { getYahooCreds, fetchCalendarEvents, fetchChartData, fetchAnalystData } from "@/lib/yahoo-finance";
 import type { StockCalendar, ChartData, AnalystData } from "@/lib/yahoo-finance";
+import { fetchTickerNews } from "@/lib/news-fetch";
+import type { Headline } from "@/lib/news-fetch";
 import StockDetail from "./StockDetail";
 
 export { type StockCalendar, type ChartData, type AnalystData };
@@ -174,10 +176,11 @@ export default async function StockPage(
       : Promise.resolve({ data: [] }),
   ]);
 
-  const [calendar, chartData, analystData] = await Promise.all([
+  const [calendar, chartData, analystData, tickerNews] = await Promise.all([
     fetchCalendarEvents(code4T, creds),
     fetchChartData(code4T, creds),
     fetchAnalystData(code4T, creds),
+    fetchTickerNews(code.slice(0, 4), stock.name as string | undefined).catch(() => [] as Headline[]),
   ]);
 
   const trend = buildAnnualTrend(allSummaries);
@@ -205,6 +208,7 @@ export default async function StockPage(
         chartData={chartData}
         peerStats={peerStats}
         analystData={analystData}
+        tickerNews={tickerNews.slice(0, 5)}
       />
     </>
   );
