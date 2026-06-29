@@ -14,16 +14,16 @@ export interface PatternDef {
 }
 
 export interface BacktestResult {
-  returnPct: number;         // 元本比リターン %
-  annualizedReturn: number;  // 年換算 %
-  vsVoo: number;             // VOO との差 (pp)
-  months: number;            // 対象期間（月）
-  activatedMonths?: number;  // シグナル型：実際に投資した月数
+  returnPct: number;
+  annualizedReturn: number;
+  vsVoo: number;
+  months: number;
+  activatedMonths?: number;
+  snapshots: number[]; // 月次累積リターン%の配列（チャート用）
   ok: boolean;
 }
 
-// ── JP シグナル設定 ────────────────────────────────────────────────────────────
-// decisions/0033 で採用された配当利回りシグナルのパラメータ
+// ── JP シグナル設定（decisions/0033） ─────────────────────────────────────────
 
 const JP_SIGNAL_CONFIGS = [
   { ticker: "9432.T", annualDiv: 5.30,  buyYield: 0.035 },
@@ -86,7 +86,7 @@ export const PORTFOLIO_PATTERNS: PatternDef[] = [
   {
     id: "jp_blind",
     name: "配当盲目DCA",
-    tag: "信号無視",
+    tag: "信号無視・対照",
     tagCls: "border-slate-400/25 bg-slate-400/[0.06] text-slate-400",
     assets: JP_SIGNAL_CONFIGS.map(({ ticker }) => ({ ticker, weight: 1 / 3 })),
     note: "NTT/JT/KDDIに毎月均等積立。シグナル連動型との対照実験。",
@@ -98,7 +98,7 @@ export const PORTFOLIO_PATTERNS: PatternDef[] = [
 async function fetchYahoo(
   ticker: string,
   range: string,
-  interval: string
+  interval: string,
 ): Promise<{ timestamps: number[]; closes: (number | null)[] } | null> {
   const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=${range}&interval=${interval}`;
   try {
@@ -124,7 +124,7 @@ async function fetchYahoo(
 
 async function fetchMonthly(
   ticker: string,
-  range = "1y"
+  range = "1y",
 ): Promise<{ dates: string[]; closes: number[] } | null> {
   const raw = await fetchYahoo(ticker, range, "1mo");
   if (!raw) return null;
@@ -155,8 +155,37 @@ async function fetchCurrentPrice(ticker: string): Promise<number | null> {
 const MONTHLY_JPY = 30_000;
 
 const FAIL: BacktestResult = {
-  returnPct: 0, annualizedReturn: 0, vsVoo: 0, months: 0, ok: false,
+  returnPct: 0, annualizedReturn: 0, vsVoo: 0,
+  months: 0, snapshots: [], ok: false,
 };
+
+// 月次スナップショット計算（チャート用）
+// 月 m 時点での「月 0..m に投資した資金の、月 m 価格での評価リターン%」
+function computeDcaSnapshots(
+  commonMonths: string[],
+  assets: PortfolioAsset[],
+  priceMaps: Map<string, Map<string, number>>,
+): number[] {
+  return commonMonths.map((_, m) => {
+    let totalInv = 0;
+    let totalVal = 0;
+    for (const { ticker, weight } of assets) {
+      const pm = priceMaps.get(ticker)!;
+      const priceAtM = pm.get(commonMonths[m]);
+      if (!priceAtM) return 0;
+      let units = 0;
+      for (let k = 0; k <= m; k++) {
+        const buyPrice = pm.get(commonMonths[k]);
+        if (!buyPrice) continue;
+        const invested = MONTHLY_JPY * weight;
+        units += invested / buyPrice;
+        totalInv += invested;
+      }
+      totalVal += units * priceAtM;
+    }
+    return totalInv > 0 ? (totalVal / totalInv - 1) * 100 : 0;
+  });
+}
 
 async function backtestDca(pattern: PatternDef): Promise<BacktestResult> {
   const [monthlyResults, currentPrices] = await Promise.all([
@@ -185,21 +214,29 @@ async function backtestDca(pattern: PatternDef): Promise<BacktestResult> {
   const n = commonMonths.length;
   if (n < 3) return FAIL;
 
+  // priceMap per ticker（月次）
+  const priceMaps = new Map(
+    pattern.assets.map(({ ticker }) => {
+      const data = monthlyMap.get(ticker)!;
+      return [ticker, new Map(data.dates.map((d, i) => [d, data.closes[i]]))];
+    }),
+  );
+
+  // 月次スナップショット（チャート用・月次終値ベース）
+  const snapshots = computeDcaSnapshots(commonMonths, pattern.assets, priceMaps);
+
+  // 最終リターン（当日価格ベース）
   let totalInvested = 0;
   let totalCurrentValue = 0;
-
   for (const { ticker, weight } of pattern.assets) {
-    const data = monthlyMap.get(ticker)!;
-    const priceMap = new Map(data.dates.map((d, i) => [d, data.closes[i]]));
+    const pm = priceMaps.get(ticker)!;
     const nowPrice = currentMap.get(ticker)!;
-
     let units = 0;
     for (const month of commonMonths) {
-      const buyPrice = priceMap.get(month);
+      const buyPrice = pm.get(month);
       if (!buyPrice) continue;
-      const invested = MONTHLY_JPY * weight;
-      units += invested / buyPrice;
-      totalInvested += invested;
+      units += (MONTHLY_JPY * weight) / buyPrice;
+      totalInvested += MONTHLY_JPY * weight;
     }
     totalCurrentValue += units * nowPrice;
   }
@@ -214,13 +251,12 @@ async function backtestDca(pattern: PatternDef): Promise<BacktestResult> {
     annualizedReturn: (Math.pow(ratio, 1 / years) - 1) * 100,
     vsVoo: 0,
     months: n,
+    snapshots,
     ok: true,
   };
 }
 
 // ── JP シグナル連動バックテスト ───────────────────────────────────────────────
-// 各月に BUY 信号が出ている銘柄のみに均等投資。HOLD/SELL 月は現金保持。
-// 52週高安は2年分の月次データからローリング計算。
 
 async function backtestJpSignal(): Promise<BacktestResult> {
   const tickers = JP_SIGNAL_CONFIGS.map((c) => c.ticker);
@@ -228,7 +264,7 @@ async function backtestJpSignal(): Promise<BacktestResult> {
   const [monthlyResults, currentPrices] = await Promise.all([
     Promise.all(tickers.map(async (ticker) => ({
       ticker,
-      data: await fetchMonthly(ticker, "2y"), // 52週計算に2年分必要
+      data: await fetchMonthly(ticker, "2y"),
     }))),
     Promise.all(tickers.map(async (ticker) => ({
       ticker,
@@ -237,79 +273,88 @@ async function backtestJpSignal(): Promise<BacktestResult> {
   ]);
 
   const monthlyMap = new Map(monthlyResults.map(({ ticker, data }) => [ticker, data]));
-  const currentMap = new Map(currentPrices.map(({ ticker, price }) => [ticker, price]));
+  const currentMap = new Map<string, number | null>(currentPrices.map(({ ticker, price }) => [ticker, price]));
 
   if ([...monthlyMap.values()].some((d) => !d) || [...currentMap.values()].some((p) => !p)) {
     return FAIL;
   }
 
-  // 全銘柄共通の月（過去24ヶ月以内）
   const monthSets = tickers.map((t) => new Set(monthlyMap.get(t)!.dates));
   const allMonths = [...monthSets[0]]
     .filter((m) => monthSets.every((s) => s.has(m)))
     .sort();
 
-  // 直近12ヶ月を投資対象期間とする
   const investMonths = allMonths.slice(-12);
   if (investMonths.length < 3) return FAIL;
 
-  let totalInvested = 0;
-  let totalCurrentValue = 0;
-  let activatedMonths = 0;
-
-  for (const month of investMonths) {
-    const monthIdx = allMonths.indexOf(month);
-
-    // 各銘柄の BUY 判定
-    const buyTickers = JP_SIGNAL_CONFIGS.filter(({ ticker, annualDiv, buyYield }) => {
+  // priceMap per ticker（全2年分）
+  const priceMaps = new Map<string, Map<string, number>>(
+    tickers.map((ticker) => {
       const data = monthlyMap.get(ticker)!;
-      const priceMap = new Map(data.dates.map((d, i) => [d, data.closes[i]]));
-      const price = priceMap.get(month);
-      if (!price) return false;
+      return [ticker, new Map(data.dates.map((d, i) => [d, data.closes[i]]))];
+    }),
+  );
 
-      // 52週高安：当月を含む直近12ヶ月
+  // 各投資月のBUY銘柄を事前計算
+  function getBuyTickers(month: string): string[] {
+    const monthIdx = allMonths.indexOf(month);
+    return JP_SIGNAL_CONFIGS.filter(({ ticker, annualDiv, buyYield }) => {
+      const pm = priceMaps.get(ticker)!;
+      const price = pm.get(month);
+      if (!price) return false;
       const window = allMonths
         .slice(Math.max(0, monthIdx - 11), monthIdx + 1)
-        .map((m) => priceMap.get(m) ?? 0)
+        .map((m) => pm.get(m) ?? 0)
         .filter((p) => p > 0);
-
       if (window.length < 3) return false;
-
       const hi = Math.max(...window);
       const lo = Math.min(...window);
       const w52Pos = hi > lo ? (price - lo) / (hi - lo) : 0.5;
-      const divYield = annualDiv / price;
+      return annualDiv / price >= buyYield && w52Pos <= 0.2;
+    }).map((c) => c.ticker);
+  }
 
-      return divYield >= buyYield && w52Pos <= 0.2;
-    });
+  const buyByMonth = new Map(investMonths.map((m) => [m, getBuyTickers(m)]));
 
-    if (buyTickers.length === 0) continue; // 現金保持月
+  // 月次スナップショット
+  const snapshots = investMonths.map((_, m) => {
+    let totalInv = 0, totalVal = 0;
+    for (let k = 0; k <= m; k++) {
+      const month = investMonths[k];
+      const buys = buyByMonth.get(month) ?? [];
+      if (buys.length === 0) continue;
+      const perStock = MONTHLY_JPY / buys.length;
+      for (const ticker of buys) {
+        const pm = priceMaps.get(ticker)!;
+        const buyPrice = pm.get(month);
+        const valPrice = pm.get(investMonths[m]);
+        if (!buyPrice || !valPrice) continue;
+        totalInv += perStock;
+        totalVal += (perStock / buyPrice) * valPrice;
+      }
+    }
+    return totalInv > 0 ? (totalVal / totalInv - 1) * 100 : 0;
+  });
 
+  // 最終リターン（当日価格）
+  let totalInvested = 0, totalCurrentValue = 0, activatedMonths = 0;
+  for (const month of investMonths) {
+    const buys = buyByMonth.get(month) ?? [];
+    if (buys.length === 0) continue;
     activatedMonths++;
-    const perStock = MONTHLY_JPY / buyTickers.length;
-
-    for (const { ticker } of buyTickers) {
-      const data = monthlyMap.get(ticker)!;
-      const priceMap = new Map(data.dates.map((d, i) => [d, data.closes[i]]));
-      const buyPrice = priceMap.get(month)!;
-      const nowPrice = currentMap.get(ticker)!;
-
-      const units = perStock / buyPrice;
+    const perStock = MONTHLY_JPY / buys.length;
+    for (const ticker of buys) {
+      const pm = priceMaps.get(ticker)!;
+      const buyPrice = pm.get(month);
+      const nowPrice = currentMap.get(ticker);
+      if (!buyPrice || !nowPrice) continue;
       totalInvested += perStock;
-      totalCurrentValue += units * nowPrice;
+      totalCurrentValue += (perStock / buyPrice) * nowPrice;
     }
   }
 
   if (totalInvested === 0) {
-    // 1年間一度も BUY が出なかった → 現金保持（リターン 0%）
-    return {
-      returnPct: 0,
-      annualizedReturn: 0,
-      vsVoo: 0,
-      months: investMonths.length,
-      activatedMonths: 0,
-      ok: true,
-    };
+    return { returnPct: 0, annualizedReturn: 0, vsVoo: 0, months: investMonths.length, activatedMonths: 0, snapshots, ok: true };
   }
 
   const ratio = totalCurrentValue / totalInvested;
@@ -321,6 +366,7 @@ async function backtestJpSignal(): Promise<BacktestResult> {
     vsVoo: 0,
     months: investMonths.length,
     activatedMonths,
+    snapshots,
     ok: true,
   };
 }
@@ -337,18 +383,15 @@ export async function backtestAllPatterns(): Promise<Map<string, BacktestResult>
     PORTFOLIO_PATTERNS.map(async (p) => {
       const r = await backtestPortfolio(p).catch(() => FAIL);
       return [p.id, r] as [string, BacktestResult];
-    })
+    }),
   );
 
   const map = new Map(results);
 
-  // VOO を基準に vsVoo を計算
   const voo = map.get("sp500");
   if (voo?.ok) {
     for (const [id, r] of map) {
-      if (id !== "sp500" && r.ok) {
-        r.vsVoo = r.returnPct - voo.returnPct;
-      }
+      if (id !== "sp500" && r.ok) r.vsVoo = r.returnPct - voo.returnPct;
     }
   }
 
