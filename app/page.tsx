@@ -4,6 +4,7 @@ import { getSupabaseServer } from "@/lib/supabase";
 import type { Metadata } from "next";
 import WatchlistPanel from "@/app/components/WatchlistPanel";
 import CollapseSection from "@/app/components/CollapseSection";
+import PortfolioPatterns from "@/app/components/PortfolioPatterns";
 
 export const metadata: Metadata = {
   title: "株の買い場を30年統計で判定 — phi2・CRS シグナル",
@@ -209,6 +210,9 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* ━━━ 積立パターン比較 ━━━ */}
+      <PortfolioPatterns />
 
       {/* ━━━ 過去の買い場 ━━━ */}
       <CollapseSection badge="過去の実績" title="「買い場」と判定した日、その後どうなったか">
