@@ -6,65 +6,86 @@ function fmtPct(n: number, forceSign = false) {
   return `${forceSign && n >= 0 ? "+" : ""}${n.toFixed(1)}%`;
 }
 
-// ── コンパクトな結果バー ──────────────────────────────────────────────────────
-function ResultRow({
-  pattern,
-  result,
-  isBaseline,
+// ── 利回りテーブル ────────────────────────────────────────────────────────────
+function YieldTable({
+  rows,
 }: {
-  pattern: PatternDef;
-  result: BacktestResult;
-  isBaseline: boolean;
+  rows: { pattern: PatternDef; result: BacktestResult; isBaseline: boolean }[];
 }) {
-  const isSignal = pattern.backtestMode === "jp_signal";
-
   return (
-    <div
-      className={`flex items-center justify-between gap-4 rounded-xl border px-4 py-3 ${
-        isBaseline
-          ? "border-white/[0.10] bg-white/[0.02]"
-          : isSignal
-          ? "border-[#34d399]/20 bg-[#34d399]/[0.04]"
-          : "border-white/[0.15] bg-white/[0.05]"
-      }`}
-    >
-      <div className="flex items-center gap-2 min-w-0">
-        {isBaseline && (
-          <span className="shrink-0 rounded border border-white/[0.18] bg-white/[0.08] px-1.5 py-0.5 font-mono text-[8px] text-slate-500">
-            脳死積立
-          </span>
-        )}
-        {isSignal && (
-          <span className="shrink-0 rounded border border-[#34d399]/30 bg-[#34d399]/[0.08] px-1.5 py-0.5 font-mono text-[8px] text-[#34d399]">
-            QRIP検証済み
-          </span>
-        )}
-        <p className="font-mono text-xs text-slate-300 truncate">{pattern.name}</p>
-        {isSignal && result.activatedMonths !== undefined && (
-          <span className="font-mono text-[9px] text-slate-600 shrink-0">
-            発動{result.activatedMonths}/{result.months}ヶ月
-          </span>
-        )}
+    <div className="overflow-hidden rounded-2xl border border-white/[0.15]">
+      {/* ヘッダー行 */}
+      <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 border-b border-white/[0.12] bg-white/[0.04] px-4 py-2">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500">パターン</p>
+        <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 text-right">年換算</p>
+        <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 text-right">通算</p>
+        <p className="font-mono text-[9px] uppercase tracking-widest text-slate-500 text-right">vs 基準</p>
       </div>
-      <div className="flex items-center gap-4 shrink-0">
-        <div className="text-right">
-          <p className="font-mono text-[9px] text-slate-500">リターン</p>
-          <p className={`font-mono text-sm font-bold tabular-nums ${result.returnPct >= 0 ? "text-[#34d399]" : "text-[#f87171]"}`}>
-            {fmtPct(result.returnPct, true)}
-          </p>
-        </div>
-        {!isBaseline && (
-          <div className="text-right">
-            <p className="font-mono text-[9px] text-slate-500">vs 基準</p>
-            <p className={`font-mono text-sm font-bold tabular-nums ${result.vsVoo >= 0 ? "text-[#34d399]" : "text-[#f87171]"}`}>
-              {fmtPct(result.vsVoo, true)}
+
+      {/* データ行 */}
+      {rows.map(({ pattern, result, isBaseline }, i) => {
+        const isSignal = pattern.backtestMode === "jp_signal";
+        const isLast   = i === rows.length - 1;
+        return (
+          <div
+            key={pattern.id}
+            className={`grid grid-cols-[1fr_auto_auto_auto] gap-x-4 items-center px-4 py-3 ${
+              !isLast ? "border-b border-white/[0.08]" : ""
+            } ${isSignal ? "bg-[#34d399]/[0.03]" : isBaseline ? "" : "bg-white/[0.02]"}`}
+          >
+            {/* パターン名 */}
+            <div className="flex items-center gap-2 min-w-0">
+              {isBaseline && (
+                <span className="shrink-0 rounded border border-white/[0.15] bg-white/[0.06] px-1.5 py-0.5 font-mono text-[8px] text-slate-500">
+                  基準
+                </span>
+              )}
+              {isSignal && (
+                <span className="shrink-0 rounded border border-[#34d399]/30 bg-[#34d399]/[0.08] px-1.5 py-0.5 font-mono text-[8px] text-[#34d399]">
+                  ★QRIP
+                </span>
+              )}
+              <span className="font-mono text-xs text-slate-300 truncate">{pattern.name}</span>
+              {isSignal && result.activatedMonths !== undefined && (
+                <span className="hidden sm:inline font-mono text-[9px] text-slate-600 shrink-0">
+                  発動{result.activatedMonths}/{result.months}ヶ月
+                </span>
+              )}
+            </div>
+
+            {/* 年換算 */}
+            <p className={`font-mono text-sm font-bold tabular-nums text-right ${
+              result.annualizedReturn >= 0 ? "text-[#34d399]" : "text-[#f87171]"
+            }`}>
+              {fmtPct(result.annualizedReturn, true)}
+            </p>
+
+            {/* 通算 */}
+            <p className={`font-mono text-sm font-bold tabular-nums text-right ${
+              result.returnPct >= 0 ? "text-[#34d399]" : "text-[#f87171]"
+            }`}>
+              {fmtPct(result.returnPct, true)}
+            </p>
+
+            {/* vs 基準 */}
+            <p className={`font-mono text-sm tabular-nums text-right ${
+              isBaseline
+                ? "text-slate-600"
+                : result.vsVoo > 0
+                ? "text-[#34d399] font-bold"
+                : result.vsVoo < 0
+                ? "text-[#f87171] font-bold"
+                : "text-slate-500"
+            }`}>
+              {isBaseline ? "—" : fmtPct(result.vsVoo, true)}
             </p>
           </div>
-        )}
-      </div>
+        );
+      })}
     </div>
   );
 }
+
 
 // ── 各セクション ──────────────────────────────────────────────────────────────
 function PatternSection({
@@ -96,17 +117,8 @@ function PatternSection({
         <PortfolioChart series={chartSeries} height={300} />
       </div>
 
-      {/* 結果リスト */}
-      <div className="space-y-2">
-        {rows.map(({ pattern, result, isBaseline }) => (
-          <ResultRow
-            key={pattern.id}
-            pattern={pattern}
-            result={result}
-            isBaseline={isBaseline}
-          />
-        ))}
-      </div>
+      {/* 利回りテーブル */}
+      <YieldTable rows={rows} />
 
       {note && (
         <p className="mt-3 font-mono text-[9px] text-slate-600">{note}</p>
